@@ -1,0 +1,13 @@
+dist-newstyle
+*.bbl
+*.blg
+*.log
+*.out
+*.gz
+*.aux
+*.bcf
+*.nav
+*.run.xml
+*.toc
+*.snm
+*.vrb
