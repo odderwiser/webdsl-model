@@ -5,22 +5,33 @@ import Effects
 import Utils.Composition
 import Utils.Free
 
-instance Functor eff => Denote 
-    Boolean (Operation OpB LitB + eff) LitB 
+instance (Cond (LitB e) <: eff, Operation OpB (LitB e) <: eff) => Denote 
+    Boolean eff LitB 
     where
-  denote :: Boolean (Env -> Free (Operation OpB LitB + eff) LitB) 
-    -> Env -> Free (Operation OpB LitB + eff) LitB
-  denote (LitB bool) env = return bool
+
+  denote :: Boolean (Env -> Free eff (LitB e))
+    -> Env 
+    -> Free eff (LitB e)
+  denote (LitB (Lit bool)) env = return (Lit bool)
 
   denote (OpB op a b) env = do 
     a' <- a env 
     b' <- b env 
     binaryOp op a' b'
 
-instance Functor eff =>  Denote Boolean (Cond v + eff) v where  
-  denote :: Boolean (Env -> Free (Cond v + eff) v)
-    -> Env 
-    -> Free (Cond v + eff) v
   denote (If condition left right) env = do
     condition' <- condition env
     cond condition' (left env) (right env)
+
+instance (Cond (LitB e) <: eff, LitB <: v) => Denote 
+    IfTE eff v where
+  denote :: (LitB <: v, Cond (LitB e) <: eff) =>
+    IfTE (Env -> Free eff (v e')) -> Env -> Free eff (v e')
+  denote (IfTE condition left right) env = do
+    (condition' :: LitB e) <- (condition :: Env -> Free eff (LitB e)) env
+    cond condition' (left env) (right env)
+
+-- instance Functor eff =>  Denote Boolean (Cond v + eff) v where  
+--   denote :: Boolean (Env -> Free (Cond v + eff) v)
+--     -> Env 
+--     -> Free (Cond v + eff) v

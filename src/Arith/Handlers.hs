@@ -3,7 +3,7 @@ import Effects (Operation (Oper))
 import Arith.Syntax (OpArith (..), LitAr (Lit))
 import Utils.Handler
  
-binOp :: (Functor g) => Handler (Operation OpArith LitAr) a g a
+binOp :: (Functor g) => Handler (Operation OpArith (LitAr e)) a g a
 binOp = Handler
    { ret = pure
   , hdlr = \ case

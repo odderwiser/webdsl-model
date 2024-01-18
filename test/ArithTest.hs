@@ -10,7 +10,7 @@ import Utils.Composition
 import Utils.Fix
 import Utils.Handler
 
-runArith :: (Env -> Free (Operation OpArith LitAr + End) LitAr) -> Int
+runArith :: (Env -> Free (Operation OpArith (LitAr e) + End) (LitAr e)) -> Int
 runArith e = 
     case unwrap 
         $ handle binOp 
@@ -28,12 +28,13 @@ testAddition :: Test
 testAddition = TestCase (
         assertEqual "add"
         3
-        (runArith $ foldD 
+        (runArith $ foldD $ In
         (bin Add 
             (LitAr (Lit 1)) 
             (LitAr (Lit 2)) 
-            :: Fix Arith))
+        ))
     )
 
 arithTests :: Test
-arithTests = TestList [testAddition]
+arithTests = TestList [testSimple,
+ testAddition]

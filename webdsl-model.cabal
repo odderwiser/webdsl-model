@@ -47,12 +47,14 @@ library
                         MultiParamTypeClasses,
                         RankNTypes,
                         ScopedTypeVariables,
-                        TypeOperators
+                        TypeOperators,
+                        UndecidableInstances
 
 test-suite webdsl-tests
     type:               exitcode-stdio-1.0
     main-is:            Main.hs
-    other-modules:      ArithTest
+    other-modules:      ArithTest,
+                        BoolTest
     build-depends:      base ^>=4.17.2.0, 
                         HUnit ^>=1.6,
                         webdsl-model

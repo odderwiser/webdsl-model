@@ -7,4 +7,4 @@ injF :: (f <: g) => f (Fix g) -> Fix g
 injF = In . inj
 
 class (f <: g) => BinaryInject f g op where
-    bin ::  op -> f (Fix g) -> f (Fix g) -> Fix g
+    bin ::  op -> g (Fix g) -> g (Fix g) -> f (Fix g)
