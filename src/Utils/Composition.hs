@@ -57,6 +57,7 @@ inj = case forephism of
 data End k -- No constructors!
   deriving Functor
 
+
 instance Functor f => f <: f where
   forephism :: Functor f => Forephism f f
   forephism = Forephism (Iso

@@ -6,14 +6,15 @@ import Utils.Composition
 import Utils.Free (Free)
 
 instance (Operation OpArith (LitAr e) <:  eff) 
-  => Denote Arith eff (LitAr e) where
-  denote :: Functor eff =>
-    Arith (Env -> Free eff (LitAr e))
-    -> Env -> Free eff (LitAr e)
-    
-  denote (LitAr (Lit int)) env = return (Lit int)
+  => Denote Arith eff LitAr where
+  denote :: (Operation OpArith (LitAr e) <: eff) 
+    => Arith (Env -> Free eff (LitAr e1)) 
+    -> Env 
+    -> Free eff (LitAr e1)
+
+  denote (LitAr e) env = return $ coerce e
 
   denote (OpArith op a b) env = do 
     a' <- a env 
     b' <- b env 
-    binaryOp op a' b'
+    binaryOp op (coerce a' :: LitAr e) (coerce b')

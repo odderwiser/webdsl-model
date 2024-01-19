@@ -1,11 +1,16 @@
 module Bool.Syntax where
 import Utils.Composition
 import Utils.Fix
-import Utils.Denote (Env)
+import Utils.Denote (Env, Literal (coerce))
 import Utils.Free
 
 data LitB e = Lit Bool 
     deriving Functor
+
+instance Literal LitB where 
+  coerce :: LitB a -> LitB b
+  coerce (Lit b) = Lit b
+
 
 data OpB = Or | And 
 
