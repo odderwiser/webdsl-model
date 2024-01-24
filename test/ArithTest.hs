@@ -1,14 +1,15 @@
 module ArithTest where
+import Utils.Denote
+import Utils.Free
 import Effects
-import Test.HUnit 
-import Arith.Syntax
-import Arith.Handlers (binOp)
 import Arith.Interface
-import Utils.Denote (Env, foldD)
-import Utils.Free (Free)
+import Arith.Syntax
 import Utils.Composition
+import Test.HUnit
 import Utils.Fix
 import Utils.Handler
+import Arith.Handlers
+
 
 runArith :: (Env -> Free (Operation OpArith LitAr + End) LitAr) -> Int
 runArith e = 
@@ -28,11 +29,11 @@ testAddition :: Test
 testAddition = TestCase (
         assertEqual "add"
         3
-        (runArith $ foldD 
+        (runArith $ foldD $ In 
         (bin Add 
             (LitAr (Lit 1)) 
-            (LitAr (Lit 2)) 
-            :: Fix Arith))
+            (LitAr (Lit 2)))
+    )
     )
 
 arithTests :: Test

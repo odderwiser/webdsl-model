@@ -11,7 +11,9 @@ data Arith e = LitAr LitAr
     deriving Functor
 
 instance (Arith <: g) => BinaryInject Arith g OpArith where
-  bin :: (Arith <: g) => OpArith -> 
-    Arith (Fix g) -> Arith (Fix g) -> Fix g
-  bin op left right = injF $ 
-    OpArith op (injF left) (injF right)
+  bin :: (Arith <: g) 
+    => OpArith 
+    -> g (Fix g) 
+    -> g (Fix g) 
+    -> Arith (Fix g)
+  bin op left right = OpArith op (injF left) (injF right)
