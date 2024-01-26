@@ -1,6 +1,8 @@
 module Utils.Composition where
 import Prelude hiding (sum)
 
+--- FUNCTOR COMPOSITION
+
 infixr 6 +
 data (f + g) a
   = L (f a)
@@ -75,3 +77,32 @@ instance {-# OVERLAPPABLE #-} (Functor f, Functor g, Functor g', f <: g')
       (isoTrans
          (isoSumCong isoRefl i)
          (isoTrans isoSumComm (isoSym isoSumAssoc)))
+
+--- VALUE COMPOSITION
+
+infixr 5 <
+class f < g where
+  injV  :: f -> g
+  projV :: g -> Maybe f
+
+instance f < f where
+  injV :: f -> f
+  injV = id
+  projV :: f -> Maybe f
+  projV = Just
+
+instance f < Either f g where
+  injV :: f -> Either f g
+  injV = Left
+  projV :: Either f g -> Maybe f
+  projV = \case
+    Left f -> Just f
+    _ -> Nothing
+
+instance f < g' => f < Either g g' where
+  injV :: (f < g') => f -> Either g g'
+  injV = Right . injV 
+  projV :: (f < g') => Either g g' -> Maybe f
+  projV = \case
+    Left g -> Nothing
+    Right g' -> projV g'
