@@ -16,7 +16,7 @@ calcBool bop v1 v2 = do
         And -> (&&) v1 v2
         Or  -> (||) v1 v2
 
-condition :: (Functor g) => Handler (Cond LitB) a g a
+condition :: (Functor g) => Handler Cond a g a
 condition = Handler
   { ret = pure
   , hdlr = \(Cond (Lit v) thenC elseC) ->
