@@ -2,15 +2,15 @@ module BoolTest where
 import Utils.Denote
 import Utils.Free
 import Effects
-import Bool.Syntax
-import Bool.Interface
+import Bool.Syntax ( Boolean(LitB), OpB(Or), LitB(..) )
+import Bool.Interface 
 import Utils.Composition
 import Utils.Handler
 import Bool.Handlers
 import Test.HUnit
 import Utils.Fix
 
-runBool :: (Env -> Free (Cond (LitB) + Operation OpB (LitB) + End) (LitB)) -> Bool
+runBool :: (Env -> Free (Cond + Operation OpB LitB + End) LitB) -> Bool
 runBool e = 
     case unwrap 
         $ handle binOp

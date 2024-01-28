@@ -47,7 +47,9 @@ library
                         MultiParamTypeClasses,
                         RankNTypes,
                         ScopedTypeVariables,
-                        TypeOperators
+                        TypeOperators,
+                        UndecidableInstances 
+                        --this might couse problems
 
 test-suite webdsl-tests
     type:               exitcode-stdio-1.0

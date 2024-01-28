@@ -6,10 +6,11 @@ import Utils.Composition
 import Utils.Free
 
 instance (Cond <: eff, Operation OpB LitB <: eff, LitB < v) => Denote 
-    Boolean (Operation OpB LitB + eff) v 
+    Boolean eff v 
     where
-  denote :: Boolean (Env -> Free (Operation OpB LitB + eff) v) 
-    -> Env -> Free (Operation OpB LitB + eff) v
+  denote :: (Cond <: eff, Operation OpB LitB <: eff, LitB < v) => 
+    Boolean (Env -> Free eff v) 
+    -> Env -> Free eff v
   denote (LitB bool) env = return $ injV bool
 
 -- co tu się dzieje? Czegoś mi brakuje??
