@@ -1,9 +1,10 @@
 module Arith.Interface where
-import Effects (Operation, binaryOp)
-import Arith.Syntax (Arith (..), OpArith, LitAr)
+import Effects (Operation (Oper), binaryOp)
+import Arith.Syntax (Arith (..), OpArith, LitAr (Lit))
 import Utils.Denote
 import Utils.Composition
-import Utils.Free (Free)
+import Utils.Free (Free (Op, Pure))
+import Prelude hiding (LT)
 
 instance Functor eff => Denote 
     Arith (Operation OpArith LitAr + eff) LitAr 

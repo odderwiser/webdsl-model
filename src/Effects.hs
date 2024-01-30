@@ -26,6 +26,8 @@ cond bool k1 k2 = case projV bool :: Maybe LitB of
   Just bool' -> Op . inj 
     $ Cond (injV bool') k1 k2
   
-  -- Op 
-  -- $ inj 
-  -- $ Cond (injV x) m1 m2
+-- cond :: (Cond <: f, LitB < a) => LitB -> Free f a -> Free f a -> Free f a
+-- cond bool k1 k2 =
+--   Op 
+--   $ inj 
+--   $ Cond bool k1 k2

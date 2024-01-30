@@ -85,7 +85,7 @@ class f < g where
   injV  :: f -> g
   projV :: g -> Maybe f
 
-instance f < f where
+instance {-# OVERLAPPING #-} f < f where
   injV :: f -> f
   injV = id
   projV :: f -> Maybe f
@@ -99,7 +99,7 @@ instance f < Either f g where
     Left f -> Just f
     _ -> Nothing
 
-instance f < g' => f < Either g g' where
+instance {-# OVERLAPPABLE #-} (f < g', h ~ Either g g') => f < h where
   injV :: (f < g') => f -> Either g g'
   injV = Right . injV 
   projV :: (f < g') => Either g g' -> Maybe f
