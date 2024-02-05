@@ -5,30 +5,25 @@ import Effects
 import Utils.Composition
 import Utils.Free
 
-instance (Cond <: eff, Operation OpB LitB <: eff, LitB < v) => Denote 
-    Boolean eff v 
-    where
-  denote :: (Cond <: eff, Operation OpB LitB <: eff, LitB < v) => 
-    Boolean (Env -> Free eff v) 
+instance BinaryOperation LitB v' OpB f  where
+  op :: (Operation OpB LitB <: f, LitB < v') => OpB -> v' -> v' -> Free f v'
+  op param e1 e2 = case (projV e1 :: Maybe LitB, projV e2 :: Maybe LitB) of
+    (Just e1', Just e2') -> binaryOp' param e1' e2'
+
+instance forall eff v.
+  (Cond <: eff, Operation OpB LitB <: eff, LitB < v)
+  => Denote Boolean eff v where
+  denote :: (Cond <: eff, Operation OpB LitB <: eff, LitB < v) 
+    => Boolean (Env -> Free eff v)
     -> Env -> Free eff v
   denote (LitB bool) env = return $ injV bool
 
 -- co tu się dzieje? Czegoś mi brakuje??
-  denote (OpB op a b) env = do 
-    a' <- a env 
-    b' <- b env 
-    case (projV a' :: Maybe LitB, projV b' :: Maybe LitB) of
-      (Just a'', Just b'') -> binaryOp op a'' b''
+  denote (OpB ops a b) env = do
+    a' <- a env
+    b' <- b env
+    op ops a' b'
 
-  denote (If c a b) env = do 
+  denote (If c a b) env = do
     c' <- c env
     cond c' (a env) (b env)
-
-
--- instance Functor eff =>  (Denote Boolean (Cond + eff) v, LitB < v) where  
---   denote :: Boolean (Env -> Free (Cond  + eff) v)
---     -> Env 
---     -> Free (Cond  + eff) v
---   denote (If condition left right) env = do
---     condition' <- condition env
---     cond condition' (left env) (right env)

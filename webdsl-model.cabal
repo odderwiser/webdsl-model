@@ -41,12 +41,14 @@ library
                         EmptyCase,
                         FlexibleContexts,
                         FlexibleInstances,
+                        FunctionalDependencies,
                         GADTs,
                         InstanceSigs,
                         LambdaCase,
                         MultiParamTypeClasses,
                         RankNTypes,
                         ScopedTypeVariables,
+                        TypeApplications,
                         TypeOperators,
                         UndecidableInstances 
                         --this might couse problems
