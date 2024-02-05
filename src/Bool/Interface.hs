@@ -18,7 +18,6 @@ instance forall eff v.
     -> Env -> Free eff v
   denote (LitB bool) env = return $ injV bool
 
--- co tu się dzieje? Czegoś mi brakuje??
   denote (OpB ops a b) env = do
     a' <- a env
     b' <- b env

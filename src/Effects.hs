@@ -1,4 +1,3 @@
-{-# LANGUAGE FunctionalDependencies #-}
 module Effects where
 import Utils.Composition
 import Utils.Free

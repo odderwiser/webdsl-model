@@ -37,4 +37,4 @@ testAddition = TestCase (
     )
 
 arithTests :: Test
-arithTests = TestList [testAddition]
+arithTests = TestList [testSimple, testAddition]
