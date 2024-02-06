@@ -50,7 +50,7 @@ library
                         ScopedTypeVariables,
                         TypeApplications,
                         TypeOperators,
-                        UndecidableInstances 
+                        UndecidableInstances
                         --this might couse problems
 
 test-suite webdsl-tests

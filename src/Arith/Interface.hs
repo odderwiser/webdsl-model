@@ -12,11 +12,11 @@ instance BinaryOperation LitAr v' OpArith f  where
     (Just e1', Just e2') -> binaryOp' param e1' e2'
 
 
-instance Functor eff => Denote 
-    Arith (Operation OpArith LitAr + eff) LitAr 
+instance (Operation OpArith LitAr <: eff) => Denote 
+    Arith eff LitAr 
     where
-  denote :: Arith (Env -> Free (Operation OpArith LitAr + eff) LitAr) 
-    -> Env -> Free (Operation OpArith LitAr + eff) LitAr
+  denote :: (Operation OpArith LitAr <: eff) => Arith (Env -> Free eff LitAr) 
+    -> Env -> Free eff LitAr
   denote (LitAr int) env = return int
 
   denote (OpArith ops a b) env = do 

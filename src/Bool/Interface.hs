@@ -10,8 +10,7 @@ instance BinaryOperation LitB v' OpB f  where
   op param e1 e2 = case (projV e1 :: Maybe LitB, projV e2 :: Maybe LitB) of
     (Just e1', Just e2') -> binaryOp' param e1' e2'
 
-instance forall eff v.
-  (Cond <: eff, Operation OpB LitB <: eff, LitB < v)
+instance (Cond <: eff, Operation OpB LitB <: eff, LitB < v)
   => Denote Boolean eff v where
   denote :: (Cond <: eff, Operation OpB LitB <: eff, LitB < v) 
     => Boolean (Env -> Free eff v)
