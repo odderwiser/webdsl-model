@@ -3,14 +3,21 @@ import Utils.Denote
 import Utils.Free
 import Effects
 import Bool.Syntax ( Boolean(LitB, If), OpB(Or, And), LitB(..) )
-import Bool.Interface 
+import Bool.Interface as B
 import Utils.Composition
 import Utils.Handler
 import Bool.Handlers
 import Test.HUnit
 import Utils.Fix
 
-runBool :: (Env -> Free (Cond + Operation OpB LitB + End) LitB) -> Bool
+type Eff = (Cond + Operation OpB LitB + End)
+
+instance Denote Boolean Eff LitB where
+  denote :: Boolean (Env -> Free Eff LitB)
+    -> Env -> Free Eff LitB
+  denote = B.denote
+
+runBool :: (Env -> Free Eff LitB) -> Bool
 runBool e = 
     case unwrap 
         $ handle binOp

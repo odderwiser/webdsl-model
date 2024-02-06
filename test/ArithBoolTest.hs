@@ -5,16 +5,23 @@ import Effects
 import Bool.Syntax as B
 import Utils.Composition
 import Arith.Syntax as A
-import Arith.Interface
+import Arith.Interface as A (denote) 
 import Test.HUnit
 import Utils.Handler
 import Bool.Handlers as B
 import Arith.Handlers as A
+import Bool.Interface as B (denote) 
 import Utils.Fix (bin)
 import Utils.Fix (Fix(In))
 import Utils.Fix (injF)
 
-runBA :: (Env -> Free (Cond + Operation OpB LitB + Operation OpArith LitAr + End) (Either LitB LitAr)) -> Either Bool Int
+type Eff = Cond + Operation OpB LitB + Operation OpArith LitAr + End
+type V = Either LitB LitAr
+
+runBA :: (Env 
+    -> Free (Cond + Operation OpB LitB + Operation OpArith LitAr + End) 
+        (Either LitB LitAr)) 
+    -> Either Bool Int
 runBA e = 
     case unwrap 
         $ handle A.binOp
@@ -23,16 +30,26 @@ runBA e =
         $ e []
     of (Left (B.Lit val)) -> Left val
 
+instance Denote Arith Eff V where
+  denote :: Arith (Env -> Free Eff V)
+    -> Env -> Free Eff V
+  denote = A.denote
+
+instance Denote Boolean Eff V where
+  denote :: Boolean (Env -> Free Eff V)
+    -> Env -> Free Eff V
+  denote = B.denote
+
 testIf :: Test
 testIf = TestCase (
         assertEqual "add"
         (Right 2)
         (runBA $ foldD 
-        (In (inj $ If (injF (LitB (B.Lit False)) :: Fix (Arith + Boolean))
-            (injF (LitAr (A.Lit 1)) :: Fix (Arith + Boolean)) 
+        (In (inj $ If (injF (LitB (B.Lit False)))
+            (injF (LitAr (A.Lit 1))) 
             (injF  (LitAr (A.Lit 2)) :: Fix (Arith + Boolean)))
         ))
     )
 
-boolTests :: Test
-boolTests = TestList [testIf]
+arithBoolTests :: Test
+arithBoolTests = TestList [testIf]

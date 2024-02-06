@@ -64,4 +64,8 @@ test-suite webdsl-tests
                         webdsl-model
     hs-source-dirs:     test
     default-language:   Haskell2010
-    default-extensions: TypeOperators
+    default-extensions: FlexibleInstances,
+                        InstanceSigs,
+                        MultiParamTypeClasses,
+                        TypeOperators,
+                        FlexibleInstances

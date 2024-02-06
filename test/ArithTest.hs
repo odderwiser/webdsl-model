@@ -2,7 +2,7 @@ module ArithTest where
 import Utils.Denote
 import Utils.Free
 import Effects
-import Arith.Interface
+import Arith.Interface as A
 import Arith.Syntax
 import Utils.Composition
 import Test.HUnit
@@ -10,13 +10,21 @@ import Utils.Fix
 import Utils.Handler
 import Arith.Handlers
 
+type Eff = (Operation OpArith LitAr + End)
+type V = LitAr
 
-runArith :: (Env -> Free (Operation OpArith LitAr + End) LitAr) -> Int
+
+runArith :: (Env -> Free Eff  LitAr) -> Int
 runArith e = 
     case unwrap 
         $ handle binOp 
         $ e []
     of (Lit val) -> val
+
+instance Denote Arith Eff LitAr where
+  denote :: Arith (Env -> Free Eff LitAr)
+    -> Env -> Free Eff LitAr
+  denote = A.denote
 
 testSimple :: Test
 testSimple = TestCase (
