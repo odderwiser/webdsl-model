@@ -19,25 +19,22 @@ type Eff = Cond + Operation OpB LitB + Operation OpArith LitAr + End
 type V = Either LitB LitAr
 
 runBA :: (Env 
-    -> Free (Cond + Operation OpB LitB + Operation OpArith LitAr + End) 
-        (Either LitB LitAr)) 
-    -> Either Bool Int
+  -> Free 
+    (Cond + Operation OpB LitB + Operation OpArith LitAr + End) 
+    (Either LitB LitAr)) 
+  -> Either Bool Int
 runBA e = 
-    case unwrap 
-        $ handle A.binOp
-        $ handle B.binOp
-        $ handle condition 
-        $ e []
-    of (Left (B.Lit val)) -> Left val
+  case unwrap 
+    $ handle A.binOp
+    $ handle B.binOp
+    $ handle condition 
+    $ e []
+  of (Left (B.Lit val)) -> Left val
 
 instance Denote Arith Eff V where
-  denote :: Arith (Env -> Free Eff V)
-    -> Env -> Free Eff V
   denote = A.denote
 
 instance Denote Boolean Eff V where
-  denote :: Boolean (Env -> Free Eff V)
-    -> Env -> Free Eff V
   denote = B.denote
 
 testIf :: Test

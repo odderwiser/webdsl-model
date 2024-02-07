@@ -1,21 +1,29 @@
 module Utils.Handler where
-import Utils.Free
+import Utils.Free ( fold, Free(..) )
 import Utils.Composition
+    ( End,
+      type (<:)(..),
+      Forephism(Forephism),
+      type (:<->:)(to, from),
+      type (->:),
+      type (+)(..) )
 
 data Handler f a f' b
-  = Handler { ret  :: a -> Free f' b
-            , hdlr :: f (Free f' b) -> Free f' b }
+  = Handler { 
+    ret  :: a -> Free f' b
+  , hdlr :: f (Free f' b) -> Free f' b 
+  }
 
 handle :: (Functor f, Functor f')
-       => Handler f a f' b -> Free (f + f') a -> Free f' b
+  => Handler f a f' b -> Free (f + f') a -> Free f' b
 handle h = fold
   (ret h)
   (\ x -> case x of
-     L y -> hdlr h y
-     R y -> Op y)
+    L y -> hdlr h y
+    R y -> Op y)
 
 permute :: (Functor f, Functor f')
-        => (f ->: f') -> Free f a -> Free f' a
+  => (f ->: f') -> Free f a -> Free f' a
 permute f = fold Pure (Op . f)
 
 mask :: Functor f => Free f a -> Free (f' + f) a
