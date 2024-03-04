@@ -3,11 +3,15 @@ import Utils.Composition
 import Utils.Free
 import Bool.Syntax (LitB, OpB)
 import Data.Kind
+import Arith.Syntax (LitAr)
 
-data Operation p v k
-  = Oper p [v] (v -> k)
+data Operation p k
+  = OpBool p [LitB] (LitB -> k)
+  | OpAr p [LitAr] (LitAr -> k)
  -- | forall v1 v2. (v1 < v, v2 < v) => OperHet p [v1] (v2 -> k) -- how bad of an idea is this?
   deriving Functor
+
+type Constructor tIn tOut = forall p k. p -> [tIn] -> (tOut -> k) -> Operation p k
 
 -- binaryOp :: forall v v' p f. (Operation p v <: f, v < v')  
 --   => p -> v' -> v' 
@@ -21,13 +25,13 @@ data Operation p v k
 -- the old code could not infer what v should be,
 -- and I couldn't figure out how to inject the correct constraint as type hint 
 
-binaryOp' :: (Operation p v <: f, v < a) => p -> v -> v -> Free f a
-binaryOp' param e1 e2 = Op . inj
-    $ Oper param [e1, e2] 
+binaryOp' :: (Operation p <: f, v < a) => Constructor v v -> p -> v -> v -> Free f a
+binaryOp' c param e1 e2 = Op . inj
+    $ c param [e1, e2] 
     $ Pure . injV
 
-class BinaryOperation v v' p f | v -> p, p -> v where
-  op :: (Operation p v <: f, v < v')  
+class BinaryOperation p v f | p -> v, v -> p where 
+  op :: (Operation p <: f, v < v')  
     => p -> v' -> v' 
     -> Free f v'
 

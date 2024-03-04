@@ -10,7 +10,7 @@ import Utils.Fix
 import Utils.Handler
 import Arith.Handlers
 
-type Eff = (Operation OpArith LitAr + End)
+type Eff = (Operation OpArith + End)
 type V = LitAr
 
 

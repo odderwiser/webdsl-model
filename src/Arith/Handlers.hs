@@ -1,13 +1,13 @@
 module Arith.Handlers where
-import Effects (Operation (Oper))
+import Effects (Operation (OpAr))
 import Arith.Syntax (OpArith (..), LitAr (Lit))
 import Utils.Handler
  
-binOp :: (Functor g) => Handler (Operation OpArith LitAr) a g a
+binOp :: (Functor g) => Handler (Operation OpArith) a g a
 binOp = Handler
    { ret = pure
   , hdlr = \ case
-      Oper op [Lit v1, Lit v2] k -> k $ Lit $ calcArith op v1 v2
+      OpAr op [Lit v1, Lit v2] k -> k $ Lit $ calcArith op v1 v2
       }
 
 calcArith :: OpArith -> Int -> Int -> Int

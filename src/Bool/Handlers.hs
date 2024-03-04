@@ -1,15 +1,13 @@
 module Bool.Handlers where
 import Utils.Handler
-import Effects (Operation (..), Cond (..))
-import Bool.Syntax
+import Effects (Operation (OpBool), Cond (..))
+import Bool.Syntax ( Boolean(OpB), OpB(..), LitB(Lit) )
 
-binOp :: (Functor g) => Handler (Operation OpB LitB) a g a
+binOp :: (Functor g) => Handler (Operation OpB) a g a
 binOp = Handler
   { ret = pure
   , hdlr = \case
-      Oper op [Lit v1, Lit v2] k -> k 
-        $ Lit 
-        $ calcBool op v1 v2
+      OpBool op [Lit v1, Lit v2] k -> k $ Lit $ calcBool op v1 v2
   }
 
 calcBool :: OpB -> Bool -> Bool -> Bool

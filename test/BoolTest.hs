@@ -10,7 +10,7 @@ import Bool.Handlers
 import Test.HUnit
 import Utils.Fix
 
-type Eff = (Cond + Operation OpB LitB + End)
+type Eff = (Cond + Operation OpB + End)
 
 instance Denote Boolean Eff LitB where
   denote :: Boolean (Env -> Free Eff LitB)

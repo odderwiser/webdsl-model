@@ -15,7 +15,7 @@ import Utils.Fix (bin)
 import Utils.Fix (Fix(In))
 import Utils.Fix (injF)
 
-type Eff = Cond + Operation OpB LitB + Operation OpArith LitAr + End
+type Eff = Cond + Operation OpB + Operation OpArith + End
 type V = Either LitB LitAr
 
 runBA :: (Env

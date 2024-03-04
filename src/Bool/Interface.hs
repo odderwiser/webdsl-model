@@ -5,12 +5,12 @@ import Effects
 import Utils.Composition
 import Utils.Free
 
-instance BinaryOperation LitB v' OpB f  where
-  op :: (Operation OpB LitB <: f, LitB < v') => OpB -> v' -> v' -> Free f v'
+instance BinaryOperation OpB LitB f  where
+  op :: (Operation OpB  <: f, LitB < v') => OpB -> v' -> v' -> Free f v'
   op param e1 e2 = case (projV e1 :: Maybe LitB, projV e2 :: Maybe LitB) of
-    (Just e1', Just e2') -> binaryOp' param e1' e2'
+    (Just e1', Just e2') -> binaryOp' OpBool param e1' e2'
 
-denote :: (Cond <: eff, Operation OpB LitB <: eff, LitB < v) 
+denote :: (Cond <: eff, Operation OpB <: eff, LitB < v) 
   => Boolean (Env -> Free eff v)
   -> Env -> Free eff v
 denote (LitB bool) env = return $ injV bool
