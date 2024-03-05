@@ -5,8 +5,8 @@ import Effects
 import Utils.Composition
 import Utils.Free
 
-instance BinaryOperation OpB LitB f  where
-  op :: (Operation OpB  <: f, LitB < v') => OpB -> v' -> v' -> Free f v'
+instance BinaryOperation OpB LitB f where
+  op :: (Operation OpB <: f, LitB < v') => OpB -> v' -> v' -> Free f v'
   op param e1 e2 = case (projV e1 :: Maybe LitB, projV e2 :: Maybe LitB) of
     (Just e1', Just e2') -> binaryOp' OpBool param e1' e2'
 

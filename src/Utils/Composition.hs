@@ -109,3 +109,7 @@ instance {-# OVERLAPPABLE #-} (f < g', h ~ g \/ g') => f < h where
   projV = \case
     Left g -> Nothing
     Right g' -> projV g'
+
+-- I need this syntactic sugar, is it achievable? 
+-- infixr  5 <|
+-- type Either f g <| h = f <
