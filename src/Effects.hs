@@ -12,7 +12,9 @@ data Operation p k
  -- | forall v1 v2. (v1 < v, v2 < v) => OperHet p [v1] (v2 -> k) -- how bad of an idea is this?
   deriving Functor
 
-type Constructor tIn tOut = forall p k. p -> [tIn] -> (tOut -> k) -> Operation p k
+type Constructor tIn tOut =  
+    forall p k. p -> [tIn] -> (tOut -> k) 
+    -> Operation p k
 
 -- binaryOp :: forall v v' p f. (Operation p v <: f, v < v')  
 --   => p -> v' -> v' 
@@ -26,7 +28,8 @@ type Constructor tIn tOut = forall p k. p -> [tIn] -> (tOut -> k) -> Operation p
 -- the old code could not infer what v should be,
 -- and I couldn't figure out how to inject the correct constraint as type hint 
 
-binaryOp' :: (Operation p <: f, v < a, v' < a) => Constructor v v' -> p -> v -> v -> Free f a
+binaryOp' :: (Operation p <: f, v < a, v' < a) 
+  => Constructor v v' -> p -> v -> v -> Free f a
 binaryOp' c param e1 e2 = Op . inj
     $ c param [e1, e2] 
     $ Pure . injV
