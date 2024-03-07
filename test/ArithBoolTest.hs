@@ -15,14 +15,15 @@ import Utils.Fix ( bin, Fix(In), injF )
 type Eff = Cond + End
 type V = Either LitB LitAr
 
-runBA :: (Env
-  -> Free Eff V)
+runBA :: (Env -> Free Eff V)
   -> Either Bool Int
-runBA e =
+runBA e = 
   case unwrap
     $ handle condition
     $ e []
-  of (Left (B.Lit val)) -> Left val
+  of 
+    (Left (B.Lit val)) -> Left val
+    (Right (A.Lit val)) -> Right val
 
 instance Denote Arith Eff V where
   denote = A.denote

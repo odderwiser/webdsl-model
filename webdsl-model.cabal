@@ -59,7 +59,8 @@ test-suite webdsl-tests
     main-is:            Main.hs
     other-modules:      ArithTest,
                         ArithBoolTest, 
-                        BoolTest
+                        BoolTest,
+                        ExprTest
     build-depends:      base ^>=4.17.2.0, 
                         HUnit ^>=1.6,
                         webdsl-model
@@ -68,5 +69,4 @@ test-suite webdsl-tests
     default-extensions: FlexibleInstances,
                         InstanceSigs,
                         MultiParamTypeClasses,
-                        TypeOperators,
-                        FlexibleInstances
+                        TypeOperators
