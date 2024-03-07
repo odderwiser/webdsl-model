@@ -18,9 +18,9 @@ instance Denote Boolean Eff LitB where
   denote = B.denote
 
 runBool :: (Env -> Free Eff LitB) -> Bool
-runBool e = 
+runBool e =
     case unwrap
-        $ handle condition 
+        $ handle condition
         $ e []
     of (Lit val) -> val
 
@@ -36,33 +36,37 @@ testOr = TestCase (
         assertEqual "add"
         True
         (runBool $ foldD $ In
-        (bin Or 
-            (LitB (Lit False)) 
-            (LitB (Lit True)) 
+        (bin Or
+            (LitB (Lit False))
+            (LitB (Lit True))
         ))
     )
 
 testIf :: Test
-testIf = TestCase (
-        assertEqual "add"
+testIf = TestCase (assertEqual "add" 
         True
-        (runBool $ foldD 
-        (In $ If (injF $ LitB (Lit False))
-            (injF $ LitB (Lit False)) 
-            (injF $ LitB (Lit True))))
+        (runBool $ foldD syntaxIfSimple)
     )
 
+syntaxIfSimple :: Fix Boolean
+syntaxIfSimple = In 
+    $ If (injF $ LitB (Lit False))
+        (injF $ LitB (Lit False))
+        (injF $ LitB (Lit True))
+
 testIfComplicated :: Test
-testIfComplicated = TestCase (
-        assertEqual "add"
+testIfComplicated = TestCase (assertEqual "add"
         True
-        (runBool $ foldD 
-        (In $ If (In $ bin And 
-            (LitB (Lit False)) 
-            (LitB (Lit True)))
-            (injF $ LitB (Lit False)) 
-            (injF $ LitB (Lit True))))
+        (runBool $ foldD syntaxIfComplicated)
     )
+
+syntaxIfComplicated :: Fix Boolean
+syntaxIfComplicated = In
+    $ If (In $ bin And
+            (LitB (Lit False))
+            (LitB (Lit True)))
+        (injF $ LitB (Lit False))
+        (injF $ LitB (Lit True))
 
 boolTests :: Test
 boolTests = TestList [testSimple, testOr, testIf, testIfComplicated]

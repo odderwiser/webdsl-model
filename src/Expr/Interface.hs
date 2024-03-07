@@ -50,10 +50,6 @@ denote :: (Cond <: eff, LitAr < v, LitB < v)
   => Expr (Env -> Free eff v)
   -> Env -> Free eff v
 
-denote (Arith a) env = A.denote a env
-
-denote (Boolean a) env  = B.denote a env 
-
 denote (OpCmp Eq (e1, t1) (e2, t2)) env = do
   e1' <- e1 env 
   e2' <- e2 env 

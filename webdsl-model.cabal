@@ -22,9 +22,9 @@ maintainer:         wcqaguxa@gmail.com
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:    Arith.Syntax, Arith.Handlers, Arith.Interface,
-                        Bool.Syntax,  Bool.Handlers,  Bool.Interface,
-                        Expr.Syntax, Expr.Interface,
+    exposed-modules:    Arith.Syntax, Arith.Interface,
+                        Bool.Syntax,  Bool.Interface, Bool.Handlers,  
+                        Expr.Syntax,  Expr.Interface,
                         Effects, Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
                         Utils.Fix, Utils.Denote

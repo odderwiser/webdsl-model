@@ -28,7 +28,7 @@ testSimple :: Test
 testSimple = TestCase (
         assertEqual "terminal"
         1
-        (runArith $ foldD $ In (LitAr (Lit 1)))
+        (runArith $ foldD $ In (lit 1))
     )
 
 testAddition :: Test
@@ -36,10 +36,7 @@ testAddition = TestCase (
         assertEqual "add"
         3
         (runArith $ foldD $ In 
-        (bin Add 
-            (LitAr (Lit 1)) 
-            (LitAr (Lit 2)))
-    )
+        (bin Add (lit 1) (lit 2)))
     )
 
 arithTests :: Test
