@@ -6,22 +6,29 @@ import Effects
 import Utils.Composition
 import Utils.Free
 
--- instance BinaryOperation OpB LitB f where
-op :: (Operation OpB <: f, LitB < v') 
-  => OpB -> v' -> v' -> Free f v'
-op param e1 e2 = case (projV e1 :: Maybe LitB, projV e2 :: Maybe LitB) of
-  (Just e1', Just e2') -> binaryOp' OpBool param e1' e2'
 
-denote :: (Cond <: eff, Operation OpB <: eff, LitB < v) 
+op :: (Functor f, LitB < v') 
+  => (Bool -> Bool -> Bool) -> v' -> v' -> Free f v'
+op operand e1 e2 = case (projV e1, projV e2) of
+  (Just (Lit e1'), Just (Lit e2')) -> return 
+    $ injV 
+    $ Lit 
+    $ operand e1' e2'
+
+denote :: (Cond <: eff, LitB < v) 
   => Boolean (Env -> Free eff v)
   -> Env -> Free eff v
 denote (LitB bool) env = return $ injV bool
 
-denote (OpB ops a b) env = do
+denote (OpB Or a b) env = do
   a' <- a env
   b' <- b env
-  case (projV a' :: Maybe LitB, projV b' :: Maybe LitB) of
-    (Just e1', Just e2') -> binaryOp' OpBool ops e1' e2'
+  op (||) a' b'
+
+denote (OpB And a b) env = do
+  a' <- a env
+  b' <- b env
+  op (&&) a' b'
 
 denote (If c a b) env = do
   c' <- c env

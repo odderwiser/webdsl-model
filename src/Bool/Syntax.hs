@@ -1,6 +1,6 @@
 module Bool.Syntax where
-import Utils.Composition
-import Utils.Fix
+import Utils.Composition ( type (<:) )
+import Utils.Fix ( injF, BinaryInject(..), Fix )
 
 data LitB = Lit Bool 
 

@@ -8,16 +8,14 @@ import Utils.Composition
 import Test.HUnit
 import Utils.Fix
 import Utils.Handler
-import Arith.Handlers
 
-type Eff = (Operation OpArith + End)
+type Eff = End
 type V = LitAr
 
 
-runArith :: (Env -> Free Eff  LitAr) -> Int
+runArith :: (Env -> Free Eff LitAr) -> Int
 runArith e = 
-    case unwrap 
-        $ handle binOp 
+    case unwrap
         $ e []
     of (Lit val) -> val
 

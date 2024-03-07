@@ -1,35 +1,85 @@
 module Expr.Interface where
-import Effects (Operation (OpBool, OpAB), binaryOp', binaryOpHet, BinaryOperation (op))
+import Effects (Operation (OpBool, OpAB), binaryOp', binaryOpHet, BinaryOperation (), Cond)
 import Expr.Syntax
-import Bool.Syntax (LitB, OpB)
-import Utils.Composition (type (<:), type (<), projV)
+import Bool.Syntax as B
+import Utils.Composition (type (<:), type (<) (injV), projV)
 import Utils.Free (Free)
 import Arith.Syntax (LitAr)
 import Utils.Denote (Env)
+import qualified Arith.Interface as A
+import qualified Bool.Interface as B
+import Syntax (Type (..))
+import qualified Arith.Syntax as A
+import Foreign (fromBool)
 
--- class CmpOperation v1 where 
---   opC :: (Operation Cmp <: f, v1 < v', LitB < v')  
---     => Cmp -> v' -> v' 
---     -> Free f v'
+op :: (Functor f, Num a, LitB < v)
+  => (a -> a -> Bool) -> a -> a -> Free f v
+op operand e1 e2 = return 
+  $ injV 
+  $ B.Lit 
+  $ operand e1 e2
 
--- instance CmpOperation LitB where
-opC :: (Operation Cmp <: f, LitB < v') => Cmp -> v' -> v' -> Free f v'
-opC param e1 e2 = case (projV e1 :: Maybe LitB, projV e2 :: Maybe LitB) of
-  (Just e1', Just e2') -> binaryOp' OpBool param e1' e2'
+opAr :: (Functor f, Num a, LitAr < v, LitB < v) 
+  => (a -> a -> Bool) -> v -> v -> Free f v
+opAr operand exp1 exp2 = 
+  case (projV exp1, projV exp2) of
+  (Just (A.Lit e1'), Just (A.Lit e2')) -> 
+    op operand (fromIntegral e1') (fromIntegral e2')
 
--- instance CmpOperation LitAr   where
-opC' :: (Operation Cmp <: f, LitAr < v', LitB < v') => Cmp -> v' -> v' -> Free f v'
-opC' param e1 e2 = case (projV e1, projV e2) of
-  (Just e1', Just e2') -> binaryOpHet OpAB param e1' e2'
+opB :: (Functor f, Num a, LitB < v) 
+  => (a -> a -> Bool) -> v -> v -> Free f v
+opB operand exp1 exp2 = 
+  case (projV exp1, projV exp2) of
+    (Just (B.Lit e1'), Just (B.Lit e2')) -> 
+      op operand (fromBool e1') (fromBool e2')
 
-denote :: (Operation OpB <: eff, LitB < v) 
+opEq :: (Functor f, Num a, LitB < v, LitAr < v)
+  => (a -> a -> Bool) -> (v, Type) -> (v, Type) 
+  -> Free f v
+opEq operand (exp1, type1) (exp2, type2) = 
+  case (type1, type2) of
+  (Int,  Int)  -> opAr operand exp1 exp2
+  (Bool, Bool) -> opB  operand exp1 exp2
+      
+opCmp :: (Functor f, Num a, LitB < v, LitAr < v)
+  => (a -> a -> Bool) -> (v, Type) -> (v, Type) 
+  -> Free f v
+opCmp operand (exp1, _) (exp2, _) = opAr operand exp1 exp2
+
+denote :: (Cond <: eff, LitAr < v, LitB < v)
   => Expr (Env -> Free eff v)
   -> Env -> Free eff v
 
-denote (OpCmp Eq a b) env = do
-  a' <- a env
-  b' <- b env
-  case (projV a', projV b') of
-    (Just e1', Just e2') -> Pure . injV e1' e2'
+denote (Arith a) env = A.denote a env
 
+denote (Boolean a) env  = B.denote a env 
 
+denote (OpCmp Eq (e1, t1) (e2, t2)) env = do
+  e1' <- e1 env 
+  e2' <- e2 env 
+  opEq (==) (e1', t1) (e2', t2)
+  
+denote (OpCmp Neq (e1, t1) (e2, t2)) env = do
+  e1' <- e1 env 
+  e2' <- e2 env 
+  opEq (/=) (e1', t1) (e2', t2)
+
+denote (OpCmp Lt (e1, t1) (e2, t2)) env = do
+  e1' <- e1 env 
+  e2' <- e2 env 
+  opCmp (<) (e1', t1) (e2', t2)
+
+denote (OpCmp Lte (e1, t1) (e2, t2)) env = do
+  e1' <- e1 env 
+  e2' <- e2 env 
+  opCmp (<=) (e1', t1) (e2', t2)
+
+denote (OpCmp Gt (e1, t1) (e2, t2)) env = do
+  e1' <- e1 env 
+  e2' <- e2 env 
+  opCmp (>) (e1', t1) (e2', t2)
+
+denote (OpCmp Gte (e1, t1) (e2, t2)) env = do
+  e1' <- e1 env 
+  e2' <- e2 env 
+  opCmp (>=) (e1', t1) (e2', t2)

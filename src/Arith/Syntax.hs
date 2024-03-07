@@ -1,13 +1,13 @@
 module Arith.Syntax where
-import Utils.Composition
-import Utils.Fix
+import Utils.Composition ( type (<:) )
+import Utils.Fix ( injF, BinaryInject(..), Fix )
 
 data LitAr = Lit Int 
 
 data OpArith = Add | Div | Sub | Mul | Mod
 
 data Arith e = LitAr LitAr 
-    | OpArith OpArith e e  
+    | OpArith OpArith e e
     deriving Functor
 
 instance (Arith <: g) => BinaryInject Arith g OpArith where

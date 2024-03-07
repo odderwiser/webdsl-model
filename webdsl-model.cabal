@@ -25,7 +25,7 @@ library
     exposed-modules:    Arith.Syntax, Arith.Handlers, Arith.Interface,
                         Bool.Syntax,  Bool.Handlers,  Bool.Interface,
                         Expr.Syntax, Expr.Interface,
-                        Effects,
+                        Effects, Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
                         Utils.Fix, Utils.Denote
 

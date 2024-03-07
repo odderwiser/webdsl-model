@@ -9,13 +9,10 @@ import Arith.Interface as A (denote)
 import Test.HUnit
 import Utils.Handler
 import Bool.Handlers as B
-import Arith.Handlers as A
 import Bool.Interface as B (denote)
-import Utils.Fix (bin)
-import Utils.Fix (Fix(In))
-import Utils.Fix (injF)
+import Utils.Fix ( bin, Fix(In), injF )
 
-type Eff = Cond + Operation OpB + Operation OpArith + End
+type Eff = Cond + End
 type V = Either LitB LitAr
 
 runBA :: (Env
@@ -23,8 +20,6 @@ runBA :: (Env
   -> Either Bool Int
 runBA e =
   case unwrap
-    $ handle A.binOp
-    $ handle B.binOp
     $ handle condition
     $ e []
   of (Left (B.Lit val)) -> Left val
@@ -42,7 +37,7 @@ testIf = TestCase (
   (runBA $ foldD
   (injF $ If (injF (LitB (B.Lit False)))
       (injF (LitAr (A.Lit 1)))
-      (injF  (LitAr (A.Lit 2)) :: Fix (Arith + Boolean))
+      (injF (LitAr (A.Lit 2)) :: Fix (Arith + Boolean))
   ))
   )
 

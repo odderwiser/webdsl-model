@@ -1,25 +1,47 @@
 module Arith.Interface (denote) where
-import Effects (Operation (..), binaryOp', BinaryOperation (op))
-import Arith.Syntax (Arith (..), OpArith, LitAr (Lit))
+import Effects (Operation (..), binaryOp')
+import Arith.Syntax (Arith (..), OpArith (..), LitAr (Lit))
 import Utils.Denote (Env)
 import Utils.Composition
 import Utils.Free (Free (Op, Pure))
-import Prelude hiding (LT)
+import Syntax (Type(Int))
 
-instance BinaryOperation OpArith LitAr f  where
-  op :: (Operation OpArith <: f, LitAr < v') 
-    => OpArith -> v' -> v' 
-    -> Free f v'
-  op param e1 e2 = case (projV e1 :: Maybe LitAr, projV e2 :: Maybe LitAr) of
-    (Just e1', Just e2') -> binaryOp' OpAr param e1' e2'
+op :: (Functor f, LitAr < v') 
+  => (Int -> Int -> Int) -> v' -> v' 
+  -> Free f v'
+op operand e1 e2 = case (projV e1, projV e2) of
+  (Just (Lit e1'), Just (Lit e2')) -> return 
+    $ injV 
+    $ Lit 
+    $ operand e1' e2'
 
 
-denote :: (Operation OpArith <: eff, LitAr < v) 
+denote :: (Functor eff, LitAr < v) 
   => Arith (Env -> Free eff v) 
   -> Env -> Free eff v
 denote (LitAr int) env = return $ injV int
 
-denote (OpArith ops a b) env = do 
+denote (OpArith Add a b) env = do 
   a' <- a env 
   b' <- b env 
-  op ops a' b'
+  op (+) a' b'
+
+denote (OpArith Div a b) env = do 
+  a' <- a env 
+  b' <- b env 
+  op div a' b'
+
+denote (OpArith Sub a b) env = do 
+  a' <- a env 
+  b' <- b env 
+  op (-) a' b'
+
+denote (OpArith Mul a b) env = do 
+  a' <- a env 
+  b' <- b env 
+  op (*) a' b'
+
+denote (OpArith Mod a b) env = do 
+  a' <- a env 
+  b' <- b env 
+  op mod a' b'

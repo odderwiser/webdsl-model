@@ -10,7 +10,7 @@ import Bool.Handlers
 import Test.HUnit
 import Utils.Fix
 
-type Eff = (Cond + Operation OpB + End)
+type Eff = (Cond + End)
 
 instance Denote Boolean Eff LitB where
   denote :: Boolean (Env -> Free Eff LitB)
@@ -19,8 +19,7 @@ instance Denote Boolean Eff LitB where
 
 runBool :: (Env -> Free Eff LitB) -> Bool
 runBool e = 
-    case unwrap 
-        $ handle binOp
+    case unwrap
         $ handle condition 
         $ e []
     of (Lit val) -> val
