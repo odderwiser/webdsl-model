@@ -19,3 +19,6 @@ instance (Boolean <: g)
     -> Boolean (Fix g)
   bin op left right = 
     OpB op (injF left) (injF right)
+
+lit :: Bool -> Boolean e
+lit i = LitB $ Lit i

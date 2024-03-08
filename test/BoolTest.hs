@@ -2,13 +2,14 @@ module BoolTest where
 import Utils.Denote
 import Utils.Free
 import Effects
-import Bool.Syntax ( Boolean(LitB, If), OpB(Or, And), LitB(..) )
+import Bool.Syntax ( Boolean(If), OpB(Or, And), LitB(..), lit, lit)
 import Bool.Interface as B
 import Utils.Composition
 import Utils.Handler
 import Bool.Handlers
 import Test.HUnit
-import Utils.Fix
+import Utils.Fix 
+import TestSyntax (ifSimple, ifComplicated)
 
 type Eff = (Cond + End)
 
@@ -17,8 +18,8 @@ instance Denote Boolean Eff LitB where
     -> Env -> Free Eff LitB
   denote = B.denote
 
-runBool :: (Env -> Free Eff LitB) -> Bool
-runBool e =
+run :: (Env -> Free Eff LitB) -> Bool
+run e =
     case unwrap
         $ handle condition
         $ e []
@@ -28,45 +29,36 @@ testSimple :: Test
 testSimple = TestCase (
         assertEqual "terminal"
         True
-        (runBool $ foldD $ In (LitB (Lit True)))
+        (run $ foldD $ In (lit True))
     )
 
 testOr :: Test
 testOr = TestCase (
         assertEqual "add"
         True
-        (runBool $ foldD $ In
+        (run $ foldD $ In
         (bin Or
-            (LitB (Lit False))
-            (LitB (Lit True))
+            (lit False)
+            (lit True)
         ))
     )
 
 testIf :: Test
 testIf = TestCase (assertEqual "add" 
         True
-        (runBool $ foldD syntaxIfSimple)
+        (run $ foldD ifSimple)
     )
-
-syntaxIfSimple :: Fix Boolean
-syntaxIfSimple = In 
-    $ If (injF $ LitB (Lit False))
-        (injF $ LitB (Lit False))
-        (injF $ LitB (Lit True))
 
 testIfComplicated :: Test
 testIfComplicated = TestCase (assertEqual "add"
         True
-        (runBool $ foldD syntaxIfComplicated)
+        (run $ foldD ifComplicated)
     )
 
-syntaxIfComplicated :: Fix Boolean
-syntaxIfComplicated = In
-    $ If (In $ bin And
-            (LitB (Lit False))
-            (LitB (Lit True)))
-        (injF $ LitB (Lit False))
-        (injF $ LitB (Lit True))
-
 boolTests :: Test
-boolTests = TestList [testSimple, testOr, testIf, testIfComplicated]
+boolTests = TestList [
+    testSimple, 
+    testOr, 
+    testIf, 
+    testIfComplicated 
+    ]

@@ -11,18 +11,19 @@ import Utils.Handler
 import Bool.Handlers as B
 import Bool.Interface as B (denote)
 import Utils.Fix ( bin, Fix(In), injF )
+import TestSyntax (ifSyntax, ifComparison)
 
 type Eff = Cond + End
 type V = Either LitB LitAr
 
-runBA :: (Env -> Free Eff V)
+run :: (Env -> Free Eff V)
   -> Either Bool Int
-runBA e = 
+run e =
   case unwrap
     $ handle condition
     $ e []
-  of 
-    (Left (B.Lit val)) -> Left val
+  of
+    (Left (B.Lit val))  -> Left val
     (Right (A.Lit val)) -> Right val
 
 instance Denote Arith Eff V where
@@ -35,25 +36,15 @@ testIf :: Test
 testIf = TestCase (
   assertEqual "add"
   (Right 2)
-  (runBA $ foldD
-  (injF $ If (injF (LitB (B.Lit False)))
-      (injF (LitAr (A.Lit 1)))
-      (injF (LitAr (A.Lit 2)) :: Fix (Arith + Boolean))
-  ))
+  (run $ foldD ifSyntax)
   )
 
 testIfComp :: Test
 testIfComp = TestCase (
   assertEqual "add"
   (Right 1)
-  (runBA $ foldD
-  (injF $ If (injF (OpB
-      Or
-        (injF $ LitB (B.Lit False))
-        (injF $ LitB (B.Lit True))))
-      (injF (LitAr (A.Lit 1)))
-      (injF  (LitAr (A.Lit 2)) :: Fix (Arith + Boolean))
-  )))
+  (run $ foldD
+  ifComparison))
 
 arithBoolTests :: Test
 arithBoolTests = TestList [testIf, testIfComp]

@@ -60,6 +60,7 @@ test-suite webdsl-tests
     other-modules:      ArithTest,
                         ArithBoolTest, 
                         BoolTest,
+                        TestSyntax,
                         ExprTest
     build-depends:      base ^>=4.17.2.0, 
                         HUnit ^>=1.6,

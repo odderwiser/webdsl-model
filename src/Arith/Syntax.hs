@@ -19,4 +19,4 @@ instance (Arith <: g) => BinaryInject Arith g OpArith where
   bin op left right = OpArith op (injF left) (injF right)
 
 lit :: Int -> Arith e
-lit i = LitAr $ Lit  i
+lit i = LitAr $ Lit i
