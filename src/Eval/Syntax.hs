@@ -7,3 +7,4 @@ data Eval e
     = Var       VName 
     | VDecl     VName e Type e
     | VAssign   VName e Type
+    deriving Functor

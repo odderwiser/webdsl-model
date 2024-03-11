@@ -6,10 +6,17 @@ import ArithTest ( arithTests )
 import BoolTest
 import ArithBoolTest (arithBoolTests)
 import ExprTest (exprTests)
+import EvalTest (evalTests)
 
 main :: IO ()
 main = do
-    result <- runTestTT $ test [arithTests, boolTests, arithBoolTests, exprTests]
+    result <- runTestTT $ test 
+        [ arithTests
+        , boolTests
+        , arithBoolTests
+        , exprTests
+        , evalTests
+        ]
     print result
     if failures result > 0 then exitFailure else exitSuccess
 

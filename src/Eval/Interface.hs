@@ -8,7 +8,6 @@ import Syntax (Val (..), unwrap, Address, wrap)
 import Arith.Syntax (LitAr)
 import Bool.Syntax (LitB)
 import Utils.Handler (handle_)
-import Eval.Handlers (environment)
 
 derefEnv :: VName -> Env ->  Address
 derefEnv name env = case lookup name env of 

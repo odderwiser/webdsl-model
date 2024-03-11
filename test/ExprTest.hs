@@ -12,10 +12,9 @@ import Expr.Syntax
 import Utils.Handler (unwrap, handle)
 import Bool.Handlers (condition)
 import Test.HUnit 
-import Utils.Fix (injF)
-import TestSyntax (ifSimple, ifSyntax, ifComplicated, ifComparison)
+import Utils.Fix ( Fix, injF ) 
+import TestSyntax 
 import Syntax (Type(..))
-import Utils.Fix
 
 type Eff = Cond + End
 type V =  LitB \/ LitAr
@@ -31,9 +30,11 @@ run e = case unwrap
     (Right (A.Lit val)) -> Right val
 
 instance Denote Arith Eff V where
+  denote :: Arith (Env -> Free Eff V) -> Env -> Free Eff V
   denote = A.denote
 
 instance Denote Boolean Eff V where
+  denote :: Boolean (Env -> Free Eff V) -> Env -> Free Eff V
   denote = B.denote
 
 instance Denote Expr Eff V where
@@ -76,36 +77,12 @@ testEq = TestCase (
   (run $ foldD eqSyntax
   ))
 
-eqSyntax :: Fix Module
-eqSyntax = injF 
-    $ If (injF $ OpCmp Eq 
-        (injF $ B.lit True, Bool) 
-        (injF $ B.lit False, Bool)) 
-        (injF $ OpCmp Eq 
-            (injF $ B.lit True, Bool) 
-            (injF $ B.lit True, Int)) -- wrong on purpose
-        (injF $ OpCmp Neq 
-            (injF $ A.lit 1, Int) 
-            (injF $ A.lit 2, Int))
-
 testCmp :: Test
 testCmp = TestCase (
   assertEqual "add"
   (Left True)
   (run $ foldD cmpSyntax
   ))
-
-cmpSyntax :: Fix Module
-cmpSyntax = injF 
-    $ If (injF $ OpCmp Lt
-        (injF $ A.lit 1, Int) 
-        (injF $ A.lit 2, Int)) 
-        (injF $ OpCmp Lte 
-            (injF $ A.lit 3, Int) 
-            (injF $ A.lit 3, Int)) 
-        (injF $ OpCmp Gt 
-            (injF $ A.lit 1, Int) 
-            (injF $ A.lit 1, Int))
 
 exprTests :: Test
 exprTests = TestList [
