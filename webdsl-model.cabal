@@ -23,9 +23,10 @@ extra-source-files: CHANGELOG.md
 
 library
     exposed-modules:    Arith.Syntax, Arith.Interface,
-                        Bool.Syntax,  Bool.Interface, Bool.Handlers,  
+                        Bool.Syntax,    Bool.Interface, Bool.Effects, Bool.Handlers,  
                         Expr.Syntax,  Expr.Interface,
-                        Effects, Syntax,
+                        Eval.Syntax, Eval.Effects, Eval.Interface, Eval.Handlers,
+                        Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
                         Utils.Fix, Utils.Denote
 

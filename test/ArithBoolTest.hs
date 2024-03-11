@@ -1,7 +1,7 @@
 module ArithBoolTest where
 import Utils.Denote
 import Utils.Free
-import Effects
+import Bool.Effects
 import Bool.Syntax as B
 import Utils.Composition
 import Arith.Syntax as A

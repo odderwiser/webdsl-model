@@ -1,8 +1,7 @@
 module Bool.Interface (denote) where
 import Utils.Denote (Env)
 import Bool.Syntax
-import Effects
-    ( Cond, Operation(OpBool), binaryOp', cond )
+import Bool.Effects ( Cond, cond )
 import Utils.Composition
 import Utils.Free
 

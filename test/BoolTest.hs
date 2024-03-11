@@ -1,7 +1,7 @@
 module BoolTest where
 import Utils.Denote
 import Utils.Free
-import Effects
+import Bool.Effects
 import Bool.Syntax ( Boolean(If), OpB(Or, And), LitB(..), lit, lit)
 import Bool.Interface as B
 import Utils.Composition

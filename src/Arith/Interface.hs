@@ -1,5 +1,4 @@
 module Arith.Interface (denote) where
-import Effects (Operation (..), binaryOp')
 import Arith.Syntax (Arith (..), OpArith (..), LitAr (Lit))
 import Utils.Denote (Env)
 import Utils.Composition

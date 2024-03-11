@@ -1,7 +1,6 @@
 module ArithTest where
 import Utils.Denote
 import Utils.Free
-import Effects
 import Arith.Interface as A
 import Arith.Syntax
 import Utils.Composition

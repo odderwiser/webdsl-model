@@ -1,5 +1,4 @@
 module Expr.Interface where
-import Effects (Operation (OpBool, OpAB), binaryOp', binaryOpHet, BinaryOperation (), Cond)
 import Expr.Syntax
 import Bool.Syntax as B
 import Utils.Composition (type (<:), type (<) (injV), projV)
@@ -46,7 +45,7 @@ opCmp :: (Functor f, Num a, LitB < v, LitAr < v)
   -> Free f v
 opCmp operand (exp1, _) (exp2, _) = opAr operand exp1 exp2
 
-denote :: (Cond <: eff, LitAr < v, LitB < v)
+denote :: (Functor eff, LitAr < v, LitB < v)
   => Expr (Env -> Free eff v)
   -> Env -> Free eff v
 

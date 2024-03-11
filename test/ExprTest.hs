@@ -1,5 +1,5 @@
 module ExprTest where
-import Effects (Cond)
+import Bool.Effects (Cond)
 import Utils.Composition (type (+), type (\/), End)
 import Utils.Denote (Env, Denote(denote), foldD)
 import Utils.Free (Free)
@@ -14,7 +14,7 @@ import Bool.Handlers (condition)
 import Test.HUnit 
 import Utils.Fix (injF)
 import TestSyntax (ifSimple, ifSyntax, ifComplicated, ifComparison)
-import Syntax
+import Syntax (Type(..))
 import Utils.Fix
 
 type Eff = Cond + End
