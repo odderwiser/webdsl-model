@@ -8,19 +8,3 @@ import Utils.Free (Free)
 type Address = Int
 
 data Type  = Int | Bool 
-data Val
-    = VBool LitB
-    | VInt LitAr
-
-unwrap :: (Functor eff, LitAr < v, LitB < v)
-    => Val -> Free eff v
-unwrap v = return $ case v of
-        (VInt  v') -> injV v'
-        (VBool v') -> injV v'
-
-wrap :: (LitAr < v, LitB < v)
-    => v -> Type -> Val
-wrap val Int = case projV val of
-    Just v -> VInt v
-wrap val Bool = case projV val of
-    Just v -> VBool v

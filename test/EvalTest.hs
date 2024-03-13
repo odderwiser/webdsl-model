@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module EvalTest where
 import Eval.Effects 
 import Syntax hiding (unwrap) 
@@ -19,11 +20,10 @@ import Expr.Interface as Ex
 import Eval.Interface as Ev
 import Test.HUnit 
 import TestSyntax
-import Utils.Fix (injF)
 import Utils.Fix
 import Eval.Syntax
 
-type Eff = MLState Address Val + Cond + End
+type Eff = MLState Address V + Cond + End
 type V =  LitB \/ LitAr
 type Module = Arith + Boolean + Expr + Eval
 
@@ -38,7 +38,7 @@ run e = case unwrap
     (Right (A.Lit val), _) -> Right val
 
 runWithEnv ::  (Env -> Free Eff V) 
-  -> Env -> [(Address, Val)]
+  -> Env -> [(Address, V)]
   -> Either Bool Int
 runWithEnv e env store = case unwrap
     $ handle condition
@@ -58,7 +58,7 @@ instance Denote Expr Eff V where
   denote = Ex.denote
 
 instance Denote Eval Eff V where
-  denote = Ev.denote
+  denote = Ev.denote @V
 
 
 
@@ -112,7 +112,7 @@ testVar = TestCase (
   (runWithEnv 
     (foldD varSyntax) 
     [("x", 0)] 
-    [(0, VInt $ A.Lit 3)]
+    [(0, injV $ A.Lit 3)]
   ))
 
 varSyntax :: Fix Module
