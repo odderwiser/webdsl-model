@@ -8,3 +8,5 @@ import Utils.Free (Free)
 type Address = Int
 
 data Type  = Int | Bool 
+
+data LitN = Null

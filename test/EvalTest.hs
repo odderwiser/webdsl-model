@@ -1,8 +1,8 @@
 {-# LANGUAGE TypeApplications #-}
 module EvalTest where
-import Eval.Effects 
-import Syntax hiding (unwrap) 
-import Utils.Composition 
+import Eval.Effects
+import Syntax hiding (unwrap)
+import Utils.Composition
 import Bool.Effects (Cond)
 import Utils.Composition
 import Bool.Syntax as B
@@ -10,43 +10,44 @@ import Arith.Syntax as A
 import Expr.Syntax
 import Utils.Denote
 import Utils.Free
-import Eval.Handlers 
+import Eval.Handlers
 import Utils.Handler
 import Bool.Handlers
-import Eval.Syntax (Eval)
 import Bool.Interface as B
 import Arith.Interface as A
 import Expr.Interface as Ex
 import Eval.Interface as Ev
-import Test.HUnit 
+import Test.HUnit
 import TestSyntax
 import Utils.Fix
 import Eval.Syntax
 
 type Eff = MLState Address V + Cond + End
-type V =  LitB \/ LitAr
+type V =  LitB \/ LitAr \/ LitN
 type Module = Arith + Boolean + Expr + Eval
 
-run :: (Env -> Free Eff V) 
-  -> Either Bool Int
+run :: (Env -> Free Eff V)
+  -> Maybe (Either Bool Int)
 run e = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv [])
     $ e []
-  of 
-    (Left (B.Lit val), _)  -> Left val
-    (Right (A.Lit val), _) -> Right val
+  of
+    (Left (B.Lit val), _)  -> Just $ Left val
+    (Right (Left (A.Lit val)), _) -> Just $ Right val
+    (Right (Right Null), _) -> Nothing
 
-runWithEnv ::  (Env -> Free Eff V) 
+runWithEnv ::  (Env -> Free Eff V)
   -> Env -> [(Address, V)]
-  -> Either Bool Int
+  -> Maybe (Either Bool Int)
 runWithEnv e env store = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv store)
     $ e env
-  of 
-    (Left (B.Lit val), _)  -> Left val
-    (Right (A.Lit val), _) -> Right val
+  of
+    (Left (B.Lit val), _)  -> Just $ Left val
+    (Right (Left (A.Lit val)), _) -> Just $ Right val
+    (Right (Right Null), _) -> Nothing
 
 instance Denote Arith Eff V where
   denote = A.denote
@@ -58,33 +59,33 @@ instance Denote Expr Eff V where
   denote = Ex.denote
 
 instance Denote Eval Eff V where
-  denote = Ev.denote @V
+  denote = Ev.denote
 
 
 
 testIf :: Test
-testIf = TestCase (assertEqual "add" 
-        (Left True)
+testIf = TestCase (assertEqual "add"
+        (Just $ injV True)
         (run $ foldD ifSimple)
     )
 
 testIfComplicated :: Test
 testIfComplicated = TestCase (assertEqual "add"
-        (Left True)
+        (Just $ injV True)
         (run $ foldD ifComplicated)
     )
 
 testIfAB :: Test
 testIfAB = TestCase (
   assertEqual "add"
-  (Right 2)
+  (Just $ Right 2)
   (run $ foldD ifSyntax)
   )
 
 testIfComp :: Test
 testIfComp = TestCase (
   assertEqual "add"
-  (Right 1)
+  (Just $ Right 1)
   (run $ foldD
   ifComparison))
 
@@ -92,14 +93,14 @@ testIfComp = TestCase (
 testEq :: Test
 testEq = TestCase (
   assertEqual "add"
-  (Left True)
+  (Just $ Left True)
   (run $ foldD eqSyntax
   ))
 
 testCmp :: Test
 testCmp = TestCase (
   assertEqual "add"
-  (Left True)
+  (Just $ Left True)
   (run $ foldD cmpSyntax
   ))
 
@@ -108,54 +109,69 @@ testCmp = TestCase (
 testVar :: Test
 testVar = TestCase (
   assertEqual "var with env"
-  (Right 5)
-  (runWithEnv 
-    (foldD varSyntax) 
-    [("x", 0)] 
+  (Just $ Right 5)
+  (runWithEnv
+    (foldD varSyntax)
+    [("x", 0)]
     [(0, injV $ A.Lit 3)]
   ))
 
 varSyntax :: Fix Module
 varSyntax = injF $
-    OpArith Add 
-        (injF $ Var "x") 
+    OpArith Add
+        (injF $ Var "x")
         (injF $ A.lit 2)
 
 testVDecl :: Test
 testVDecl = TestCase (
-  assertEqual "vDecl"
-  (Right 8)
+  assertEqual "vAssign"
+  Nothing
   (run $ foldD vDeclSyntax
   ))
 
 vDeclSyntax :: Fix Module
 vDeclSyntax = injF $
-    VDecl "x" (injF $ A.lit 4) Int 
+  VDecl "x" $ injF $
+  VAssign "x" (injF $ B.lit True) Bool
+
+
+testVValDecl :: Test
+testVValDecl = TestCase (
+  assertEqual "vDecl"
+  (Just $ Right 8)
+  (run $ foldD vValDeclSyntax
+  ))
+
+vValDeclSyntax :: Fix Module
+vValDeclSyntax = injF $
+    VValDecl "x" (injF $ A.lit 4) Int
     (injF $ OpArith Mul
-        (injF $ Var "x") 
+        (injF $ Var "x")
         (injF $ A.lit 2))
 
 testVAssign :: Test
 testVAssign = TestCase (
   assertEqual "vAssign"
-  (Right 8)
+  Nothing
   (run $ foldD vAssignSyntax
   ))
 
 vAssignSyntax :: Fix Module
 vAssignSyntax = injF $
-    VDecl "x" (injF $ A.lit 4) Int 
+    VValDecl "x" (injF $ A.lit 4) Int
     (injF $ VAssign "x" (injF $ A.lit 8) Int)
+
 
 
 evalTests :: Test
 evalTests = TestList [
-    testIf, 
+    testIf,
     testIfAB,
     testIfComp,
     testEq,
     testCmp,
     testVar,
     testVDecl,
+    testVValDecl,
     testVAssign
     ]
