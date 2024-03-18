@@ -26,6 +26,7 @@ library
                         Bool.Syntax,    Bool.Interface, Bool.Effects, Bool.Handlers,  
                         Expr.Syntax,  Expr.Interface,
                         Eval.Syntax, Eval.Effects, Eval.Interface, Eval.Handlers,
+                        Stmt.Syntax, Stmt.Interface,
                         Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
                         Utils.Fix, Utils.Denote
@@ -64,7 +65,8 @@ test-suite webdsl-tests
                         BoolTest,
                         TestSyntax,
                         ExprTest,
-                        EvalTest
+                        EvalTest,
+                        StmtTest
     build-depends:      base ^>=4.17.2.0, 
                         HUnit ^>=1.6,
                         webdsl-model

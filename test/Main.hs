@@ -7,6 +7,7 @@ import BoolTest
 import ArithBoolTest (arithBoolTests)
 import ExprTest (exprTests)
 import EvalTest (evalTests)
+import StmtTest (stmtTests)
 
 main :: IO ()
 main = do
@@ -16,6 +17,7 @@ main = do
         , arithBoolTests
         , exprTests
         , evalTests
+        , stmtTests
         ]
     print result
     if failures result > 0 then exitFailure else exitSuccess
