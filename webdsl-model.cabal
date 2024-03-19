@@ -26,6 +26,7 @@ library
                         Bool.Syntax,    Bool.Interface, Bool.Effects, Bool.Handlers,  
                         Expr.Syntax,  Expr.Interface,
                         Eval.Syntax, Eval.Effects, Eval.Interface, Eval.Handlers,
+                        Fun.Syntax, Fun.Interface, Fun.Effects,
                         Stmt.Syntax, Stmt.Interface,
                         Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
