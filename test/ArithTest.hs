@@ -9,18 +9,15 @@ import Utils.Fix
 import Utils.Handler
 
 type Eff = End
-type V = LitAr
+type V = Int
 
 
-runArith :: (Env -> Free Eff LitAr) -> Int
-runArith e = 
-    case unwrap
-        $ e []
-    of (Lit val) -> val
+runArith :: (Env -> Free Eff Int) -> Int
+runArith e = unwrap $ e []
 
-instance Denote Arith Eff LitAr where
-  denote :: Arith (Env -> Free Eff LitAr)
-    -> Env -> Free Eff LitAr
+instance Denote Arith Eff Int where
+  denote :: Arith (Env -> Free Eff Int)
+    -> Env -> Free Eff Int
   denote = A.denote
 
 testSimple :: Test

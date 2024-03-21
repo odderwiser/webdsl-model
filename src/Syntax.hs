@@ -1,6 +1,4 @@
 module Syntax where
-import Bool.Syntax (LitB)
-import Arith.Syntax (LitAr)
 import Utils.Composition (type (<), injV, projV)
 import Utils.Free (Free)
 
@@ -9,4 +7,4 @@ type Address = Int
 
 data Type  = Int | Bool 
 
-data LitN = Null
+type Null = ()

@@ -6,15 +6,14 @@ import Utils.Composition
 import Utils.Free
 
 
-op :: (Functor f, LitB < v') 
+op :: (Functor f, Bool < v') 
   => (Bool -> Bool -> Bool) -> v' -> v' -> Free f v'
 op operand e1 e2 = case (projV e1, projV e2) of
-  (Just (Lit e1'), Just (Lit e2')) -> return 
+  (Just e1', Just e2') -> return 
     $ injV 
-    $ Lit 
     $ operand e1' e2'
 
-denote :: (Cond <: eff, LitB < v) 
+denote :: (Cond <: eff, Bool < v) 
   => Boolean (Env -> Free eff v)
   -> Env -> Free eff v
 denote (LitB bool) env = return $ injV bool

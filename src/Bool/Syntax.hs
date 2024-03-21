@@ -2,11 +2,9 @@ module Bool.Syntax where
 import Utils.Composition ( type (<:) )
 import Utils.Fix ( injF, BinaryInject(..), Fix )
 
-data LitB = Lit Bool 
-
 data OpB = Or | And 
 
-data Boolean e = LitB LitB 
+data Boolean e = LitB Bool
     | OpB OpB e e  
     | If e e e
     deriving Functor
@@ -21,4 +19,4 @@ instance (Boolean <: g)
     OpB op (injF left) (injF right)
 
 lit :: Bool -> Boolean e
-lit i = LitB $ Lit i
+lit = LitB 

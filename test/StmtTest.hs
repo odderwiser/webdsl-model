@@ -20,7 +20,7 @@ import Stmt.Syntax as S
 import qualified Stmt.Interface as S
 
 type Eff = MLState Address V + Cond + End
-type V =  LitB \/ LitAr \/ LitN
+type V =  Bool \/ Int \/ Null
 type Module = Stmt + Arith + Boolean + Eval
 
 run :: (Env -> Free Eff V)
@@ -31,9 +31,9 @@ run e = case unwrap
 
     $ e []
   of
-    (Left (B.Lit val), _)  -> Just $ Left val
-    (Right (Left (A.Lit val)), _) -> Just $ Right val
-    (Right (Right Null), _) -> Nothing
+    (Left val, _)         -> Just $ Left val
+    (Right (Left val), _) -> Just $ Right val
+    (Right (Right _), _)  -> Nothing
 
 
 instance Denote Arith Eff V where

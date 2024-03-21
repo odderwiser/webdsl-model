@@ -2,7 +2,7 @@ module BoolTest where
 import Utils.Denote
 import Utils.Free
 import Bool.Effects
-import Bool.Syntax ( Boolean(If), OpB(Or, And), LitB(..), lit, lit)
+import Bool.Syntax 
 import Bool.Interface as B
 import Utils.Composition
 import Utils.Handler
@@ -13,17 +13,15 @@ import TestSyntax (ifSimple, ifComplicated)
 
 type Eff = (Cond + End)
 
-instance Denote Boolean Eff LitB where
-  denote :: Boolean (Env -> Free Eff LitB)
-    -> Env -> Free Eff LitB
+instance Denote Boolean Eff Bool where
+  denote :: Boolean (Env -> Free Eff Bool)
+    -> Env -> Free Eff Bool
   denote = B.denote
 
-run :: (Env -> Free Eff LitB) -> Bool
-run e =
-    case unwrap
+run :: (Env -> Free Eff Bool) -> Bool
+run e = unwrap
         $ handle condition
         $ e []
-    of (Lit val) -> val
 
 testSimple :: Test
 testSimple = TestCase (

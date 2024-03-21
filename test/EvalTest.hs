@@ -23,7 +23,7 @@ import Utils.Fix
 import Eval.Syntax
 
 type Eff = MLState Address V + Cond + End
-type V =  LitB \/ LitAr \/ LitN
+type V =  Bool \/ Int \/ Null
 type Module = Arith + Boolean + Expr + Eval
 
 run :: (Env -> Free Eff V)
@@ -33,9 +33,9 @@ run e = case unwrap
     $ flipHandle_ handle_ heap (makeEnv [])
     $ e []
   of
-    (Left (B.Lit val), _)  -> Just $ Left val
-    (Right (Left (A.Lit val)), _) -> Just $ Right val
-    (Right (Right Null), _) -> Nothing
+    (Left val, _)           -> Just $ Left val
+    (Right (Left val), _)   -> Just $ Right val
+    (Right (Right _), _) -> Nothing
 
 runWithEnv ::  (Env -> Free Eff V)
   -> Env -> [(Address, V)]
@@ -45,9 +45,9 @@ runWithEnv e env store = case unwrap
     $ flipHandle_ handle_ heap (makeEnv store)
     $ e env
   of
-    (Left (B.Lit val), _)  -> Just $ Left val
-    (Right (Left (A.Lit val)), _) -> Just $ Right val
-    (Right (Right Null), _) -> Nothing
+    (Left val, _)           -> Just $ Left val
+    (Right (Left val), _)   -> Just $ Right val
+    (Right (Right _), _) -> Nothing
 
 instance Denote Arith Eff V where
   denote = A.denote
@@ -113,7 +113,7 @@ testVar = TestCase (
   (runWithEnv
     (foldD varSyntax)
     [("x", 0)]
-    [(0, injV $ A.Lit 3)]
+    [(0, injV (3 :: Int))] 
   ))
 
 varSyntax :: Fix Module

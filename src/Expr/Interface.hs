@@ -3,7 +3,6 @@ import Expr.Syntax
 import Bool.Syntax as B
 import Utils.Composition (type (<:), type (<) (injV), projV)
 import Utils.Free (Free)
-import Arith.Syntax (LitAr)
 import Utils.Denote (Env)
 import qualified Arith.Interface as A
 import qualified Bool.Interface as B
@@ -11,28 +10,27 @@ import Syntax (Type (..))
 import qualified Arith.Syntax as A
 import Foreign (fromBool)
 
-op :: (Functor f, Num a, LitB < v)
+op :: (Functor f, Num a, Bool < v)
   => (a -> a -> Bool) -> a -> a -> Free f v
 op operand e1 e2 = return 
   $ injV 
-  $ B.Lit 
   $ operand e1 e2
 
-opAr :: (Functor f, Num a, LitAr < v, LitB < v) 
+opAr :: (Functor f, Num a, Int < v, Bool < v) 
   => (a -> a -> Bool) -> v -> v -> Free f v
 opAr operand exp1 exp2 = 
   case (projV exp1, projV exp2) of
-  (Just (A.Lit e1'), Just (A.Lit e2')) -> 
+  (Just e1' :: Maybe Int, Just e2' :: Maybe Int) -> 
     op operand (fromIntegral e1') (fromIntegral e2')
 
-opB :: (Functor f, Num a, LitB < v) 
+opB :: (Functor f, Num a, Bool < v) 
   => (a -> a -> Bool) -> v -> v -> Free f v
 opB operand exp1 exp2 = 
   case (projV exp1, projV exp2) of
-    (Just (B.Lit e1'), Just (B.Lit e2')) -> 
+    (Just e1', Just e2') -> 
       op operand (fromBool e1') (fromBool e2')
 
-opEq :: (Functor f, Num a, LitB < v, LitAr < v)
+opEq :: (Functor f, Num a, Bool < v, Int < v)
   => (a -> a -> Bool) -> (v, Type) -> (v, Type) 
   -> Free f v
 opEq operand (exp1, type1) (exp2, type2) = 
@@ -40,12 +38,12 @@ opEq operand (exp1, type1) (exp2, type2) =
   (Int,  Int)  -> opAr operand exp1 exp2
   (Bool, Bool) -> opB  operand exp1 exp2
       
-opCmp :: (Functor f, Num a, LitB < v, LitAr < v)
+opCmp :: (Functor f, Num a, Bool < v, Int < v)
   => (a -> a -> Bool) -> (v, Type) -> (v, Type) 
   -> Free f v
 opCmp operand (exp1, _) (exp2, _) = opAr operand exp1 exp2
 
-denote :: (Functor eff, LitAr < v, LitB < v)
+denote :: (Functor eff, Int < v, Bool < v)
   => Expr (Env -> Free eff v)
   -> Env -> Free eff v
 

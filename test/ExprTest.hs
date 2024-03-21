@@ -17,7 +17,7 @@ import TestSyntax
 import Syntax (Type(..))
 
 type Eff = Cond + End
-type V =  LitB \/ LitAr
+type V =  Bool \/ Int
 type Module = Arith + Boolean + Expr
 
 run :: (Env -> Free Eff V)
@@ -26,8 +26,8 @@ run e = case unwrap
     $ handle condition
     $ e []
   of 
-    (Left (B.Lit val))  -> Left val
-    (Right (A.Lit val)) -> Right val
+    (Left val)  -> Left val
+    (Right val) -> Right val
 
 instance Denote Arith Eff V where
   denote :: Arith (Env -> Free Eff V) -> Env -> Free Eff V

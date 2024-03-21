@@ -14,7 +14,7 @@ import Utils.Fix ( bin, Fix(In), injF )
 import TestSyntax (ifSyntax, ifComparison)
 
 type Eff = Cond + End
-type V = Either LitB LitAr
+type V = Either Bool Int
 
 run :: (Env -> Free Eff V)
   -> Either Bool Int
@@ -23,8 +23,8 @@ run e =
     $ handle condition
     $ e []
   of
-    (Left (B.Lit val))  -> Left val
-    (Right (A.Lit val)) -> Right val
+    (Left  val) -> Left val
+    (Right val) -> Right val
 
 instance Denote Arith Eff V where
   denote = A.denote
