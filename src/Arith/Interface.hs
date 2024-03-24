@@ -15,8 +15,8 @@ op operand e1 e2 = case (projV e1, projV e2) of
 
 
 denote :: (Functor eff, Int < v) 
-  => Arith (Env -> Free eff v) 
-  -> Env -> Free eff v
+  => Arith (Env eff v -> Free eff v) 
+  -> Env eff v-> Free eff v
 denote (LitAr int) env = return $ injV int
 
 denote (OpArith Add a b) env = do 

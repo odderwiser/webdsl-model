@@ -1,7 +1,7 @@
 module ExprTest where
 import Bool.Effects (Cond)
 import Utils.Composition (type (+), type (\/), End)
-import Utils.Denote (Env, Denote(denote), foldD)
+import Utils.Denote 
 import Utils.Free (Free)
 import Arith.Syntax as A 
 import Arith.Interface as A ( denote )
@@ -20,21 +20,21 @@ type Eff = Cond + End
 type V =  Bool \/ Int
 type Module = Arith + Boolean + Expr
 
-run :: (Env -> Free Eff V)
+run :: FreeEnv Eff V
   -> Either Bool Int
 run e = case unwrap
     $ handle condition
-    $ e []
+    $ e $ Env []
   of 
     (Left val)  -> Left val
     (Right val) -> Right val
 
 instance Denote Arith Eff V where
-  denote :: Arith (Env -> Free Eff V) -> Env -> Free Eff V
+  denote :: Arith (FreeEnv Eff V) -> FreeEnv Eff V
   denote = A.denote
 
 instance Denote Boolean Eff V where
-  denote :: Boolean (Env -> Free Eff V) -> Env -> Free Eff V
+  denote :: Boolean (FreeEnv Eff V) -> FreeEnv Eff V
   denote = B.denote
 
 instance Denote Expr Eff V where

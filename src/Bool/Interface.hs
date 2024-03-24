@@ -14,8 +14,8 @@ op operand e1 e2 = case (projV e1, projV e2) of
     $ operand e1' e2'
 
 denote :: (Cond <: eff, Bool < v) 
-  => Boolean (Env -> Free eff v)
-  -> Env -> Free eff v
+  => Boolean (Env eff v-> Free eff v)
+  -> Env eff v -> Free eff v
 denote (LitB bool) env = return $ injV bool
 
 denote (OpB Or a b) env = do

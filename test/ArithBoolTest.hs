@@ -16,12 +16,12 @@ import TestSyntax (ifSyntax, ifComparison)
 type Eff = Cond + End
 type V = Either Bool Int
 
-run :: (Env -> Free Eff V)
+run :: (Env Eff V -> Free Eff V)
   -> Either Bool Int
 run e =
   case unwrap
     $ handle condition
-    $ e []
+    $ e $ Env []
   of
     (Left  val) -> Left val
     (Right val) -> Right val

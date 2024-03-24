@@ -14,14 +14,14 @@ import TestSyntax (ifSimple, ifComplicated)
 type Eff = (Cond + End)
 
 instance Denote Boolean Eff Bool where
-  denote :: Boolean (Env -> Free Eff Bool)
-    -> Env -> Free Eff Bool
+  denote :: Boolean (FreeEnv Eff Bool)
+    -> FreeEnv Eff Bool
   denote = B.denote
 
-run :: (Env -> Free Eff Bool) -> Bool
+run :: FreeEnv Eff Bool -> Bool
 run e = unwrap
         $ handle condition
-        $ e []
+        $ e $ Env []
 
 testSimple :: Test
 testSimple = TestCase (

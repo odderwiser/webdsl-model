@@ -23,13 +23,12 @@ type Eff = MLState Address V + Cond + End
 type V =  Bool \/ Int \/ Null
 type Module = Stmt + Arith + Boolean + Eval
 
-run :: (Env -> Free Eff V)
+run :: FreeEnv Eff V
   -> Maybe (Either Bool Int)
 run e = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv [])
-
-    $ e []
+    $ e $ Env []
   of
     (Left val, _)         -> Just $ Left val
     (Right (Left val), _) -> Just $ Right val

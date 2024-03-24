@@ -1,6 +1,6 @@
 module Fun.Syntax where
 import Eval.Syntax (VName)
-import Utils.Denote (Env)
+import Utils.Free
 
 type FunName = String
 

@@ -44,8 +44,8 @@ opCmp :: (Functor f, Num a, Bool < v, Int < v)
 opCmp operand (exp1, _) (exp2, _) = opAr operand exp1 exp2
 
 denote :: (Functor eff, Int < v, Bool < v)
-  => Expr (Env -> Free eff v)
-  -> Env -> Free eff v
+  => Expr (Env eff v -> Free eff v)
+  -> Env eff v -> Free eff v
 
 denote (OpCmp Eq (e1, t1) (e2, t2)) env = do
   e1' <- e1 env 

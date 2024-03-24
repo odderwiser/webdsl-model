@@ -6,30 +6,39 @@ import Utils.Denote
 import Utils.Free
 import Eval.Effects
 import Syntax
+import Eval.Interface (refEnv)
+import Eval.Handlers (environment)
+import Utils.Handler (handle_)
+import Fun.Handlers (defs)
+
+refVars varNames locs = handle_ environment (mapM assign (zip varNames locs))
+derefDefs name = handle_ defs (deref name) 
+refDefs :: (Functor eff) => [FDecl (FreeEnv eff v)] -> Env eff v -> Free eff ([FunName], Env eff v)
+refDefs decls = handle_ defs (mapM ref decls)
 
 -- does this still work with how Variable Declaration is defined?
-denote :: (Abort v <: eff,
-    MLState Address v <: eff,
-    MLState FunName (FDecl (Env -> Free eff v)) <: eff)
-  => Fun (Env -> Free eff v)
-  -> Env -> Free eff v
+denote :: forall v eff. (Abort v <: eff, MLState Address v <: eff,
+    Null < v)
+  => Fun (Env eff v-> Free eff v)
+  -> Env eff v -> Free eff v
 denote (Return e)       env = do
     e' <- e env
     abort e'
 
 denote (FCall name vars) env = do
-    (FDecl _ varNames body) <- deref name
-    locs                    <- mapM (
+    (FDecl _ varNames (body :: FreeEnv eff v), _) <- derefDefs name env
+    (locs :: [Address])                           <- mapM (
         \e -> do
             e' <- e env
             ref e'
         ) vars
-    body $ zip varNames locs ++ env
+    (_, env) <- refVars varNames locs env -- this might nor work, are the assignments chained correctyl?
+    inj $ body env
 
 
-denoteProgram :: forall eff v. (MLState FunName (FDecl (Env -> Free eff v)) <: eff)
-  => Program (Env -> Free eff v)
-  -> Env -> Free eff v
+denoteProgram :: forall eff v. (Functor eff)
+  => Program (Env eff v -> Free eff v)
+  -> Env eff v-> Free eff v
 denoteProgram (Program decls program) env = do
-    mapM_ (ref :: FDecl (Env -> Free eff v) -> Free eff FunName) decls
-    program env
+    (_, env') <- refDefs decls env
+    program env'

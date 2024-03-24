@@ -12,12 +12,12 @@ type Eff = End
 type V = Int
 
 
-runArith :: (Env -> Free Eff Int) -> Int
-runArith e = unwrap $ e []
+runArith :: (Env Eff V -> Free Eff Int) -> Int
+runArith e = unwrap $ e $ Env []
 
 instance Denote Arith Eff Int where
-  denote :: Arith (Env -> Free Eff Int)
-    -> Env -> Free Eff Int
+  denote :: Arith (Env Eff V -> Free Eff Int)
+    -> Env Eff V -> Free Eff Int
   denote = A.denote
 
 testSimple :: Test

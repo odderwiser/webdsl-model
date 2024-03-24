@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module EvalTest where
 import Eval.Effects
 import Syntax hiding (unwrap)
@@ -26,19 +25,19 @@ type Eff = MLState Address V + Cond + End
 type V =  Bool \/ Int \/ Null
 type Module = Arith + Boolean + Expr + Eval
 
-run :: (Env -> Free Eff V)
+run :: FreeEnv Eff V
   -> Maybe (Either Bool Int)
 run e = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv [])
-    $ e []
+    $ e $ Env []
   of
     (Left val, _)           -> Just $ Left val
     (Right (Left val), _)   -> Just $ Right val
     (Right (Right _), _) -> Nothing
 
-runWithEnv ::  (Env -> Free Eff V)
-  -> Env -> [(Address, V)]
+runWithEnv :: FreeEnv Eff V
+  -> Env Eff V -> [(Address, V)]
   -> Maybe (Either Bool Int)
 runWithEnv e env store = case unwrap
     $ handle condition
@@ -112,7 +111,7 @@ testVar = TestCase (
   (Just $ Right 5)
   (runWithEnv
     (foldD varSyntax)
-    [("x", 0)]
+    (Env [("x", 0)])
     [(0, injV (3 :: Int))] 
   ))
 
@@ -161,6 +160,31 @@ vAssignSyntax = injF $
     VValDecl "x" (injF $ A.lit 4) Int
     (injF $ VAssign "x" (injF $ A.lit 8) Int)
 
+testTwoVarsA :: Test
+testTwoVarsA = TestCase (
+  assertEqual "two variables"
+  (Just $ Right 4)
+  (run $ foldD twoVarsASyntax
+  ))
+
+twoVarsASyntax :: Fix Module
+twoVarsASyntax = injF $
+    VValDecl "x" (injF $ A.lit 4) Int
+    (injF $ VValDecl "y" (injF $ A.lit 3) Int
+    (injF $ Var "x"))
+
+testTwoVarsB :: Test
+testTwoVarsB = TestCase (
+  assertEqual "two variables"
+  (Just $ Right 3)
+  (run $ foldD twoVarsBSyntax
+  ))
+
+twoVarsBSyntax :: Fix Module
+twoVarsBSyntax = injF $
+    VValDecl "x" (injF $ A.lit 4) Int
+    (injF $ VValDecl "y" (injF $ A.lit 3) Int
+    (injF $ Var "y"))
 
 
 evalTests :: Test
@@ -173,5 +197,7 @@ evalTests = TestList [
     testVar,
     testVDecl,
     testVValDecl,
-    testVAssign
+    testVAssign,
+    testTwoVarsA,
+    testTwoVarsB
     ]
