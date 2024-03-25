@@ -8,6 +8,7 @@ import ArithBoolTest (arithBoolTests)
 import ExprTest (exprTests)
 import EvalTest (evalTests)
 import StmtTest (stmtTests)
+import FunTest (funTests)
 
 main :: IO ()
 main = do
@@ -17,6 +18,7 @@ main = do
         , arithBoolTests
         , exprTests
         , evalTests
+        , funTests
         , stmtTests
         ]
     print result

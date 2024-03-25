@@ -17,7 +17,7 @@ refDefs :: (Functor eff) => [FDecl (FreeEnv eff v)] -> Env eff v -> Free eff ([F
 refDefs decls = handle_ defs (mapM ref decls)
 
 -- does this still work with how Variable Declaration is defined?
-denote :: forall v eff. (Abort v <: eff, MLState Address v <: eff,
+denote :: (Abort v <: eff, MLState Address v <: eff,
     Null < v)
   => Fun (Env eff v-> Free eff v)
   -> Env eff v -> Free eff v
@@ -36,7 +36,7 @@ denote (FCall name vars) env = do
     inj $ body env
 
 
-denoteProgram :: forall eff v. (Functor eff)
+denoteProgram :: (Functor eff)
   => Program (Env eff v -> Free eff v)
   -> Env eff v-> Free eff v
 denoteProgram (Program decls program) env = do
