@@ -21,12 +21,13 @@ import TestSyntax
 import Utils.Fix
 import Eval.Syntax
 
-type Eff = MLState Address V + Cond + End
-type V =  Bool \/ Int \/ Null
+type Eff    = MLState Address V + Cond + End
+type V      =  Bool \/ Int \/ Null
 type Module = Arith + Boolean + Expr + Eval
+type Out    = Maybe (Either Bool Int)
 
 run :: FreeEnv Eff V
-  -> Maybe (Either Bool Int)
+  -> Out
 run e = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv [])
@@ -38,7 +39,7 @@ run e = case unwrap
 
 runWithEnv :: FreeEnv Eff V
   -> Env Eff V -> [(Address, V)]
-  -> Maybe (Either Bool Int)
+  -> Out
 runWithEnv e env store = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv store)
@@ -60,60 +61,64 @@ instance Denote Expr Eff V where
 instance Denote Eval Eff V where
   denote = Ev.denote
 
+testEq :: Denote m Eff V 
+  => String -> Out -> Fix m -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
 
+testEqEnv :: Denote m Eff V 
+  => String -> Out -> Fix m 
+  -> Env Eff V -> [(Address, V)] -> Test
+testEqEnv id res syntax env heap = TestCase 
+  $ assertEqual id res 
+  $ runWithEnv (foldD syntax) env heap
 
 testIf :: Test
-testIf = TestCase (assertEqual "add"
-        (Just $ injV True)
-        (run $ foldD ifSimple)
-    )
+testIf = testEq 
+  "eval if simple"
+  (Just $ injV True)
+  ifSimple
 
 testIfComplicated :: Test
-testIfComplicated = TestCase (assertEqual "add"
-        (Just $ injV True)
-        (run $ foldD ifComplicated)
-    )
+testIfComplicated = testEq  
+  "if complicates"
+  (Just $ injV True)
+  ifComplicated
 
 testIfAB :: Test
-testIfAB = TestCase (
-  assertEqual "add"
+testIfAB = testEq
+  "ifAB"
   (Just $ Right 2)
-  (run $ foldD ifSyntax)
-  )
+  ifSyntax
 
 testIfComp :: Test
-testIfComp = TestCase (
-  assertEqual "add"
+testIfComp = testEq
+  "ifComparison"
   (Just $ Right 1)
-  (run $ foldD
-  ifComparison))
+  ifComparison
 
 
-testEq :: Test
-testEq = TestCase (
-  assertEqual "add"
+testEqu :: Test
+testEqu = testEq
+ "eq"
   (Just $ Left True)
-  (run $ foldD eqSyntax
-  ))
+  eqSyntax
 
 testCmp :: Test
-testCmp = TestCase (
-  assertEqual "add"
+testCmp =  testEq 
+  "cmp"
   (Just $ Left True)
-  (run $ foldD cmpSyntax
-  ))
+  cmpSyntax
 
 ----------- new feature tests ------------
 
 testVar :: Test
-testVar = TestCase (
-  assertEqual "var with env"
+testVar = testEqEnv
+ "var with env"
   (Just $ Right 5)
-  (runWithEnv
-    (foldD varSyntax)
-    (Env [("x", 0)])
-    [(0, injV (3 :: Int))] 
-  ))
+  varSyntax
+  (Env [("x", 0)])
+  [(0, injV (3 :: Int))] 
 
 varSyntax :: Fix Module
 varSyntax = injF $
@@ -122,24 +127,21 @@ varSyntax = injF $
         (injF $ A.lit 2)
 
 testVDecl :: Test
-testVDecl = TestCase (
-  assertEqual "vAssign"
+testVDecl = testEq
+ "vDecl"
   Nothing
-  (run $ foldD vDeclSyntax
-  ))
+  vDeclSyntax
 
 vDeclSyntax :: Fix Module
 vDeclSyntax = injF $
   VDecl "x" $ injF $
   VAssign "x" (injF $ B.lit True) Bool
 
-
 testVValDecl :: Test
-testVValDecl = TestCase (
-  assertEqual "vDecl"
+testVValDecl = testEq
+ "vValDecl"
   (Just $ Right 8)
-  (run $ foldD vValDeclSyntax
-  ))
+  vValDeclSyntax
 
 vValDeclSyntax :: Fix Module
 vValDeclSyntax = injF $
@@ -149,11 +151,10 @@ vValDeclSyntax = injF $
         (injF $ A.lit 2))
 
 testVAssign :: Test
-testVAssign = TestCase (
-  assertEqual "vAssign"
+testVAssign = testEq
+ "vAssign"
   Nothing
-  (run $ foldD vAssignSyntax
-  ))
+  vAssignSyntax
 
 vAssignSyntax :: Fix Module
 vAssignSyntax = injF $
@@ -161,11 +162,9 @@ vAssignSyntax = injF $
     (injF $ VAssign "x" (injF $ A.lit 8) Int)
 
 testTwoVarsA :: Test
-testTwoVarsA = TestCase (
-  assertEqual "two variables"
+testTwoVarsA = testEq "two variables"
   (Just $ Right 4)
-  (run $ foldD twoVarsASyntax
-  ))
+  twoVarsASyntax
 
 twoVarsASyntax :: Fix Module
 twoVarsASyntax = injF $
@@ -174,11 +173,10 @@ twoVarsASyntax = injF $
     (injF $ Var "x"))
 
 testTwoVarsB :: Test
-testTwoVarsB = TestCase (
-  assertEqual "two variables"
+testTwoVarsB = testEq
+ "two variables"
   (Just $ Right 3)
-  (run $ foldD twoVarsBSyntax
-  ))
+  twoVarsBSyntax
 
 twoVarsBSyntax :: Fix Module
 twoVarsBSyntax = injF $
@@ -188,16 +186,16 @@ twoVarsBSyntax = injF $
 
 
 evalTests :: Test
-evalTests = TestList [
-    testIf,
-    testIfAB,
-    testIfComp,
-    testEq,
-    testCmp,
-    testVar,
-    testVDecl,
-    testVValDecl,
-    testVAssign,
-    testTwoVarsA,
-    testTwoVarsB
-    ]
+evalTests = TestList 
+  [ testIf
+  , testIfAB
+  , testIfComp
+  , testEqu
+  , testCmp
+  , testVar
+  , testVDecl
+  , testVValDecl
+  , testVAssign
+  , testTwoVarsA
+  , testTwoVarsB
+  ]

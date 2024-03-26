@@ -15,6 +15,7 @@ import TestSyntax (ifSyntax, ifComparison)
 
 type Eff = Cond + End
 type V = Either Bool Int
+type Module = Arith + Boolean
 
 run :: (Env Eff V -> Free Eff V)
   -> Either Bool Int
@@ -32,19 +33,23 @@ instance Denote Arith Eff V where
 instance Denote Boolean Eff V where
   denote = B.denote
 
+testEq :: String -> V -> Fix Module -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
+
 testIf :: Test
-testIf = TestCase (
-  assertEqual "add"
+testIf = testEq
+  "add"
   (Right 2)
-  (run $ foldD ifSyntax)
-  )
+  ifSyntax
 
 testIfComp :: Test
-testIfComp = TestCase (
-  assertEqual "add"
+testIfComp = testEq "add"
   (Right 1)
-  (run $ foldD
-  ifComparison))
+  ifComparison
 
 arithBoolTests :: Test
-arithBoolTests = TestList [testIf, testIfComp]
+arithBoolTests = TestList 
+  [ testIf
+  , testIfComp
+  ]

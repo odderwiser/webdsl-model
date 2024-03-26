@@ -11,7 +11,9 @@ import Test.HUnit
 import Utils.Fix 
 import TestSyntax (ifSimple, ifComplicated)
 
-type Eff = (Cond + End)
+type Eff    = Cond + End
+type V      = Bool
+type Module = Boolean
 
 instance Denote Boolean Eff Bool where
   denote :: Boolean (FreeEnv Eff Bool)
@@ -23,40 +25,30 @@ run e = unwrap
         $ handle condition
         $ e $ Env []
 
+testEq :: String -> V -> Fix Module -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
+
 testSimple :: Test
-testSimple = TestCase (
-        assertEqual "terminal"
-        True
-        (run $ foldD $ In (lit True))
-    )
+testSimple = testEq "terminal" True
+    $ In (lit True)
 
 testOr :: Test
-testOr = TestCase (
-        assertEqual "add"
-        True
-        (run $ foldD $ In
-        (bin Or
-            (lit False)
-            (lit True)
-        ))
-    )
+testOr = testEq "add" True
+    $ In (bin Or
+        (lit False)
+        (lit True))
 
 testIf :: Test
-testIf = TestCase (assertEqual "add" 
-        True
-        (run $ foldD ifSimple)
-    )
+testIf = testEq "add" True ifSimple
 
 testIfComplicated :: Test
-testIfComplicated = TestCase (assertEqual "add"
-        True
-        (run $ foldD ifComplicated)
-    )
+testIfComplicated = testEq "add" True ifComplicated
 
 boolTests :: Test
-boolTests = TestList [
-    testSimple, 
-    testOr, 
-    testIf, 
-    testIfComplicated 
+boolTests = TestList 
+    [ testSimple
+    , testOr
+    , testIf
+    , testIfComplicated 
     ]

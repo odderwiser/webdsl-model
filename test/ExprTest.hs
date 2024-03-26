@@ -16,9 +16,10 @@ import Utils.Fix ( Fix, injF )
 import TestSyntax 
 import Syntax (Type(..))
 
-type Eff = Cond + End
-type V =  Bool \/ Int
+type Eff    = Cond + End
+type V      =  Bool \/ Int
 type Module = Arith + Boolean + Expr
+type Out    = Either Bool Int
 
 run :: FreeEnv Eff V
   -> Either Bool Int
@@ -40,55 +41,55 @@ instance Denote Boolean Eff V where
 instance Denote Expr Eff V where
   denote = E.denote
 
+testEq :: Denote m Eff V 
+  => String -> Out -> Fix m -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
+
 -------- regression tests ---------
 
 testIf :: Test
-testIf = TestCase (assertEqual "add" 
-        (Left True)
-        (run $ foldD ifSimple)
-    )
+testIf = testEq 
+  "ifSimple" 
+  (Left True)
+  ifSimple
+    
 
 testIfComplicated :: Test
-testIfComplicated = TestCase (assertEqual "add"
-        (Left True)
-        (run $ foldD ifComplicated)
-    )
+testIfComplicated = testEq
+  "ifComplicated"
+  (Left True)
+  ifComplicated
 
 testIfAB :: Test
-testIfAB = TestCase (
-  assertEqual "add"
+testIfAB = testEq "ifAB"
   (Right 2)
-  (run $ foldD ifSyntax)
-  )
+  ifSyntax
 
 testIfComp :: Test
-testIfComp = TestCase (
-  assertEqual "add"
+testIfComp = testEq
+ "ifComparison"
   (Right 1)
-  (run $ foldD
-  ifComparison))
+  ifComparison
 
 ----------- new feature tests ------------
 
-testEq :: Test
-testEq = TestCase (
-  assertEqual "add"
+testEqu :: Test
+testEqu = testEq "eq"
   (Left True)
-  (run $ foldD eqSyntax
-  ))
+  eqSyntax
 
 testCmp :: Test
-testCmp = TestCase (
-  assertEqual "add"
+testCmp = testEq
+ "comparison"
   (Left True)
-  (run $ foldD cmpSyntax
-  ))
+  cmpSyntax
 
 exprTests :: Test
 exprTests = TestList [
     testIf, 
     testIfAB,
     testIfComp,
-    testEq,
+    testEqu,
     testCmp
     ]

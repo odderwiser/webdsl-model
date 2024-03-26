@@ -31,6 +31,7 @@ import Stmt.Syntax as S
 type Eff = MLState Address V + Cond + Abort V + End
 type V =  Bool \/ Int \/ Null
 type Module = Arith + Boolean + Eval + Fun + Program + Stmt
+type Out = Maybe (Either Bool Int)
 
 run :: FreeEnv Eff V
   -> Maybe (Either Bool Int)
@@ -65,12 +66,17 @@ instance Denote Program Eff V where
 instance Denote Stmt Eff V where
   denote = S.denote
 
+testEq :: Denote m Eff V 
+  => String -> Out -> Fix m -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
+
+--------------------------------
+
 testAbort :: Test
-testAbort = TestCase (
-  assertEqual "two returns"
+testAbort = testEq "two returns"
   (Just $ Right 1)
-  (run $ foldD abortSyntax
-  ))
+  abortSyntax
 
 abortSyntax :: Fix Module
 abortSyntax = injF $ S 

@@ -4,36 +4,40 @@ import Utils.Free
 import Arith.Interface as A
 import Arith.Syntax
 import Utils.Composition
-import Test.HUnit
+import Test.HUnit 
 import Utils.Fix
 import Utils.Handler
 
-type Eff = End
-type V = Int
+type Eff    = End
+type V      = Int
+type Module = Arith
 
 
-runArith :: (Env Eff V -> Free Eff Int) -> Int
-runArith e = unwrap $ e $ Env []
+run :: (Env Eff V -> Free Eff Int) -> Int
+run e = unwrap $ e $ Env []
 
 instance Denote Arith Eff Int where
   denote :: Arith (Env Eff V -> Free Eff Int)
     -> Env Eff V -> Free Eff Int
   denote = A.denote
 
+testEq :: String -> V -> Fix Module -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
+
+
 testSimple :: Test
-testSimple = TestCase (
-        assertEqual "terminal"
-        1
-        (runArith $ foldD $ In (lit 1))
-    )
+testSimple = testEq "literal" 1 
+  $ injF $ lit 1
+  
 
 testAddition :: Test
-testAddition = TestCase (
-        assertEqual "add"
-        3
-        (runArith $ foldD $ In 
-        (bin Add (lit 1) (lit 2)))
-    )
+testAddition = testEq "add" 3 
+  $ In $ bin Add (lit 1) (lit 2)
+
 
 arithTests :: Test
-arithTests = TestList [testSimple, testAddition]
+arithTests = TestList 
+  [ testSimple
+  , testAddition
+  ]

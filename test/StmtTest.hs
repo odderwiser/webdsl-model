@@ -19,9 +19,10 @@ import Utils.Fix
 import Stmt.Syntax as S
 import qualified Stmt.Interface as S
 
-type Eff = MLState Address V + Cond + End
-type V =  Bool \/ Int \/ Null
+type Eff    = MLState Address V + Cond + End
+type V      = Bool \/ Int \/ Null
 type Module = Stmt + Arith + Boolean + Eval
+type Out    = Maybe (Either Bool Int)
 
 run :: FreeEnv Eff V
   -> Maybe (Either Bool Int)
@@ -48,12 +49,17 @@ instance Denote Eval Eff V where
 instance Denote Stmt Eff V where
   denote = S.denote
 
+testEq :: Denote m Eff V 
+  => String -> Out -> Fix m -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
+
+--------------------------------
+
 testStmt :: Test
-testStmt = TestCase (
-  assertEqual "Stmt"
+testStmt = testEq "Stmt"
   Nothing
-  (run $ foldD stmtSyntax
-  ))
+  stmtSyntax
 
 stmtSyntax :: Fix Module
 stmtSyntax = injF $ S (injF $
