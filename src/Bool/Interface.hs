@@ -1,5 +1,5 @@
 module Bool.Interface (denote) where
-import Utils.Denote (Env)
+import Utils.Denote (Env, FreeEnv)
 import Bool.Syntax
 import Bool.Effects ( Cond, cond )
 import Utils.Composition
@@ -14,8 +14,8 @@ op operand e1 e2 = case (projV e1, projV e2) of
     $ operand e1' e2'
 
 denote :: (Cond <: eff, Bool < v) 
-  => Boolean (Env eff v-> Free eff v)
-  -> Env eff v -> Free eff v
+  => Boolean (FreeEnv eff v)
+  -> FreeEnv eff v
 denote (LitB bool) env = return $ injV bool
 
 denote (OpB Or a b) env = do

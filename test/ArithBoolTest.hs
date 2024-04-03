@@ -22,7 +22,8 @@ run :: (Env Eff V -> Free Eff V)
 run e =
   case unwrap
     $ handle condition
-    $ e $ Env []
+    $ e 
+    $ Env {}
   of
     (Left  val) -> Left val
     (Right val) -> Right val

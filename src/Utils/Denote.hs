@@ -9,10 +9,9 @@ import Fun.Syntax (FunName, FDecl)
 type Function eff v = FDecl (Env eff v -> Free eff v)
 type FreeEnv eff v = Env eff v -> Free eff v
 
-data Env eff v 
-    = Env [(VName, Address)] 
-    | Defs [(FunName, Function eff v)]
-    | EList [Env eff v]
+data Env eff v = Env 
+    { varEnv :: [(VName, Address)]
+    , defs   :: [(FunName, Function eff v)] }
 
 class Functor sym => Denote sym eff v where
     denote :: sym (FreeEnv eff v) -> FreeEnv eff v

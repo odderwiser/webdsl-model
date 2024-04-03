@@ -40,6 +40,11 @@ ifComparison = injF
     (injF (A.lit 1))
     (injF (A.lit 2))
 
+ifComparison' = If (BinaryOp Or
+      (B.Lit False)
+      (B.Lit True))
+    (A.Lit 1) (A.Lit 2)
+
 -- ARITH + BOOLEAN + EXPR
 
 type AEB = Arith + Boolean + Expr

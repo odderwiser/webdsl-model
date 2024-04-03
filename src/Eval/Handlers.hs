@@ -40,11 +40,11 @@ environment = Handler_
       (Just env, Assign record k) -> k $ insertMap record map }
 
 findMap :: Env eff v -> Maybe [(VName, Address)]
-findMap (Env env) = Just env
-findMap (EList envs) = Just $ head $ mapMaybe findMap envs
-findMap _ = Nothing
+findMap env = Just $ varEnv env
+--findMap (EList envs) = Just $ head $ mapMaybe findMap envs
+
 
 insertMap :: (VName, Address) -> Env eff v  -> Env eff v
-insertMap record (Env env)    = Env (record : env)
-insertMap record (EList envs) = EList $ map (insertMap record) envs
-insertMap record env = env
+insertMap record env    = env --TODO
+--insertMap record (EList envs) = EList $ map (insertMap record) envs
+

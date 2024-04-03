@@ -28,7 +28,10 @@ import Fun.Handlers (funReturn, defs)
 import Stmt.Syntax as S
 
 
-type Eff = MLState Address V + Cond + Abort V + End
+type Eff = MLState Address V + Cond + Abort V 
+  + MLState FunName (FDecl (FreeEnv Eff' V)) + End
+type Eff' = MLState Address V + Cond + Abort V 
+  + MLState FunName (FDecl (FreeEnv Eff V)) + End
 type V =  Bool \/ Int \/ Null
 type Module = Arith + Boolean + Eval + Fun + Program + Stmt
 type Out = Maybe (Either Bool Int)

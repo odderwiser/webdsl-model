@@ -7,7 +7,7 @@ data OpB = Or | And
 data Boolean e = LitB Bool
     | OpB OpB e e  
     | If e e e
-    deriving Functor
+  deriving Functor
 
 instance (Boolean <: g) 
     => BinaryInject Boolean g OpB where

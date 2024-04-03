@@ -12,13 +12,14 @@ import Utils.Handler (handle_)
 import Fun.Handlers (defs)
 
 refVars varNames locs = handle_ environment (mapM assign (zip varNames locs))
-derefDefs name = handle_ defs (deref name) 
-refDefs :: (Functor eff) => [FDecl (FreeEnv eff v)] -> Env eff v -> Free eff ([FunName], Env eff v)
-refDefs decls = handle_ defs (mapM ref decls)
+derefDefs name = handle_ Fun.Handlers.defs (deref name) 
+refDefs :: Functor eff
+    => [FDecl (FreeEnv eff v)] -> Env eff v 
+    -> Free eff ([FunName], Env eff v)
+refDefs decls = handle_ Fun.Handlers.defs (mapM ref decls)
 
 -- does this still work with how Variable Declaration is defined?
-denote :: (Abort v <: eff, MLState Address v <: eff,
-    Null < v)
+denote :: (Abort v <: eff, MLState Address v <: eff, Null < v)
   => Fun (Env eff v-> Free eff v)
   -> Env eff v -> Free eff v
 denote (Return e)       env = do
@@ -42,3 +43,5 @@ denoteProgram :: (Functor eff)
 denoteProgram (Program decls program) env = do
     (_, env') <- refDefs decls env
     program env'
+
+    --- record or lens
