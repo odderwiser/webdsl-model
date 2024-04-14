@@ -31,7 +31,7 @@ run :: FreeEnv Eff V
 run e = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv [])
-    $ e $ Env []
+    $ e $ Env { varEnv = [] }
   of
     (Left val, _)           -> Just $ Left val
     (Right (Left val), _)   -> Just $ Right val
@@ -117,7 +117,7 @@ testVar = testEqEnv
  "var with env"
   (Just $ Right 5)
   varSyntax
-  (Env [("x", 0)])
+  (Env { varEnv = [("x", 0)]})
   [(0, injV (3 :: Int))] 
 
 varSyntax :: Fix Module

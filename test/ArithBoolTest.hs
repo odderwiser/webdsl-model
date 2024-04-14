@@ -29,9 +29,11 @@ run e =
     (Right val) -> Right val
 
 instance Denote Arith Eff V where
+  denote :: Arith (FreeEnv Eff V) -> FreeEnv Eff V
   denote = A.denote
 
 instance Denote Boolean Eff V where
+  denote :: Boolean (FreeEnv Eff V) -> FreeEnv Eff V
   denote = B.denote
 
 testEq :: String -> V -> Fix Module -> Test

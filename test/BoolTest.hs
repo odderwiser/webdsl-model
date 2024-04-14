@@ -23,7 +23,7 @@ instance Denote Boolean Eff Bool where
 run :: FreeEnv Eff Bool -> Bool
 run e = unwrap
         $ handle condition
-        $ e $ Env []
+        $ e $ Env {}
 
 testEq :: String -> V -> Fix Module -> Test
 testEq id res syntax =  TestCase $

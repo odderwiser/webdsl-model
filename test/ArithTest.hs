@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-missing-fields #-}
 module ArithTest where
 import Utils.Denote
 import Utils.Free
@@ -14,7 +15,7 @@ type Module = Arith
 
 
 run :: (Env Eff V -> Free Eff Int) -> Int
-run e = unwrap $ e $ Env []
+run e = unwrap $ e $ Env {}
 
 instance Denote Arith Eff Int where
   denote :: Arith (Env Eff V -> Free Eff Int)

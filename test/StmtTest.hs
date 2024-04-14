@@ -29,7 +29,7 @@ run :: FreeEnv Eff V
 run e = case unwrap
     $ handle condition
     $ flipHandle_ handle_ heap (makeEnv [])
-    $ e $ Env []
+    $ e $ Env {varEnv = []}
   of
     (Left val, _)         -> Just $ Left val
     (Right (Left val), _) -> Just $ Right val

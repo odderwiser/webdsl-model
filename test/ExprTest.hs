@@ -25,7 +25,7 @@ run :: FreeEnv Eff V
   -> Either Bool Int
 run e = case unwrap
     $ handle condition
-    $ e $ Env []
+    $ e $ Env {}
   of 
     (Left val)  -> Left val
     (Right val) -> Right val

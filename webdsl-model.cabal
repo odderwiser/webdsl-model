@@ -80,3 +80,4 @@ test-suite webdsl-tests
                         MultiParamTypeClasses,
                         TypeOperators,
                         TypeApplications
+    ghc-options:         -Wno-missing-fields
