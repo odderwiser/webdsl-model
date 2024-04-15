@@ -4,8 +4,8 @@ import Syntax (Type)
 type VName = String
 
 data Eval e 
-    = Var       VName 
-    | VDecl     VName        e
-    | VValDecl  VName e Type e
-    | VAssign   VName e Type
+    = Var       VName           -- use a variable
+    | VDecl     VName        e  -- declare but not initialise, with continuation
+    | VValDecl  VName e Type e  -- declare and initialise variable
+    | VAssign   VName e Type    -- assign value to an existing variable
     deriving Functor

@@ -27,14 +27,14 @@ denote (Var name)              env = do
 
 denote (VDecl name k)        env = do
     loc <- ref (injV () :: v)
-    (_, env) <- refEnv name loc env
-    k env
+    (_, env') <- refEnv name loc env
+    k env'
 
 denote (VValDecl name e typ k) env = do
     v   <- e env
     loc <- ref v
-    (_, env) <- refEnv name loc env
-    k env
+    (_, env') <- refEnv name loc env
+    k env'
 
 denote (VAssign name e typ)    env = do
     v <- e env

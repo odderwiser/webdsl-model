@@ -83,6 +83,17 @@ abortSyntax = injF $ S
   (injF $ Return (injF $ A.lit 1)) 
   (injF $ Return (injF $ A.lit 2))
 
+testfCall :: Test
+testfCall = testEq "simple function call"
+  (Just $ Right 7)
+  fCallSyntax
+
+fCallSyntax :: Fix Module
+fCallSyntax = injF 
+  $ Program [FDecl "addThree" ["x"] 
+    (injF $ OpArith Add (injF $ Var "x") (injF $ A.lit 3))] 
+  $ injF $ FCall "addThree" [injF $ A.lit 4]
+
 funTests :: Test
 funTests = TestList [
     testAbort

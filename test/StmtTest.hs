@@ -58,7 +58,7 @@ testEq id res syntax =  TestCase $
 
 testStmt :: Test
 testStmt = testEq "Stmt"
-  Nothing
+  (Just $ Right 8)
   stmtSyntax
 
 stmtSyntax :: Fix Module
