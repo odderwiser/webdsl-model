@@ -80,36 +80,32 @@ instance {-# OVERLAPPABLE #-} (Functor f, Functor g, Functor g', f <: g')
 
 --- VALUE COMPOSITION
 
-infixr 5 <
-class f < g where
-  injV  :: f -> g
-  projV :: g -> Maybe f
+infix 5 <
+class u < v where
+  injV  :: u -> v
+  projV :: v -> Maybe u
 
 infixr \/
-type f \/ g = Either f g
+type u \/ v = Either u v
 
-instance {-# OVERLAPPING #-} f < f where
-  injV :: f -> f
+instance {-# OVERLAPPING #-} u < u where
+  injV :: u -> u
   injV = id
-  projV :: f -> Maybe f
+  projV :: u -> Maybe u
   projV = Just
 
-instance f < Either f g where
-  injV :: f -> Either f g
+instance u < u \/ v where
+  injV :: u -> u \/ v
   injV = Left
-  projV :: Either f g -> Maybe f
+  projV :: u \/ v -> Maybe u
   projV = \case
     Left f -> Just f
     _ -> Nothing
 
-instance {-# OVERLAPPABLE #-} (f < g', h ~ g \/ g') => f < h where
-  injV :: (f < g') => f -> g \/ g'
+instance {-# OVERLAPPABLE #-} (u < v', w ~ v \/ v') => u < w where
+  injV :: (u < v') => u -> v \/ v'
   injV = Right . injV 
-  projV :: (f < g') => g \/ g' -> Maybe f
+  projV :: (u < v') => v \/ v' -> Maybe u
   projV = \case
     Left g -> Nothing
     Right g' -> projV g'
-
--- I need this syntactic sugar, is it achievable? 
--- infixr  5 <|
--- type Either f g <| h = f <
