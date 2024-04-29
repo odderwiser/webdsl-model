@@ -62,12 +62,11 @@ testStmt = testEq "Stmt"
   stmtSyntax
 
 stmtSyntax :: Fix Module
-stmtSyntax = injF $ S (injF $
+stmtSyntax = injF $ 
     VValDecl "x" (injF $ A.lit 4) Int
-      (injF $ VAssign "x" (injF $ A.lit 8) Int)
+      (injF $ S (injF $ VAssign "x" (injF $ A.lit 8) Int)
+      (injF $ Var "x")
     )
-
-    (injF $ Var "x")
 
 stmtTests :: Test
 stmtTests = TestList [
