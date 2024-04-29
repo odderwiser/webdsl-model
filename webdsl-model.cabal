@@ -27,6 +27,7 @@ library
                         Expr.Syntax,  Expr.Denotation,
                         Eval.Syntax,  Eval.Denotation,   Eval.Effects, Eval.Handlers,
                         Fun.Syntax,   Fun.Denotation,    Fun.Effects,  Fun.Handlers,
+                        List.Syntax,
                         Stmt.Syntax,  Stmt.Denotation,
                         Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
