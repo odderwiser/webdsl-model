@@ -1,11 +1,11 @@
-module Expr.Interface where
+module Expr.Denotation where
 import Expr.Syntax
 import Bool.Syntax as B
 import Utils.Composition (type (<:), type (<) (injV), projV)
 import Utils.Free (Free)
 import Utils.Denote (Env)
-import qualified Arith.Interface as A
-import qualified Bool.Interface as B
+import qualified Arith.Denotation as A
+import qualified Bool.Denotation as B
 import Syntax (Type (..))
 import qualified Arith.Syntax as A
 import Foreign (fromBool)

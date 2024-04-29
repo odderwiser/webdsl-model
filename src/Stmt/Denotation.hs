@@ -1,4 +1,4 @@
-module Stmt.Interface where
+module Stmt.Denotation where
 import Utils.Denote (Env)
 import Stmt.Syntax
 import Utils.Free (Free)

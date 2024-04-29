@@ -2,7 +2,7 @@
 module ArithTest where
 import Utils.Denote
 import Utils.Free
-import Arith.Interface as A
+import Arith.Denotation as A
 import Arith.Syntax
 import Utils.Composition
 import Test.HUnit 

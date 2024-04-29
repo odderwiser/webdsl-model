@@ -1,4 +1,4 @@
-module Arith.Interface (denote) where
+module Arith.Denotation (denote) where
 import Arith.Syntax (Arith (..), OpArith (..))
 import Utils.Denote (Env)
 import Utils.Composition

@@ -4,10 +4,10 @@ import Utils.Composition (type (+), type (\/), End)
 import Utils.Denote 
 import Utils.Free (Free)
 import Arith.Syntax as A 
-import Arith.Interface as A ( denote )
+import Arith.Denotation as A ( denote )
 import Bool.Syntax as B 
-import Bool.Interface as B
-import Expr.Interface as E
+import Bool.Denotation as B
+import Expr.Denotation as E
 import Expr.Syntax
 import Utils.Handler (unwrap, handle)
 import Bool.Handlers (condition)

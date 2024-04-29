@@ -1,4 +1,4 @@
-module Fun.Interface where
+module Fun.Denotation where
 import Fun.Effects
 import Utils.Composition
 import Fun.Syntax
@@ -6,7 +6,6 @@ import Utils.Denote
 import Utils.Free
 import Eval.Effects
 import Syntax
-import Eval.Interface (refEnv)
 import Eval.Handlers (environment)
 import Utils.Handler (handle_)
 import Fun.Handlers (defs)

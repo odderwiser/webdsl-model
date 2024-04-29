@@ -1,4 +1,4 @@
-module Bool.Interface (denote) where
+module Bool.Denotation (denote) where
 import Utils.Denote (Env, FreeEnv)
 import Bool.Syntax
 import Bool.Effects ( Cond, cond )

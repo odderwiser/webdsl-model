@@ -1,4 +1,4 @@
-module Eval.Interface where
+module Eval.Denotation where
 import Eval.Syntax
 import Utils.Denote (Env)
 import Utils.Free (Free)

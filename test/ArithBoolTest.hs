@@ -5,11 +5,11 @@ import Bool.Effects
 import Bool.Syntax as B
 import Utils.Composition
 import Arith.Syntax as A
-import Arith.Interface as A (denote)
+import Arith.Denotation as A (denote)
 import Test.HUnit
 import Utils.Handler
 import Bool.Handlers as B
-import Bool.Interface as B (denote)
+import Bool.Denotation as B (denote)
 import Utils.Fix ( bin, Fix(In), injF )
 import TestSyntax (ifSyntax, ifComparison)
 

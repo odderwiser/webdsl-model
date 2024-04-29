@@ -3,7 +3,7 @@ import Utils.Denote
 import Utils.Free
 import Bool.Effects
 import Bool.Syntax 
-import Bool.Interface as B
+import Bool.Denotation as B
 import Utils.Composition
 import Utils.Handler
 import Bool.Handlers

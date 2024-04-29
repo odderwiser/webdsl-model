@@ -12,10 +12,10 @@ import Utils.Free
 import Eval.Handlers
 import Utils.Handler
 import Bool.Handlers
-import Bool.Interface as B
-import Arith.Interface as A
-import Expr.Interface as Ex
-import Eval.Interface as Ev
+import Bool.Denotation as B
+import Arith.Denotation as A
+import Expr.Denotation as Ex
+import Eval.Denotation as Ev
 import Test.HUnit
 import TestSyntax
 import Utils.Fix

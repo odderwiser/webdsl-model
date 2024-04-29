@@ -8,16 +8,16 @@ import Arith.Syntax as A
 import Eval.Syntax as E
 import Utils.Denote
 import Utils.Free
-import Arith.Interface as A
-import Bool.Interface as B
-import Eval.Interface as E
+import Arith.Denotation as A
+import Bool.Denotation as B
+import Eval.Denotation as E
 import Utils.Handler
 import Bool.Handlers
 import Eval.Handlers
 import Test.HUnit 
 import Utils.Fix
 import Stmt.Syntax as S
-import qualified Stmt.Interface as S
+import qualified Stmt.Denotation as S
 
 type Eff    = MLState Address V + Cond + End
 type V      = Bool \/ Int \/ Null
