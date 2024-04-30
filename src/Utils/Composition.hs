@@ -81,20 +81,20 @@ instance {-# OVERLAPPABLE #-} (Functor f, Functor g, Functor g', f <: g')
 --- VALUE COMPOSITION
 
 infix 5 <
-class u < v where
+class (Eq u, Eq v) => u < v where
   injV  :: u -> v
   projV :: v -> Maybe u
 
 infixr \/
 type u \/ v = Either u v
 
-instance {-# OVERLAPPING #-} u < u where
+instance {-# OVERLAPPING #-} Eq u => u < u where
   injV :: u -> u
   injV = id
   projV :: u -> Maybe u
   projV = Just
 
-instance u < u \/ v where
+instance (Eq u, Eq v) => u < u \/ v where
   injV :: u -> u \/ v
   injV = Left
   projV :: u \/ v -> Maybe u
@@ -102,10 +102,11 @@ instance u < u \/ v where
     Left f -> Just f
     _ -> Nothing
 
-instance {-# OVERLAPPABLE #-} (u < v', w ~ v \/ v') => u < w where
+instance {-# OVERLAPPABLE #-} (Eq u, Eq w,  u < v', w ~ v \/ v') => u < w where
   injV :: (u < v') => u -> v \/ v'
   injV = Right . injV 
   projV :: (u < v') => v \/ v' -> Maybe u
   projV = \case
     Left g -> Nothing
     Right g' -> projV g'
+
