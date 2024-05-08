@@ -6,7 +6,7 @@ import ArithTest ( arithTests )
 import BoolTest ( boolTests )
 import ArithBoolTest (arithBoolTests)
 import ExprTest (exprTests)
--- import EvalTest (evalTests)
+import EvalTest (evalTests)
 -- import StmtTest (stmtTests)
 -- import FunTest (funTests)
 -- import ColTest (colTests)
@@ -18,7 +18,7 @@ main = do
     , boolTests
     , arithBoolTests
     , exprTests
-    -- , evalTests
+    , evalTests
     -- , funTests
     -- , stmtTests
     -- , colTests

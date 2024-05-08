@@ -7,4 +7,5 @@ type Address = Int
 
 data Type  = Int | Bool | List
 
-type Null = ()
+data Null e = Null
+    deriving Functor

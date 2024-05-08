@@ -10,24 +10,25 @@ data (f + g) a
   deriving Functor
 
 infix 5 <:
-class f <: g where
+class (Functor f, Functor g) => f <: g where
   inj  :: f k -> g k
   proj :: g k -> Maybe (f k)
 
 
-instance {-# OVERLAPPING #-} f <: f where
+
+instance {-# OVERLAPPING #-} (Functor f) => f <: f where
   inj :: f k -> f k
   inj = id
   proj :: f k -> Maybe (f k)
   proj = Just
 
-instance f <: f + g where
+instance (Functor f, Functor g) =>f <: f + g where
   inj = L
   proj = \case
     L f -> Just f
     _ -> Nothing
 
-instance {-# OVERLAPPABLE #-} (f <: g', h ~ g + g') => f <: h where
+instance {-# OVERLAPPABLE #-} (Functor f, Functor g, f <: g', h ~ g + g') => f <: h where
   inj = R . inj 
   proj = \case
     L g -> Nothing

@@ -14,7 +14,7 @@ op operand e1 e2 = case (projF e1, projF e2) of
     $ injF $ Lit 
     $ operand e1' e2'
 
-denote :: (Functor eff, Cond <: eff, LitBool <: v) 
+denote :: (Cond <: eff, LitBool <: v) 
   => Boolean (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 denote (LitB bool) env = return $ injF $ Lit bool
