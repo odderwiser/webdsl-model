@@ -12,20 +12,23 @@ import Utils.Fix
 import TestSyntax (ifSimple, ifComplicated)
 
 type Eff    = Cond + End
-type V      = Bool
+type V      = Fix LitBool
 type Module = Boolean
+type Output = Bool
 
-instance Denote Boolean Eff Bool where
-  denote :: Boolean (FreeEnv Eff Bool)
-    -> FreeEnv Eff Bool
+instance Denote Boolean Eff V where
+  denote :: Boolean (FreeEnv Eff V)
+    -> FreeEnv Eff V
   denote = B.denote
 
-run :: FreeEnv Eff Bool -> Bool
-run e = unwrap
-        $ handle condition
-        $ e $ Env {}
+run :: FreeEnv Eff V -> Bool
+run e = case unwrap
+    $ handle condition
+    $ e $ Env {}
+  of
+    (In (Lit bool)) -> bool
 
-testEq :: String -> V -> Fix Module -> Test
+testEq :: String -> Output -> Fix Module -> Test
 testEq id res syntax =  TestCase $
   assertEqual id res $ run $ foldD syntax
 

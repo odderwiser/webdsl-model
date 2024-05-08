@@ -1,22 +1,23 @@
-module Bool.Denotation (denote) where
+module Bool.Denotation where
 import Utils.Denote (Env, FreeEnv)
 import Bool.Syntax
 import Bool.Effects ( Cond, cond )
 import Utils.Composition
 import Utils.Free
+import Utils.Fix
 
 
-op :: (Functor f, Bool < v') 
-  => (Bool -> Bool -> Bool) -> v' -> v' -> Free f v'
-op operand e1 e2 = case (projV e1, projV e2) of
-  (Just e1', Just e2') -> return 
-    $ injV 
+op :: (Functor f, LitBool <: v') 
+  => (Bool -> Bool -> Bool) -> Fix v' -> Fix v' -> Free f (Fix v')
+op operand e1 e2 = case (projF e1, projF e2) of
+  (Just (Lit e1'), Just (Lit e2')) -> return 
+    $ injF $ Lit 
     $ operand e1' e2'
 
-denote :: (Cond <: eff, Bool < v) 
-  => Boolean (FreeEnv eff v)
-  -> FreeEnv eff v
-denote (LitB bool) env = return $ injV bool
+denote :: (Functor eff, Cond <: eff, LitBool <: v) 
+  => Boolean (FreeEnv eff (Fix v))
+  -> FreeEnv eff (Fix v)
+denote (LitB bool) env = return $ injF $ Lit bool
 
 denote (OpB Or a b) env = do
   a' <- a env

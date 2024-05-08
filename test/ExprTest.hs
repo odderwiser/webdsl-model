@@ -1,6 +1,6 @@
 module ExprTest where
 import Bool.Effects (Cond)
-import Utils.Composition (type (+), type (\/), End)
+import Utils.Composition (type (+), type (\/))
 import Utils.Denote 
 import Utils.Free (Free)
 import Arith.Syntax as A 
@@ -15,11 +15,14 @@ import Test.HUnit
 import Utils.Fix ( Fix, injF ) 
 import TestSyntax 
 import Syntax (Type(..))
+import Utils.Handler (End)
+import Utils.Fix
+import Utils.Composition
 
 type Eff    = Cond + End
-type V      =  Bool \/ Int
+type V      = Fix (LitBool + LitInt)
 type Module = Arith + Boolean + Expr
-type Out    = Either Bool Int
+type Out    = Bool \/ Int
 
 run :: FreeEnv Eff V
   -> Either Bool Int
@@ -27,8 +30,8 @@ run e = case unwrap
     $ handle condition
     $ e $ Env {}
   of 
-    (Left val)  -> Left val
-    (Right val) -> Right val
+    (In (L (B.Lit val)))  -> Left val
+    (In (R (A.Lit val)))  -> Right val
 
 instance Denote Arith Eff V where
   denote :: Arith (FreeEnv Eff V) -> FreeEnv Eff V

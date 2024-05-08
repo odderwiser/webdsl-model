@@ -10,19 +10,21 @@ import Utils.Fix
 import Utils.Handler
 
 type Eff    = End
-type V      = Int
+type V      = Fix LitInt
 type Module = Arith
+type Output = Int
 
 
-run :: (Env Eff V -> Free Eff Int) -> Int
-run e = unwrap $ e $ Env {}
+run :: FreeEnv Eff V -> Int
+run e = case unwrap $ e $ Env {} of
+  (In (Lit int)) -> int
 
-instance Denote Arith Eff Int where
-  denote :: Arith (Env Eff V -> Free Eff Int)
-    -> Env Eff V -> Free Eff Int
+instance Denote Arith Eff V where
+  denote :: Arith (FreeEnv  Eff V)
+    -> FreeEnv Eff V
   denote = A.denote
 
-testEq :: String -> V -> Fix Module -> Test
+testEq :: String -> Output -> Fix Module -> Test
 testEq id res syntax =  TestCase $
   assertEqual id res $ run $ foldD syntax
 

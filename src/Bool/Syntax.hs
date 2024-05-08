@@ -4,6 +4,9 @@ import Utils.Fix ( injF, BinaryInject(..), Fix )
 
 data OpB = Or | And 
 
+data LitBool e = Lit Bool
+  deriving Functor
+
 data Boolean e = LitB Bool
     | OpB OpB e e  
     | If e e e

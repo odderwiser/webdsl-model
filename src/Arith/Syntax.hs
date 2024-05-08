@@ -7,7 +7,7 @@ data OpArith = Add | Div | Sub | Mul | Mod
 data LitInt v = Lit Int
   deriving Functor
 
-data Arith e = LitAr (LitInt e) 
+data Arith e = LitAr Int 
     | OpArith OpArith e e
     deriving Functor
 
@@ -20,4 +20,4 @@ instance (Arith <: g) => BinaryInject Arith g OpArith where
   bin op left right = OpArith op (injF left) (injF right)
 
 lit :: Int -> Arith e
-lit = LitAr . Lit 
+lit = LitAr  
