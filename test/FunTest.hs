@@ -28,73 +28,73 @@ import Fun.Handlers (funReturn, defs)
 import Stmt.Syntax as S
 
 
--- type Eff = MLState Address V + Cond + Abort V + End
--- type V =  Bool \/ Int \/ Null
--- type Module = Arith + Boolean + Eval + Fun + Program + Stmt
--- type Out = Maybe (Either Bool Int)
+type Eff = MLState Address V + Cond + Abort V + End
+type V =  Fix (LitBool + LitInt + Null)
+type Module = Arith + Boolean + Eval + Fun + Program + Stmt
+type Out = Maybe (Either Bool Int)
 
--- run :: FreeEnv Eff V
---   -> Maybe (Either Bool Int)
--- run e = case unwrap
---     $ handle funReturn
---     $ handle condition
---     $ flipHandle_ handle_ heap' (makeEnv [])
---     $ e $ Env { varEnv = [], Utils.Denote.defs = []}
---   of
---     (Left val)           -> Just $ Left val
---     (Right (Left val))   -> Just $ Right val
---     (Right (Right _))    -> Nothing
+run :: FreeEnv Eff V
+  -> Maybe (Either Bool Int)
+run e = case unwrap
+    $ handle funReturn
+    $ handle condition
+    $ flipHandle_ handle_ heap' (makeEnv [])
+    $ e $ Env { varEnv = [], Utils.Denote.defs = []}
+  of
+    In (L (B.Lit val))     -> Just $ Left val
+    In (R (L (A.Lit val))) -> Just $ Right val
+    In (R (R _))           -> Nothing
 
--- instance Denote Arith Eff V where
---   denote = A.denote
+instance Denote Arith Eff V where
+  denote = A.denote
 
--- instance Denote Boolean Eff V where
---   denote = B.denote
+instance Denote Boolean Eff V where
+  denote = B.denote
 
--- instance Denote Expr Eff V where
---   denote = Ex.denote
+instance Denote Expr Eff V where
+  denote = Ex.denote
 
--- instance Denote Eval Eff V where
---   denote = Ev.denote
+instance Denote Eval Eff V where
+  denote = Ev.denote
 
--- instance Denote Fun Eff V where
---   denote = F.denote
+instance Denote Fun Eff V where
+  denote = F.denote
 
--- instance Denote Program Eff V where
---   denote = F.denoteProgram
+instance Denote Program Eff V where
+  denote = F.denoteProgram
 
--- instance Denote Stmt Eff V where
---   denote = S.denote
+instance Denote Stmt Eff V where
+  denote = S.denote
 
--- testEq :: Denote m Eff V 
---   => String -> Out -> Fix m -> Test
--- testEq id res syntax =  TestCase $
---   assertEqual id res $ run $ foldD syntax
+testEq :: Denote m Eff V 
+  => String -> Out -> Fix m -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
 
--- --------------------------------
+--------------------------------
 
--- testAbort :: Test
--- testAbort = testEq "two returns"
---   (Just $ Right 1)
---   abortSyntax
+testAbort :: Test
+testAbort = testEq "two returns"
+  (Just $ Right 1)
+  abortSyntax
 
--- abortSyntax :: Fix Module
--- abortSyntax = injF $ S 
---   (injF $ Return (injF $ A.lit 1)) 
---   (injF $ Return (injF $ A.lit 2))
+abortSyntax :: Fix Module
+abortSyntax = injF $ S 
+  (injF $ Return (injF $ A.lit 1)) 
+  (injF $ Return (injF $ A.lit 2))
 
--- testfCall :: Test
--- testfCall = testEq "simple function call"
---   (Just $ Right 7)
---   fCallSyntax
+testfCall :: Test
+testfCall = testEq "simple function call"
+  (Just $ Right 7)
+  fCallSyntax
 
--- fCallSyntax :: Fix Module
--- fCallSyntax = injF 
---   $ Program [FDecl "addThree" ["x"] 
---     (injF $ OpArith Add (injF $ Var "x") (injF $ A.lit 3))] 
---   $ injF $ FCall "addThree" [injF $ A.lit 4]
+fCallSyntax :: Fix Module
+fCallSyntax = injF 
+  $ Program [FDecl "addThree" ["x"] 
+    (injF $ OpArith Add (injF $ Var "x") (injF $ A.lit 3))] 
+  $ injF $ FCall "addThree" [injF $ A.lit 4]
 
--- funTests :: Test
--- funTests = TestList [
---     testAbort
---     ]
+funTests :: Test
+funTests = TestList [
+    testAbort
+    ]
