@@ -1,11 +1,12 @@
 module Arith.Denotation (denote) where
-import Arith.Syntax (Arith (..), OpArith (..))
-import Utils.Denote (Env)
+import Arith.Syntax (Arith (..), OpArith (..), LitInt (Lit))
+import Utils.Denote (Env, FreeEnv)
 import Utils.Composition
 import Utils.Free (Free (Op, Pure))
 import Syntax (Type(Int))
+import Utils.Fix
 
-op :: (Functor f, Int < v') 
+op :: (Functor f, Int <: v') 
   => (Int -> Int -> Int) -> v' -> v' 
   -> Free f v'
 op operand e1 e2 = case (projV e1, projV e2) of
@@ -14,10 +15,10 @@ op operand e1 e2 = case (projV e1, projV e2) of
     $ operand e1' e2'
 
 
-denote :: (Functor eff, Int < v) 
-  => Arith (Env eff v -> Free eff v) 
-  -> Env eff v-> Free eff v
-denote (LitAr int) env = return $ injV int
+denote :: (Functor eff, LitInt <: v) 
+  => Arith (FreeEnv eff (Fix v)) 
+  -> FreeEnv eff (Fix v)
+denote (LitAr (Lit int)) env = return $ injF (Lit int)
 
 denote (OpArith Add a b) env = do 
   a' <- a env 

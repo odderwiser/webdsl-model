@@ -18,6 +18,7 @@ import Bool.Syntax as B
 
 type Eff    = Cond + End
 type V      =  Recursive (Bool \/ Int)
+type V'      = Fix (Bool + Int)
 type Module = Arith + Boolean + Expr + Col
 type Out    = Recursive (Either Bool Int)
 
