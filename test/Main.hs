@@ -7,7 +7,7 @@ import BoolTest ( boolTests )
 import ArithBoolTest (arithBoolTests)
 import ExprTest (exprTests)
 import EvalTest (evalTests)
--- import StmtTest (stmtTests)
+import StmtTest (stmtTests)
 import FunTest (funTests)
 -- import ColTest (colTests)
 
@@ -20,7 +20,7 @@ main = do
     , exprTests
     , evalTests
     , funTests
-    -- , stmtTests
+    , stmtTests
     -- , colTests
     ]
   print result

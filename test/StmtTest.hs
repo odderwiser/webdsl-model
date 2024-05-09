@@ -19,57 +19,57 @@ import Utils.Fix
 import Stmt.Syntax as S
 import qualified Stmt.Denotation as S
 
--- type Eff    = MLState Address V + Cond + End
--- type V      = Bool \/ Int \/ Null
--- type Module = Stmt + Arith + Boolean + Eval
--- type Out    = Maybe (Either Bool Int)
+type Eff    = MLState Address V + Cond + End
+type V      = Fix (LitBool + LitInt + Null)
+type Module = Stmt + Arith + Boolean + Eval
+type Out    = Maybe (Either Bool Int)
 
--- run :: FreeEnv Eff V
---   -> Maybe (Either Bool Int)
--- run e = case unwrap
---     $ handle condition
---     $ flipHandle_ handle_ heap (makeEnv [])
---     $ e $ Env {varEnv = []}
---   of
---     (Left val, _)         -> Just $ Left val
---     (Right (Left val), _) -> Just $ Right val
---     (Right (Right _), _)  -> Nothing
-
-
--- instance Denote Arith Eff V where
---   denote = A.denote
-
--- instance Denote Boolean Eff V where
---   denote = B.denote
+run :: FreeEnv Eff V
+  -> Maybe (Either Bool Int)
+run e = case unwrap
+    $ handle condition
+    $ flipHandle_ handle_ heap (makeEnv [])
+    $ e $ Env {varEnv = []}
+  of
+    (In (L (B.Lit val)), _)     -> Just $ Left val
+    (In (R (L (A.Lit val))), _) -> Just $ Right val
+    (In (R (R _)), _)           -> Nothing
 
 
--- instance Denote Eval Eff V where
---   denote = E.denote
+instance Denote Arith Eff V where
+  denote = A.denote
 
--- instance Denote Stmt Eff V where
---   denote = S.denote
+instance Denote Boolean Eff V where
+  denote = B.denote
 
--- testEq :: Denote m Eff V 
---   => String -> Out -> Fix m -> Test
--- testEq id res syntax =  TestCase $
---   assertEqual id res $ run $ foldD syntax
 
--- --------------------------------
+instance Denote Eval Eff V where
+  denote = E.denote
 
--- testStmt :: Test
--- testStmt = testEq "Stmt"
---   (Just $ Right 8)
---   stmtSyntax
+instance Denote Stmt Eff V where
+  denote = S.denote
 
--- stmtSyntax :: Fix Module
--- stmtSyntax = injF $ 
---     VValDecl "x" (injF $ A.lit 4) Int
---       (injF $ S 
---         (injF $ VAssign "x" (injF $ A.lit 8) Int)
---         (injF $ Var "x")
---     )
+testEq :: Denote m Eff V 
+  => String -> Out -> Fix m -> Test
+testEq id res syntax =  TestCase $
+  assertEqual id res $ run $ foldD syntax
 
--- stmtTests :: Test
--- stmtTests = TestList [
---     testStmt
---     ]
+--------------------------------
+
+testStmt :: Test
+testStmt = testEq "Stmt"
+  (Just $ Right 8)
+  stmtSyntax
+
+stmtSyntax :: Fix Module
+stmtSyntax = injF $ 
+    VValDecl "x" (injF $ A.lit 4) Int
+      (injF $ S 
+        (injF $ VAssign "x" (injF $ A.lit 8) Int)
+        (injF $ Var "x")
+    )
+
+stmtTests :: Test
+stmtTests = TestList [
+    testStmt
+    ]
