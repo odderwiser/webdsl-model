@@ -134,8 +134,8 @@ testVDecl = testEq
 
 vDeclSyntax :: Fix Module
 vDeclSyntax = injF $
-  VDecl "x" $ injF $
-  VAssign "x" (injB True) Bool
+  VDecl ["x"] $ injF $
+  VAssign ["x"] (injB True) Bool
 
 testVValDecl :: Test
 testVValDecl = testEq
@@ -145,7 +145,7 @@ testVValDecl = testEq
 
 vValDeclSyntax :: Fix Module
 vValDeclSyntax = injF $
-  VValDecl "x" (injA 4) Int 
+  VValDecl ["x"] (injA 4) Int 
     $ injF $ OpArith Mul (injVar "x") (injA 2)
 
 testVAssign :: Test
@@ -156,8 +156,8 @@ testVAssign = testEq
 
 vAssignSyntax :: Fix Module
 vAssignSyntax = injF 
-  $ VValDecl "x" (injA 4) Int
-  $ injF $ VAssign "x" (injA 8) Int
+  $ VValDecl ["x"] (injA 4) Int
+  $ injF $ VAssign ["x"] (injA 8) Int
 
 testTwoVarsA :: Test
 testTwoVarsA = testEq "two variables"
@@ -166,8 +166,8 @@ testTwoVarsA = testEq "two variables"
 
 twoVarsASyntax :: Fix Module
 twoVarsASyntax = injF 
-  $ VValDecl "x" (injA 4) Int
-  $ injF $ VValDecl "y" (injA 3) Int (injVar "x")
+  $ VValDecl ["x"] (injA 4) Int
+  $ injF $ VValDecl ["y"] (injA 3) Int (injVar "x")
 
 testTwoVarsB :: Test
 testTwoVarsB = testEq
@@ -177,8 +177,8 @@ testTwoVarsB = testEq
 
 twoVarsBSyntax :: Fix Module
 twoVarsBSyntax = injF 
-  $ VValDecl "x" (injA 4) Int
-  $ injF $ VValDecl "y" (injA 3) Int
+  $ VValDecl ["x"] (injA 4) Int
+  $ injF $ VValDecl ["y"] (injA 3) Int
   $ injVar "y"
 
 
