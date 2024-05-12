@@ -11,16 +11,17 @@ import Utils.Handler (handle_)
 import Fun.Handlers (defs)
 import Utils.Fix
 
-refVars varNames locs = handle_ environment (mapM assign (zip varNames locs))
+refVars varNames locs env = handle_ environment env (mapM assign (zip varNames locs))
+
 derefDefs :: Functor remEff 
     => FunName -> Env remEff v 
     -> Free remEff (FDecl (FreeEnv remEff v), Env remEff v)
-derefDefs name = handle_ Fun.Handlers.defs (deref name) 
+derefDefs name env = handle_ Fun.Handlers.defs env (deref name) 
 
 refDefs :: Functor eff
     => [FDecl (FreeEnv eff v)] -> Env eff v 
     -> Free eff ([FunName], Env eff v)
-refDefs decls = handle_ Fun.Handlers.defs (mapM ref decls)
+refDefs decls env  = handle_ Fun.Handlers.defs env (mapM ref decls)
 
 -- does this still work with how Variable Declaration is defined?
 denote :: (Abort (Fix v) <: eff, MLState Address (Fix v) <: eff, Null <: v)

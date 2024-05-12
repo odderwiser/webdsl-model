@@ -36,19 +36,20 @@ unwrap (Pure x) = x
 unwrap (Op f) = case f of
 
 data Handler_ handledEff val param remEff output
-  = Handler_ { ret_  :: val -> (param -> Free remEff output)
-             , hdlr_ :: handledEff (param -> Free remEff output) 
-             -> (param -> Free remEff output) }
+  = Handler_ 
+    { ret_  :: val -> (param -> Free remEff output)
+    , hdlr_ :: handledEff (param -> Free remEff output) 
+      -> (param -> Free remEff output) }
 
 handle_ :: (Functor handledEff, Functor remEff)
-        => Handler_ handledEff val param remEff output 
-        -> Free (handledEff + remEff) val -> param -> Free remEff output
+  => Handler_ handledEff val param remEff output 
+  -> param -> Free (handledEff + remEff) val 
+  -> Free remEff output
 
-handle_ handler = fold
+handle_ handler param value = fold
   (ret_ handler)
   (\case 
      L handledEff -> hdlr_ handler handledEff
      R remainder -> \param -> Op (fmap (\apply -> apply param) remainder))
+  value param
 
-flipHandle_ :: (a -> b -> c -> d) -> a -> c -> b -> d 
-flipHandle_ fun a c b = fun a b c

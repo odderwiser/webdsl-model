@@ -28,7 +28,7 @@ run :: FreeEnv Eff V
   -> Maybe (Either Bool Int)
 run e = case unwrap
     $ handle condition
-    $ flipHandle_ handle_ heap (makeEnv [])
+    $ handle_ heap (makeEnv [])
     $ e $ Env {varEnv = []}
   of
     (In (L (B.Lit val)), _)     -> Just $ Left val

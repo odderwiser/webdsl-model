@@ -38,7 +38,7 @@ run :: FreeEnv Eff V
 run e = case unwrap
     $ handle funReturn
     $ handle condition
-    $ flipHandle_ handle_ heap' (makeEnv [])
+    $ handle_ heap' (makeEnv [])
     $ e $ Env { varEnv = [], Utils.Denote.defs = []}
   of
     In (L (B.Lit val))     -> Just $ Left val

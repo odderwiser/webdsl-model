@@ -30,7 +30,7 @@ run :: FreeEnv Eff V
   -> Out
 run e = case unwrap
     $ handle condition
-    $ flipHandle_ handle_ heap (makeEnv [])
+    $ handle_ heap (makeEnv [])
     $ e $ Env { varEnv = [] }
   of
     (In (L (B.Lit val)), _)     -> Just $ Left val
@@ -42,7 +42,7 @@ runWithEnv :: FreeEnv Eff V
   -> Out
 runWithEnv e env store = case unwrap
     $ handle condition
-    $ flipHandle_ handle_ heap (makeEnv store)
+    $ handle_ heap (makeEnv store)
     $ e env
   of
     (In (L (B.Lit val)), _)     -> Just $ Left val

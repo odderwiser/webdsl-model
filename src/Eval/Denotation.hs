@@ -12,17 +12,17 @@ import Utils.Fix (Fix, injF)
 
 derefEnv :: (Functor eff) 
     => VName -> Env eff v -> Free eff (Address, Env eff v)
-derefEnv name = handle_ environment (deref name)
+derefEnv name env = handle_ environment env (deref name)
 refEnv :: (Functor eff)
     => VName -> Address 
     -> Env eff v -> Free eff ((), Env eff v)
-refEnv name loc = handle_ environment (assign (name, loc))
+refEnv name loc env = handle_ environment env (assign (name, loc))
 
 denote :: forall v eff. ( MLState Address (Fix v) <: eff, Null <: v)
   => Eval (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 
-denote (Var name)              env = do
+denote (Var name)            env = do
     (loc, _) <- derefEnv name env
     deref loc
 
