@@ -12,7 +12,11 @@ import Fun.Handlers (defs)
 import Utils.Fix
 
 refVars varNames locs = handle_ environment (mapM assign (zip varNames locs))
+derefDefs :: Functor remEff 
+    => FunName -> Env remEff v 
+    -> Free remEff (FDecl (FreeEnv remEff v), Env remEff v)
 derefDefs name = handle_ Fun.Handlers.defs (deref name) 
+
 refDefs :: Functor eff
     => [FDecl (FreeEnv eff v)] -> Env eff v 
     -> Free eff ([FunName], Env eff v)

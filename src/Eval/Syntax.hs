@@ -1,5 +1,7 @@
 module Eval.Syntax where
 import Syntax (Type)
+import Utils.Fix
+import Utils.Composition
 
 type VName = String
 
@@ -9,3 +11,6 @@ data Eval e
     | VValDecl  VName e Type e  -- declare and initialise variable
     | VAssign   VName e Type    -- assign value to an existing variable
     deriving Functor
+
+injVar :: (Eval <: f) => VName -> Fix f
+injVar = injF . Var

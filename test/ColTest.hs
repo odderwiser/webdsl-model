@@ -47,39 +47,39 @@ testEq id res syntax =  TestCase $
   assertEqual id res $ run $ foldD syntax
 
 testInt = testEq
-    "contains int"
-    (injF $ B.Lit True)
-    (injF $ OpIn 
-        (injF $ A.lit 1) 
-        (injF $ LitC $ map injF 
-            [A.lit 2, 
-            A.lit 4,
-            OpArith Sub (injF $ A.lit 3) (injF $ A.lit 2)]) 
-            :: Fix Module) 
+  "contains int"
+  (injF $ B.Lit True)
+  (injF $ OpIn 
+    (injA 1) 
+    (injC  
+      [ injA  2
+      , injA  4
+      , injF $ OpArith Sub (injA 3) (injA 2)
+      ]) :: Fix Module) 
 
 testBool = testEq
-    "contains bool"
-    (injF $ B.Lit False)
-    (injF $ OpIn
-        (injF $ B.lit True) 
-        (injF $ LitC $ 
-            [injF $ B.lit False, 
-            injF $ OpB And (injF $ B.lit True) (injF $ B.lit False),
-            injF $ OpCmp Neq (injF $ A.lit 3, Int) (injF $ A.lit 3, Int)]) 
-            :: Fix Module) 
+  "contains bool"
+  (injF $ B.Lit False)
+  (injF $ OpIn
+    (injB True) 
+    (injC 
+      [ injB False
+      , injF $ OpB   And (injB True) (injB False)
+      , injF $ OpCmp Neq (injA 3, Int) (injA 3, Int)
+      ]) :: Fix Module) 
 
 testList = testEq
-    "contains list"
-    (injF $ B.Lit True)
-    (injF $ OpIn
-        (injF $ C.lit [injF $ A.lit 1]) 
-        (injF $ C.lit 
-            [ injF $ C.lit [], 
-              injF $ C.lit $ [injF $ A.lit 1], 
-              injF $ C.lit $ [  
-            injF $ OpArith Add (injF $ A.lit 2) (injF $ A.lit 3),
-            injF $ OpArith Mul (injF $ A.lit 3) (injF $ A.lit 3)]]) 
-            :: Fix Module)
+  "contains list"
+  (injF $ B.Lit True)
+  (injF $ OpIn
+    (injC [injA 1]) 
+    (injC 
+      [ injC []
+      , injC [injF $ OpArith Sub (injA 3) (injA 2)]
+      , injC 
+        [ injF $ OpArith Add (injA 2) (injA 3)
+        , injF $ OpArith Mul (injA 3) (injA 3)
+        ]]) :: Fix Module)
 
 colTests :: Test
 colTests = TestList 

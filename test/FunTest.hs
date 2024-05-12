@@ -79,9 +79,9 @@ testAbort = testEq "two returns"
   abortSyntax
 
 abortSyntax :: Fix Module
-abortSyntax = injF $ S 
-  (injF $ Return (injF $ A.lit 1)) 
-  (injF $ Return (injF $ A.lit 2))
+abortSyntax = injF 
+  $ S (injF $ Return $ injA 1) 
+  $ injF $ Return $ injA 2
 
 testfCall :: Test
 testfCall = testEq "simple function call"
@@ -91,10 +91,11 @@ testfCall = testEq "simple function call"
 fCallSyntax :: Fix Module
 fCallSyntax = injF 
   $ Program [FDecl "addThree" ["x"] 
-    (injF $ OpArith Add (injF $ Var "x") (injF $ A.lit 3))] 
-  $ injF $ FCall "addThree" [injF $ A.lit 4]
+    (injF $ OpArith Add (injVar "x") (injA 3))] 
+  $ injF $ FCall "addThree" [injA 4]
 
 funTests :: Test
-funTests = TestList [
-    testAbort
-    ]
+funTests = TestList 
+  [ testAbort
+  , testfCall
+  ]

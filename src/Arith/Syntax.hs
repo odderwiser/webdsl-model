@@ -25,3 +25,6 @@ instance (Arith <: g) => BinaryInject Arith g OpArith where
 
 lit :: Int -> Arith e
 lit = LitAr  
+
+injA :: (Arith <: f) => Int -> Fix f
+injA =  injF . LitAr

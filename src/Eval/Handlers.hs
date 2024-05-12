@@ -32,7 +32,8 @@ heap' = Handler_
       Deref key k -> k (case Map.lookup key map of Just x -> x) map
       Assign (key, value) k -> k $ Map.insert key value map }
 
-environment :: (Functor g) => Handler_ (MLState VName Address) a (Env eff v) g (a, Env eff v)
+environment :: (Functor g) => Handler_ (MLState VName Address) 
+  a (Env eff v) g (a, Env eff v)
 environment = Handler_
   { ret_ = \x map -> pure (x, map)
   , hdlr_ = \x map -> case (varEnv map, x) of

@@ -1,7 +1,7 @@
 module Col.Syntax where
 import Syntax (Type)
 import Utils.Composition
-import Data.Maybe (mapMaybe)
+import Utils.Fix
 
 data Col e 
   = LitC [e]  
@@ -11,3 +11,6 @@ data Col e
 
 lit :: [a] -> Col a
 lit = LitC 
+
+injC :: (Col <: f) => [Fix f] -> Fix f
+injC =  injF . LitC

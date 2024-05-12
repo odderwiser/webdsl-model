@@ -27,3 +27,6 @@ instance (Boolean <: g)
 
 lit :: Bool -> Boolean e
 lit = LitB 
+
+injB :: (Boolean <: f) => Bool -> Fix f
+injB =  injF . LitB

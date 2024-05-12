@@ -11,59 +11,38 @@ import Syntax (Type(..))
 
 ifSimple :: Fix Boolean
 ifSimple = In 
-    $ If (injF $ B.lit False)
-        (injF $ B.lit False)
-        (injF $ B.lit True)
+  $ If (injB False) (injB False) (injB True)
 
 ifComplicated :: Fix Boolean
-ifComplicated = In
-    $ If (In $ bin And
-            (B.lit False)
-            (B.lit True))
-        (injF $ B.lit False)
-        (injF $ B.lit True)
+ifComplicated = injF $ If 
+  (injF $ OpB And (injB False) (injB True))
+  (injB False) 
+  (injB True)
 
 -- ARITH + BOOLEAN
 
 ifSyntax :: Fix (Arith + Boolean)
-ifSyntax = injF $ 
-    If (injF (B.lit False))
-        (injF (A.lit 1))
-        (injF (A.lit 2))
+ifSyntax = injF 
+  $ If (injB False) (injA 1) (injA 2)
 
 ifComparison :: Fix (Arith + Boolean)
 ifComparison = injF 
-  $ If (injF (OpB
-    Or
-      (injF $ B.lit False)
-      (injF $ B.lit True)))
-    (injF (A.lit 1))
-    (injF (A.lit 2))
+  $ If (injF 
+    $ OpB Or (injB False) (injB True))
+  (injA 1) (injA 2)
 -- ARITH + BOOLEAN + EXPR
 
 type AEB = Arith + Boolean + Expr
 
 eqSyntax :: Fix AEB
-eqSyntax = injF 
-    $ If (injF $ OpCmp Eq 
-        (injF $ B.lit True, Bool) 
-        (injF $ B.lit False, Bool)) 
-        (injF $ OpCmp Eq 
-            (injF $ B.lit True, Bool) 
-            (injF $ B.lit True, Int)) -- wrong on purpose
-        (injF $ OpCmp Neq 
-            (injF $ A.lit 1, Int) 
-            (injF $ A.lit 2, Int))
+eqSyntax = injF $ If 
+  (injF $ OpCmp Eq (injB True, Bool) (injB False, Bool)) 
+  (injF $ OpCmp Eq (injB True, Bool) (injB True, Int)) -- wrong on purpose
+  (injF $ OpCmp Neq (injA 1, Int) (injA 2, Int))
 
 cmpSyntax :: Fix AEB
-cmpSyntax = injF 
-    $ If (injF $ OpCmp Lt
-        (injF $ A.lit 1, Int) 
-        (injF $ A.lit 2, Int)) 
-        (injF $ OpCmp Lte 
-            (injF $ A.lit 3, Int) 
-            (injF $ A.lit 3, Int)) 
-        (injF $ OpCmp Gt 
-            (injF $ A.lit 1, Int) 
-            (injF $ A.lit 1, Int))
+cmpSyntax = injF $ If 
+  (injF $ OpCmp Lt  (injA 1, Int) (injA 2, Int)) 
+  (injF $ OpCmp Lte (injA 3, Int) (injA 3, Int)) 
+  (injF $ OpCmp Gt  (injA 1, Int) (injA 1, Int))
 

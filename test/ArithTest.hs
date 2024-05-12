@@ -31,12 +31,12 @@ testEq id res syntax =  TestCase $
 
 testSimple :: Test
 testSimple = testEq "literal" 1 
-  $ injF $ lit 1
+  $ injA 1
   
 
 testAddition :: Test
 testAddition = testEq "add" 3 
-  $ In $ bin Add (lit 1) (lit 2)
+  $ injF $ OpArith Add (injA 1) (injA 2)
 
 
 arithTests :: Test

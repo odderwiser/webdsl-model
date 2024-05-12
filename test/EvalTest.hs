@@ -118,13 +118,13 @@ testVar = testEqEnv
   (Just $ Right 5)
   varSyntax
   (Env { varEnv = [("x", 0)]})
-  [(0, injF (A.Lit 3))] 
+  [(0, injF $ A.Lit 3)] 
 
 varSyntax :: Fix Module
 varSyntax = injF $
     OpArith Add
-        (injF $ Var "x")
-        (injF $ A.lit 2)
+        (injVar "x")
+        (injA 2)
 
 testVDecl :: Test
 testVDecl = testEq
@@ -135,7 +135,7 @@ testVDecl = testEq
 vDeclSyntax :: Fix Module
 vDeclSyntax = injF $
   VDecl "x" $ injF $
-  VAssign "x" (injF $ B.lit True) Bool
+  VAssign "x" (injB True) Bool
 
 testVValDecl :: Test
 testVValDecl = testEq
@@ -145,10 +145,8 @@ testVValDecl = testEq
 
 vValDeclSyntax :: Fix Module
 vValDeclSyntax = injF $
-    VValDecl "x" (injF $ A.lit 4) Int
-    (injF $ OpArith Mul
-        (injF $ Var "x")
-        (injF $ A.lit 2))
+  VValDecl "x" (injA 4) Int 
+    $ injF $ OpArith Mul (injVar "x") (injA 2)
 
 testVAssign :: Test
 testVAssign = testEq
@@ -157,9 +155,9 @@ testVAssign = testEq
   vAssignSyntax
 
 vAssignSyntax :: Fix Module
-vAssignSyntax = injF $
-    VValDecl "x" (injF $ A.lit 4) Int
-    (injF $ VAssign "x" (injF $ A.lit 8) Int)
+vAssignSyntax = injF 
+  $ VValDecl "x" (injA 4) Int
+  $ injF $ VAssign "x" (injA 8) Int
 
 testTwoVarsA :: Test
 testTwoVarsA = testEq "two variables"
@@ -167,10 +165,9 @@ testTwoVarsA = testEq "two variables"
   twoVarsASyntax
 
 twoVarsASyntax :: Fix Module
-twoVarsASyntax = injF $
-    VValDecl "x" (injF $ A.lit 4) Int
-    (injF $ VValDecl "y" (injF $ A.lit 3) Int
-    (injF $ Var "x"))
+twoVarsASyntax = injF 
+  $ VValDecl "x" (injA 4) Int
+  $ injF $ VValDecl "y" (injA 3) Int (injVar "x")
 
 testTwoVarsB :: Test
 testTwoVarsB = testEq
@@ -179,10 +176,10 @@ testTwoVarsB = testEq
   twoVarsBSyntax
 
 twoVarsBSyntax :: Fix Module
-twoVarsBSyntax = injF $
-    VValDecl "x" (injF $ A.lit 4) Int
-    (injF $ VValDecl "y" (injF $ A.lit 3) Int
-    (injF $ Var "y"))
+twoVarsBSyntax = injF 
+  $ VValDecl "x" (injA 4) Int
+  $ injF $ VValDecl "y" (injA 3) Int
+  $ injVar "y"
 
 
 evalTests :: Test
