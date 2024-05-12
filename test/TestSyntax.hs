@@ -36,13 +36,13 @@ type AEB = Arith + Boolean + Expr
 
 eqSyntax :: Fix AEB
 eqSyntax = injF $ If 
-  (injF $ OpCmp Eq (injB True, Bool) (injB False, Bool)) 
-  (injF $ OpCmp Eq (injB True, Bool) (injB True, Int)) -- wrong on purpose
-  (injF $ OpCmp Neq (injA 1, Int) (injA 2, Int))
+  (injF $ OpCmp Eq  (injB True) (injB False)) 
+  (injF $ OpCmp Eq  (injB True) (injB True)) -- wrong on purpose
+  (injF $ OpCmp Neq (injA 1)    (injA 2))
 
 cmpSyntax :: Fix AEB
 cmpSyntax = injF $ If 
-  (injF $ OpCmp Lt  (injA 1, Int) (injA 2, Int)) 
-  (injF $ OpCmp Lte (injA 3, Int) (injA 3, Int)) 
-  (injF $ OpCmp Gt  (injA 1, Int) (injA 1, Int))
+  (injF $ OpCmp Lt  (injA 1) (injA 2)) 
+  (injF $ OpCmp Lte (injA 3) (injA 3)) 
+  (injF $ OpCmp Gt  (injA 1) (injA 1))
 

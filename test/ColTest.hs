@@ -65,7 +65,7 @@ testBool = testEq
     (injC 
       [ injB False
       , injF $ OpB   And (injB True) (injB False)
-      , injF $ OpCmp Neq (injA 3, Int) (injA 3, Int)
+      , injF $ OpCmp Neq (injA 3) (injA 3)
       ]) :: Fix Module) 
 
 testList = testEq
