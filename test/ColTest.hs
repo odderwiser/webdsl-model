@@ -81,9 +81,33 @@ testList = testEq
         , injF $ OpArith Mul (injA 3) (injA 3)
         ]]) :: Fix Module)
 
+testAnd = testEq
+  "andList list"
+  (injF $ B.Lit True)
+  (injF $ UnOp And
+    (injC 
+      [ injB True
+      , injF $ OpB Or (injB True) (injB False)
+      , injF $ OpCmp Lt (injA 2) (injA 3)
+      , injF $ OpCmp Gte (injA 3) (injA 3)
+      ]) :: Fix Module)
+
+testOr = testEq
+  "orList list"
+  (injF $ B.Lit False)
+  (injF $ UnOp Or
+    (injC 
+      [ injB False
+      , injF $ OpB And (injB True) (injB False)
+      , injF $ OpCmp Gt (injA 2) (injA 3)
+      , injF $ OpCmp Neq (injA 3) (injA 3)
+      ]) :: Fix Module)
+
 colTests :: Test
 colTests = TestList 
     [ testInt
     , testBool
     , testList
+    , testAnd
+    , testOr
     ]
