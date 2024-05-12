@@ -5,7 +5,11 @@ import Utils.Fix ( injF, BinaryInject(..), Fix )
 data OpB = Or | And 
 
 data LitBool e = Lit Bool
-  deriving Functor
+  deriving (Functor, Eq)
+
+instance Show (LitBool a) where
+  show :: LitBool a -> String
+  show (Lit v) = show v 
 
 data Boolean e = LitB Bool
     | OpB OpB e e  

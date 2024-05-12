@@ -2,6 +2,7 @@ module Col.Composition where
 import Col.Syntax
 import Utils.Composition 
 import Data.Maybe (mapMaybe)
+import Utils.Fix
 
 -- instance {-# OVERLAPPABLE #-}(v < u, w~ Recursive u) => v < Recursive u where
 --   injV :: (v < u) => v -> Recursive u
@@ -17,7 +18,4 @@ import Data.Maybe (mapMaybe)
 --   projV (Base v) = Nothing
 --   projV (Rec v) = Just $ mapMaybe projV v
 
--- -- manual inference of generic lists
--- projList :: Eq v => Recursive v -> Maybe [Recursive v]
--- projList (Base v) = Nothing
--- projList (Rec v) = Just v
+-- manual inference of generic lists

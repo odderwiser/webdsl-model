@@ -5,7 +5,11 @@ import Utils.Fix ( injF, BinaryInject(..), Fix )
 data OpArith = Add | Div | Sub | Mul | Mod
 
 data LitInt v = Lit Int
-  deriving Functor
+  deriving (Functor, Eq)
+
+instance Show (LitInt a) where
+  show :: LitInt a -> String
+  show (Lit v) = show v 
 
 data Arith e = LitAr Int 
     | OpArith OpArith e e

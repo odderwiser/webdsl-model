@@ -9,3 +9,7 @@ data Type  = Int | Bool | List
 
 data Null e = Null
     deriving Functor
+
+
+class (Functor f) => Literal f where
+    

@@ -1,4 +1,5 @@
 module Utils.Free where
+import Utils.Composition
 
 data Free f a
   = Pure a
@@ -21,3 +22,17 @@ instance Functor f => Applicative (Free f) where
 instance Functor f => Monad (Free f) where
   (>>=) :: Functor f => Free f a -> (a -> Free f b) -> Free f b
   (>>=) m k = fold k Op m
+
+projFree :: (f <: g) => Free g a -> Maybe (f (Free g a))
+projFree (Pure a) = Nothing
+projFree (Op g) = proj g  
+
+injFree :: (f <: g) => f (Free g a) -> Free g a 
+injFree = Op . inj
+
+instance (Eq a, Eq (f (Free f a))) => Eq (Free f a) where
+  (==) :: Eq a => Free f a -> Free f a -> Bool
+  (==) (Pure a) (Pure b) = a == b 
+  (==) (Op a) (Op b) = a == b
+  (==) _ _ = False
+

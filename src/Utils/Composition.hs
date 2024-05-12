@@ -7,14 +7,12 @@ infixr 6 +
 data (f + g) a
   = L (f a)
   | R (g a)
-  deriving Functor
+  deriving (Functor, Eq, Show)
 
 infix 5 <:
 class (Functor f, Functor g) => f <: g where
   inj  :: f k -> g k
   proj :: g k -> Maybe (f k)
-
-
 
 instance {-# OVERLAPPING #-} (Functor f) => f <: f where
   inj :: f k -> f k
@@ -22,7 +20,7 @@ instance {-# OVERLAPPING #-} (Functor f) => f <: f where
   proj :: f k -> Maybe (f k)
   proj = Just
 
-instance (Functor f, Functor g) =>f <: f + g where
+instance (Functor f, Functor g) =>f  <: f + g where
   inj = L
   proj = \case
     L f -> Just f
