@@ -20,10 +20,13 @@ import Stmt.Syntax as S
 import qualified Stmt.Denotation as S
 import Col.Syntax
 import qualified Col.Denotation as C
+import Expr.Syntax
+import Expr.Denotation as Ex
+
 
 type Eff    = MLState Address V + Cond + End
 type V      = Fix (LitBool + LitInt + Null + [])
-type Module = Stmt + Arith + Boolean + Eval + Col
+type Module = Stmt + Arith + Boolean + Eval + Col + Expr
 type Out    = Fix (LitBool + LitInt + Null + [])
 
 run :: FreeEnv Eff V
@@ -51,6 +54,9 @@ instance Denote Stmt Eff V where
 
 instance Denote Col Eff V where
   denote = C.denote
+
+instance Denote Expr Eff V where
+  denote = Ex.denote
 
 testEq :: Denote m Eff V 
   => String -> Out -> Fix m -> Test
@@ -92,7 +98,7 @@ testOrderAsc = testEq "order by ascending"
     ) (injVar "x") :: Fix Module)
 
 testOrderDesc = testEq "order by descending"
-  (injF $ A.Lit 48)
+  (injF $ A.Lit 45)
   (injF $ 
   VValDecl ["x"] (injF $ A.lit 1) Int $ injF $ S
     (injF $ ForC "e1" (injC [injA 2, injA 1, injA 4])
@@ -101,6 +107,41 @@ testOrderDesc = testEq "order by descending"
       [ OrdBy (injVar "e1") False]
     ) (injVar "x") :: Fix Module)
 
+testLimit = testEq "order by descending"
+  (injF $ A.Lit 3)
+  (injF $ 
+  VValDecl ["x"] (injF $ A.lit 0) Int $ injF $ S
+    (injF $ ForC "e1" (injC [injA 2, injA 1, injA 4])
+      (injF $ VAssign ["x"] (injF $ OpArith Add (injVar "x") (injVar "e1")) Int )
+      [ Limit (injA 2)]
+    ) (injVar "x") :: Fix Module)
+
+testOffset = testEq "order by descending"
+  (injF $ A.Lit 5)
+  (injF $ 
+  VValDecl ["x"] (injF $ A.lit 0) Int $ injF $ S
+    (injF $ ForC "e1" (injC [injA 2, injA 1, injA 4])
+      (injF $ VAssign ["x"] (injF $ OpArith Add (injVar "x") (injVar "e1")) Int )
+      [ Offset (injA 1)]
+    ) (injVar "x") :: Fix Module)
+
+testLimitOffset = testEq "order by descending"
+  (injF $ A.Lit 1)
+  (injF $ 
+  VValDecl ["x"] (injF $ A.lit 0) Int $ injF $ S
+    (injF $ ForC "e1" (injC [injA 2, injA 1, injA 4])
+      (injF $ VAssign ["x"] (injF $ OpArith Add (injVar "x") (injVar "e1")) Int )
+      [Limit (injA 2), Offset (injA 1)]
+    ) (injVar "x") :: Fix Module)
+
+testAllFilters = testEq "order by descending"
+  (injF $ A.Lit 5)
+  (injF $ 
+  VValDecl ["x"] (injF $ A.lit 0) Int $ injF $ S
+    (injF $ ForC "e1" (injC [injA 2, injA 1, injA 4, injA 3, injA 6, injA 3])
+      (injF $ VAssign ["x"] (injF $ OpArith Add (injVar "x") (injVar "e1")) Int )
+      [Where (injF $ OpCmp Lt (injVar "e1") (injA 4)), OrdBy (injVar "e1") False, Limit (injA 3), Offset (injA 1)]
+    ) (injVar "x") :: Fix Module)
   
 
 stmtTests :: Test
@@ -108,5 +149,9 @@ stmtTests = TestList [
     testStmt
     , testForLoop
     , testOrderAsc
-    -- , testOrderDesc
+    , testOrderDesc
+    , testLimit
+    , testOffset
+    , testLimitOffset
+    , testAllFilters
     ]

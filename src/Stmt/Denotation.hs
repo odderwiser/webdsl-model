@@ -71,6 +71,17 @@ denoteFilter name col (OrdBy e False) env = applyFunction sortOn
     Just ((A.Lit num)) -> -num)
   name col e env
 
+denoteFilter name col (Limit e) env = applyDecrease take
+  col e env
+
+denoteFilter name col (Offset e) env = applyDecrease drop
+  col e env
+
+applyDecrease f col e env = do
+  e' <- e env
+  case projF e' of
+    Just (A.Lit e') -> return $ injF $ f e' col
+ 
 applyFunction :: forall a b v f. (MLState Address (Fix v) <: f, [] <: v, Null <: v) 
   => (((a, b) -> a) -> [(a, Fix v)] -> [(a, Fix v)]) 
   -> (Fix v -> a) 
