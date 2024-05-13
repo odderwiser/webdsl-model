@@ -3,10 +3,10 @@ import GHC.OldList (elemIndex)
 import Eval.Syntax (VName)
 import Entity.Syntax (EName)
 
-data Stmt e = S e e
-    | ForC VName e e [Filter e]
-    | ForE VName EName [Filter e]
-    | ForA VName e e e 
+data Stmt e = S e e -- Statement concat
+    | ForCol VName e e [Filter e] -- for all elements in collection
+    | ForEnt VName EName [Filter e] -- for all entities of type EName
+    | ForArith VName e e e -- for numbers in range from e2 to e3
     | While e e
     deriving Functor
 

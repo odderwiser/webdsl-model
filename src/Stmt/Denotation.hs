@@ -16,6 +16,7 @@ import Bool.Syntax (LitBool)
 import qualified Arith.Syntax as A
 import Arith.Syntax
 import Data.List (sort, sortOn)
+import Bool.Effects
 
 executeLoop col' name env stmts = case projF col' of
     Just (ids :: [Fix v]) ->
@@ -24,7 +25,11 @@ executeLoop col' name env stmts = case projF col' of
         env' <- refEnv name loc env
         stmts env') ids
 
-denote :: (Null <: v, [] <: v, LitBool <: v, LitInt <: v,  MLState Address (Fix v) <: eff)
+halfOpenRange a b = [a, (a + step)..(b - step) ]
+  where step = signum (b - a)
+
+denote :: forall v eff. (Null <: v, [] <: v, LitBool <: v, LitInt <: v, 
+  Cond <: eff, MLState Address (Fix v) <: eff)
   => Stmt (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 
@@ -32,7 +37,7 @@ denote (S s1 s2) env = do
   s1' <- s1 env
   s2 env
 
-denote (ForC name col stmts filters) env = do
+denote (ForCol name col stmts filters) env = do
   col' <- col env
   col'' <- denoteFilters name col' filters env
   case projF col'' of
@@ -42,6 +47,26 @@ denote (ForC name col stmts filters) env = do
         env' <- refEnv name loc env
         stmts env') ids
   return $ injF Null
+
+denote (ForArith name e1 e2 stmts) env = do
+  e1' <- e1 env
+  e2' <- e2 env
+  case (projF e1', projF e2') of
+    (Just (A.Lit e1''), Just (A.Lit e2'')) -> do
+      mapM_ (\id -> do
+        loc <- ref ((injF $ A.Lit id) :: Fix v)
+        env' <- refEnv name loc env
+        stmts env') $ halfOpenRange e1'' e2''
+  return $ injF Null
+
+denote (While e stmts) env = whileLoop e stmts env
+
+whileLoop e stmts env = do
+  e' <- e env
+  cond e' (do 
+    stmts env
+    whileLoop e stmts env)
+    (return $ injF Null) 
 
 denoteFilters :: (Null <: v, [] <: v, LitBool <: v, LitInt <: v,  MLState Address (Fix v) <: eff)
   => VName -> Fix v -> [Filter (FreeEnv eff (Fix v))]

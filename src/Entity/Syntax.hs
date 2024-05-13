@@ -10,8 +10,6 @@ data Entity e = Entity EName (Maybe (Entity e)) [PName] [FDecl e]
     
 type EntityEnv = (EName, [(PName, Address)])
 
-data Dot e = Param EName PName
-
 data Program e
     = Program [FDecl e] [Entity e] e
     deriving Functor

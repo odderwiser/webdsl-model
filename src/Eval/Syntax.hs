@@ -6,12 +6,12 @@ import Utils.Composition
 type VNames = [VName]
 type VName = String
 
-data Eval e 
-    = Var       VNames           -- use a variable
-    | VDecl     VNames        e  -- declare but not initialise, with continuation
-    | VValDecl  VNames e Type e  -- declare and initialise variable
-    | VAssign   VNames e Type    -- assign value to an existing variable
+data Eval name e 
+    = Var       name           -- use a variable
+    | VDecl     name        e  -- declare but not initialise, with continuation
+    | VValDecl  name e Type e  -- declare and initialise variable
+    | VAssign   name e Type    -- assign value to an existing variable
     deriving Functor
 
-injVar :: (Eval <: f) => VName -> Fix f
-injVar v = injF . Var $ [v]
+injVar :: (Eval VName <: f) => VName -> Fix f
+injVar = injF . Var

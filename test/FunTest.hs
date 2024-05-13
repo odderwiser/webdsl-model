@@ -2,7 +2,7 @@ module FunTest where
 
 import Eval.Effects
 import Syntax
-import Bool.Effects 
+import Bool.Effects
 import Utils.Composition
 import Bool.Syntax as B
 import Arith.Syntax as A
@@ -30,7 +30,7 @@ import Stmt.Syntax as S
 
 type Eff = MLState Address V + Cond + Abort V + End
 type V =  Fix (LitBool + LitInt + Null + [])
-type Module = Arith + Boolean + Eval + Fun + Program + Stmt
+type Module = Arith + Boolean + Eval VName + Fun + Program + Stmt
 type Out = Maybe (Either Bool Int)
 
 run :: FreeEnv Eff V
@@ -54,7 +54,7 @@ instance Denote Boolean Eff V where
 instance Denote Expr Eff V where
   denote = Ex.denote
 
-instance Denote Eval Eff V where
+instance Denote (Eval VName) Eff V where
   denote = Ev.denote
 
 instance Denote Fun Eff V where
@@ -66,7 +66,7 @@ instance Denote Program Eff V where
 instance Denote Stmt Eff V where
   denote = S.denote
 
-testEq :: Denote m Eff V 
+testEq :: Denote m Eff V
   => String -> Out -> Fix m -> Test
 testEq id res syntax =  TestCase $
   assertEqual id res $ run $ foldD syntax
@@ -79,8 +79,8 @@ testAbort = testEq "two returns"
   abortSyntax
 
 abortSyntax :: Fix Module
-abortSyntax = injF 
-  $ S (injF $ Return $ injA 1) 
+abortSyntax = injF
+  $ S (injF $ Return $ injA 1)
   $ injF $ Return $ injA 2
 
 testfCall :: Test
@@ -89,13 +89,13 @@ testfCall = testEq "simple function call"
   fCallSyntax
 
 fCallSyntax :: Fix Module
-fCallSyntax = injF 
-  $ Program [FDecl "addThree" ["x"] 
-    (injF $ OpArith Add (injVar "x") (injA 3))] 
+fCallSyntax = injF
+  $ Program [FDecl "addThree" ["x"]
+    (injF $ OpArith Add (injVar "x") (injA 3))]
   $ injF $ FCall "addThree" [injA 4]
 
 funTests :: Test
-funTests = TestList 
+funTests = TestList
   [ testAbort
   , testfCall
   ]
