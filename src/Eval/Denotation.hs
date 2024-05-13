@@ -15,8 +15,10 @@ derefEnv :: (Functor eff)
 derefEnv name env = handle_ environment env (deref name)
 refEnv :: (Functor eff)
     => VName -> Address 
-    -> Env eff v -> Free eff ((), Env eff v)
-refEnv name loc env = handle_ environment env (assign (name, loc))
+    -> Env eff v -> Free eff (Env eff v)
+refEnv name loc env = do
+    (_, env') <- handle_ environment env (assign (name, loc))
+    return env'
 
 denote :: forall v eff. ( MLState Address (Fix v) <: eff, Null <: v)
   => Eval (FreeEnv eff (Fix v))
@@ -28,13 +30,13 @@ denote (Var [name])            env = do
 
 denote (VDecl [name] k)        env = do
     loc <- ref (injF Null :: Fix v)
-    (_, env') <- refEnv name loc env 
+    env' <- refEnv name loc env 
     k env'
 
 denote (VValDecl [name] e typ k) env = do
     v   <- e env
     loc <- ref v
-    (_, env') <- refEnv name loc env
+    env' <- refEnv name loc env
     k env'
 
 denote (VAssign [name] e typ)    env = do

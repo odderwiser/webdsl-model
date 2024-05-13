@@ -18,22 +18,22 @@ import Test.HUnit
 import Utils.Fix
 import Stmt.Syntax as S
 import qualified Stmt.Denotation as S
+import Col.Syntax
+import qualified Col.Denotation as C
 
 type Eff    = MLState Address V + Cond + End
-type V      = Fix (LitBool + LitInt + Null)
-type Module = Stmt + Arith + Boolean + Eval
-type Out    = Maybe (Either Bool Int)
+type V      = Fix (LitBool + LitInt + Null + [])
+type Module = Stmt + Arith + Boolean + Eval + Col
+type Out    = Fix (LitBool + LitInt + Null + [])
 
 run :: FreeEnv Eff V
-  -> Maybe (Either Bool Int)
+  -> Out
 run e = case unwrap
     $ handle condition
     $ handle_ heap (makeEnv [])
     $ e $ Env {varEnv = []}
   of
-    (In (L (B.Lit val)), _)     -> Just $ Left val
-    (In (R (L (A.Lit val))), _) -> Just $ Right val
-    (In (R (R _)), _)           -> Nothing
+    (out, _) -> out
 
 
 instance Denote Arith Eff V where
@@ -49,6 +49,9 @@ instance Denote Eval Eff V where
 instance Denote Stmt Eff V where
   denote = S.denote
 
+instance Denote Col Eff V where
+  denote = C.denote
+
 testEq :: Denote m Eff V 
   => String -> Out -> Fix m -> Test
 testEq id res syntax =  TestCase $
@@ -58,18 +61,52 @@ testEq id res syntax =  TestCase $
 
 testStmt :: Test
 testStmt = testEq "Stmt"
-  (Just $ Right 8)
+  (injF $ A.Lit 8)
   stmtSyntax
 
 stmtSyntax :: Fix Module
 stmtSyntax = injF $ 
-    VValDecl ["x"] (injF $ A.lit 4) Int
-      (injF $ S 
-        (injF $ VAssign ["x"] (injF $ A.lit 8) Int)
-        (injF $ Var ["x"])
-    )
+  VValDecl ["x"] (injF $ A.lit 4) Int
+    (injF $ S 
+      (injF $ VAssign ["x"] (injA 8) Int)
+      (injF $ Var ["x"])
+  )
+
+testForLoop = testEq "forLoop"
+  (injF $ A.Lit 8)
+  (injF $ 
+  VValDecl ["x"] (injF $ A.lit 4) Int $ injF $ S
+    (injF $ ForC "e1" (injC [injB True, injB True, injB False])
+      (injF $ VAssign ["x"] (injF $ OpArith Add (injVar "x") (injA 2)) Int )
+      [ Where (injVar "e1")]
+    ) (injVar "x") :: Fix Module)
+
+testOrderAsc = testEq "order by ascending"
+  (injF $ A.Lit 48)
+  (injF $ 
+  VValDecl ["x"] (injF $ A.lit 1) Int $ injF $ S
+    (injF $ ForC "e1" (injC [injA 2, injA 1, injA 4])
+      (injF $ VAssign ["x"] (injF $ OpArith Mul (injF 
+        $ OpArith Add (injVar "x") (injVar "e1")) (injVar "e1")) Int )
+      [ OrdBy (injVar "e1") True]
+    ) (injVar "x") :: Fix Module)
+
+testOrderDesc = testEq "order by descending"
+  (injF $ A.Lit 48)
+  (injF $ 
+  VValDecl ["x"] (injF $ A.lit 1) Int $ injF $ S
+    (injF $ ForC "e1" (injC [injA 2, injA 1, injA 4])
+      (injF $ VAssign ["x"] (injF $ OpArith Mul (injF 
+        $ OpArith Add (injVar "x") (injVar "e1")) (injVar "e1")) Int )
+      [ OrdBy (injVar "e1") False]
+    ) (injVar "x") :: Fix Module)
+
+  
 
 stmtTests :: Test
 stmtTests = TestList [
     testStmt
+    , testForLoop
+    , testOrderAsc
+    -- , testOrderDesc
     ]

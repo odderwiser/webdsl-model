@@ -6,7 +6,7 @@ import Entity.Syntax (EName)
 data Stmt e = S e e
     | ForC VName e e [Filter e]
     | ForE VName EName [Filter e]
-    | ForA VName e e e [Filter e]
+    | ForA VName e e e 
     | While e e
     deriving Functor
 

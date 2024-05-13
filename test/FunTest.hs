@@ -29,7 +29,7 @@ import Stmt.Syntax as S
 
 
 type Eff = MLState Address V + Cond + Abort V + End
-type V =  Fix (LitBool + LitInt + Null)
+type V =  Fix (LitBool + LitInt + Null + [])
 type Module = Arith + Boolean + Eval + Fun + Program + Stmt
 type Out = Maybe (Either Bool Int)
 

@@ -38,7 +38,7 @@ environment = Handler_
   { ret_ = \x map -> pure (x, map)
   , hdlr_ = \x map -> case (varEnv map, x) of
       (env, Deref key k)     -> k (case lookup key env of Just x -> x) map
-      (env, Assign record k) -> k $ insertMap record map }
+      (env, Assign record k) -> k $ insertMap record map}
 
 insertMap :: (VName, Address) -> Env eff v  -> Env eff v
 insertMap record env    = env { varEnv = record : varEnv env}

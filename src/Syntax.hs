@@ -8,7 +8,7 @@ type Address = Int
 data Type  = Int | Bool | List
 
 data Null e = Null
-    deriving (Functor, Eq)
+    deriving (Functor, Eq, Show)
 
 
 class (Functor f) => Literal f where

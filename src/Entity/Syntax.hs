@@ -2,13 +2,13 @@ module Entity.Syntax where
 import Fun.Syntax (FDecl)
 import Syntax (Address)
 
-type EName = String
-type PName = String
+type EName = String --entity name
+type PName = String --property name
 
 data Entity e = Entity EName (Maybe (Entity e)) [PName] [FDecl e]
     deriving Functor
     
-type EntityEnv = [(PName, Address)]
+type EntityEnv = (EName, [(PName, Address)])
 
 data Dot e = Param EName PName
 

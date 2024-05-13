@@ -29,7 +29,7 @@ library
                         Eval.Syntax,  Eval.Denotation,   Eval.Effects, Eval.Handlers,
                         Fun.Syntax,   Fun.Denotation,    Fun.Effects,  Fun.Handlers,
                         Col.Syntax,   Col.Denotation,
-                        Stmt.Syntax,  Stmt.Denotation,   Stmt.Effects,
+                        Stmt.Syntax,  Stmt.Denotation,   Stmt.Effects, Stmt.Handlers,
                         Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
                         Utils.Fix, Utils.Denote
