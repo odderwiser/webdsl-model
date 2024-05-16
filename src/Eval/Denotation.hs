@@ -1,6 +1,5 @@
 module Eval.Denotation where
 import Eval.Syntax
-import Utils.Denote (Env, FreeEnv)
 import Utils.Free (Free)
 import Eval.Effects
 import Utils.Composition (type (<:), type (<) (injV), type (+), inj)
@@ -8,11 +7,15 @@ import Syntax --(Val (..), unwrap, Address, wrap)
 import Utils.Handler (handle_, Handler_)
 import Eval.Handlers (environment)
 import Utils.Fix (Fix, injF)
+import Utils.Environment
 
 
 derefEnv :: (Functor eff) 
-    => VName -> Env eff v -> Free eff (Address, Env eff v)
-derefEnv name env = handle_ environment env (deref name)
+    => VName -> Env eff v -> Free eff Address
+derefEnv name env = do
+  (loc, env) <- handle_ environment env (deref name)
+  return loc
+
 refEnv :: (Functor eff)
     => VName -> Address 
     -> Env eff v -> Free eff (Env eff v)
@@ -25,7 +28,7 @@ denote :: forall v eff. ( MLState Address (Fix v) <: eff, Null <: v)
   -> FreeEnv eff (Fix v)
 
 denote (Var name)            env = do
-    (loc, _) <- derefEnv name env
+    loc <- derefEnv name env
     deref loc
 
 denote (VDecl name k)        env = do
@@ -33,15 +36,15 @@ denote (VDecl name k)        env = do
     env' <- refEnv name loc env 
     k env'
 
-denote (VValDecl name e typ k) env = do
-    v   <- e env
-    loc <- ref v
+denote (VValDecl name e k) env = do
+    v    <- e env
+    loc  <- ref v
     env' <- refEnv name loc env
     k env'
 
-denote (VAssign name e typ)    env = do
+denote (VAssign name e)    env = do
     v <- e env
-    (loc, _) <- derefEnv name env
+    loc <- derefEnv name env
     assign (loc, v)
     return $ injF Null
 

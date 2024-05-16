@@ -7,19 +7,10 @@ import Syntax
 import Fun.Syntax (FunName, FDecl)
 import Entity.Syntax (EName, Entity)
 import Stmt.Syntax (Filter)
-
-type Function eff v = FDecl (Env eff v -> Free eff v)
-type FreeEnv eff v = Env eff v -> Free eff v
-
-data Env eff v = Env
-    { varEnv   :: [(VName, Address)]
-    , defs     :: [(FunName, Function eff v)]
-    , entities :: [(EName, Entity (FreeEnv eff v))]
-    , filters  :: [Filter (FreeEnv eff v)] 
-    }
+import Utils.Environment (FreeEnv)
 
 class Functor sym => Denote sym eff v where
-    denote :: sym (FreeEnv eff v) -> FreeEnv eff v
+    denote:: sym (FreeEnv eff v) -> FreeEnv eff v
 
 instance  (Denote sym1 eff v, Denote sym2 eff v) => Denote (sym1 + sym2) eff v where
     denote :: (Denote sym1 eff v, Denote sym2 eff v) =>

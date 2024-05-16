@@ -4,13 +4,13 @@ import Arith.Syntax as A
 import Bool.Syntax as B
 import Utils.Composition (type (<:), type (<) (injV), projV)
 import Utils.Free (Free)
-import Utils.Denote (Env)
 import qualified Arith.Denotation as A
 import qualified Bool.Denotation as B
 import Syntax (Type (..))
 import qualified Arith.Syntax as A
 import Foreign (fromBool)
 import Utils.Fix
+import Utils.Environment
 
 op :: (Functor f, LitBool <: v)
   => (a -> a -> Bool) -> a -> a -> Free f (Fix v)

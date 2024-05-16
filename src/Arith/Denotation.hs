@@ -1,10 +1,10 @@
 module Arith.Denotation (denote) where
 import Arith.Syntax (Arith (..), OpArith (..), LitInt (Lit))
-import Utils.Denote (Env, FreeEnv)
 import Utils.Composition
 import Utils.Free (Free (Op, Pure))
 import Syntax (Type(Int))
 import Utils.Fix
+import Utils.Environment (FreeEnv)
 
 op :: (Functor f, LitInt <: v') 
   => (Int -> Int -> Int) -> Fix v' -> Fix v' 

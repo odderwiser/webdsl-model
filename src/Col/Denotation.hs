@@ -1,13 +1,11 @@
 module Col.Denotation where
 import Utils.Composition
-import Utils.Denote
 import Utils.Free
 import Col.Syntax
-import Syntax
 import Utils.Fix
 import Bool.Syntax as B
-import Arith.Syntax
 import Data.Maybe (mapMaybe)
+import Utils.Environment (FreeEnv)
 
 elemContains :: ([] <: g, Functor f, LitBool <: g, Eq (g (Fix g)))
     => Fix g -> Fix g -> Free f (Fix g)

@@ -1,10 +1,10 @@
 module Bool.Denotation where
-import Utils.Denote (Env, FreeEnv)
 import Bool.Syntax
 import Bool.Effects ( Cond, cond )
 import Utils.Composition
 import Utils.Free
 import Utils.Fix
+import Utils.Environment (FreeEnv)
 
 
 op :: (Functor f, LitBool <: v') 

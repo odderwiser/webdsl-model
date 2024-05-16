@@ -12,7 +12,3 @@ data Fun e
     = Return e
     | FCall FunName [e]
     deriving Functor
-
-data Program e
-    = Program [FDecl e] e
-    deriving Functor
