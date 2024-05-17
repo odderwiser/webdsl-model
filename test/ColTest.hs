@@ -16,17 +16,24 @@ import Syntax
 import Bool.Syntax as B
 import Col.Syntax as C
 import Utils.Environment
+import Eval.Effects
+import Eval.Handlers 
+import Eval.Handlers (heap)
+import Eval.Handlers (heap')
+import Eval.Syntax 
+import Eval.Denotation as Ev
 
-type Eff    = Cond + End
-type V      =  Fix (LitBool + LitInt + [])
-type Module = Arith + Boolean + Expr + Col
-type Out    =Fix (LitBool + LitInt + [])
+type Eff    = Cond + MLState Address V + End
+type V      =  Fix (LitBool + LitInt + Null + [])
+type Module = Arith + Boolean + Expr + Col + Eval VName
+type Out    =  V
 
 run :: FreeEnv Eff V
   -> Out
 run e = case unwrap
+    $ handle_ heap' (makeEnv [])
     $ handle condition
-    $ e $ Env {}
+    $ e $ Env { varEnv = [] }
   of 
     res -> res
 
@@ -41,6 +48,9 @@ instance Denote Expr Eff V where
 
 instance Denote Col Eff V where
   denote = C.denote
+
+instance Denote (Eval VName) Eff V where
+  denote = Ev.denote
 
 testEq :: Denote m Eff V 
   => String -> Out -> Fix m -> Test
@@ -82,6 +92,13 @@ testList = testEq
         , injF $ OpArith Mul (injA 3) (injA 3)
         ]]) :: Fix Module)
 
+testComprehension = testEq
+  "comprehension"
+  (injF [injF $ B.Lit False, injF $ B.Lit True])
+  ((injF $ LComp (injF $ OpCmp Gt (injVar "exp") (injA 5))
+    "exp"
+    (injC [injA 1, injF $ OpArith Add (injA 3) (injA 6)]) []) :: Fix Module)
+
 testAnd = testEq
   "andList list"
   (injF $ B.Lit True)
@@ -109,6 +126,7 @@ colTests = TestList
     [ testInt
     , testBool
     , testList
+    , testComprehension
     , testAnd
     , testOr
     ]

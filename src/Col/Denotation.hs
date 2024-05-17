@@ -40,15 +40,15 @@ denote (OpIn a b) env = do
   elemContains a' b'
 
 denote (LComp exp name col filters) env = do
-  col'   <- col env
-  col''  <- denoteFilters name col' filters env
+  col'  <- col env
+  col'' <- denoteFilters name col' filters env
   loc  <- ref (injF Null :: Fix f)
   env' <- refEnv name loc env
   case projF col'' of
     Just (list :: [Fix f]) -> do
       col''' <- mapM (\elem -> do
         assign (loc, elem)
-        exp env
+        exp env'
         ) list
       return $ injF col'''
 
