@@ -4,11 +4,12 @@ import Utils.Composition
 import Utils.Fix
 import Eval.Syntax (VName)
 import Bool.Syntax (OpB)
+import Stmt.Syntax
 
 data Col e 
   = LitC [e]                   -- List literal : []
   | OpIn e e                   -- Contains: e1 in e2
-  -- | LComp e VName e [Filter e] -- List Comprehension: [ e1 | VName : type in e2 filter ]. Syntactic sugar for ForLoop?
+  | LComp e VName e [Filter e] -- List Comprehension: [ e1 | VName : type in e2 filter ]. Syntactic sugar for ForLoop?
   | UnOp OpB e                 -- List Comp operation: And [ e1 | VName : type in e2 filter ]
     deriving Functor
 
