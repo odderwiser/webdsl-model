@@ -1,3 +1,5 @@
+
+
 module Fun.Denotation where
 import Fun.Effects
 import Utils.Composition
@@ -17,16 +19,16 @@ import Utils.Denote
 
 refVars varNames locs env = handle_ environment env (mapM assign (zip varNames locs))
 
-derefDefs :: Functor remEff 
-    => FunName -> Env remEff v 
+derefDefs :: Functor remEff
+    => FunName -> Env remEff v
     -> Free remEff (FDecl (FreeEnv remEff v), Env remEff v)
-derefDefs name env = handle_ Fun.Handlers.defs env (deref name) 
+derefDefs name env = handle_ Fun.Handlers.defs env (deref name)
 
 refDefs :: (Functor eff, FDecl <: g)
-    => [g (FreeEnv eff v)] -> Env eff v 
+    => [g (FreeEnv eff v)] -> Env eff v
     -> Free eff (Env eff v)
-refDefs decls env  = do 
-  (names :: [FunName], env') <- handle_ Fun.Handlers.defs env $ mapM ref 
+refDefs decls env  = do
+  (names :: [FunName], env') <- handle_ Fun.Handlers.defs env $ mapM ref
     $ mapMaybe (\dec ->
         case proj dec of
           Just (dec' :: FDecl (FreeEnv eff v)) -> Just dec'
@@ -55,9 +57,12 @@ denote (FCall name vars) env = do
 -- denoteProgram :: forall g eff eff' v. (Functor eff, eff ~ GlobalScope FDecl eff' + eff')
 --   => Program (FDecl (FreeEnv eff' v)) (FreeEnv eff' v)
 --   -> FreeEnv eff' v
--- denoteProgram (Fragment decls program) env = do
---   (env' :: Env eff' v) <- write Defs decls env
---   program env'
+denoteDefs ::
+  (FDecl <: g, GlobalScope g eff v <: eff')
+  => [g (FreeEnv eff v)] -> Free eff' (Env eff v) -> Free eff' (Env eff v)
+denoteDefs defs env = do 
+  env' <- env 
+  write Defs defs env'
 
 instance Def FDecl where
   -- foldDef :: (Functor eff, Denote f eff v, FDecl <: g)

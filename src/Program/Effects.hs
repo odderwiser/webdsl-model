@@ -5,11 +5,12 @@ import Utils.Environment
 import Utils.Free
 import Fun.Syntax (FDecl)
 
-data GlobalScope g eff k
-    = forall e v. Write EnvType [g (FreeEnv eff v)] (Env eff v) (Env eff v -> k)
+data GlobalScope g eff v k
+    = Write EnvType [g (FreeEnv eff v)] (Env eff v) ((Env eff v) -> k)
+    deriving Functor
 
 data EnvType = Vars | Defs | EDefs
 
-write :: (FDecl <: g, GlobalScope g f' <: f, f ~ GlobalScope g f' + f') 
-    => EnvType -> [g (FreeEnv f' v)] -> Env f' v -> Free f (Env f' v)
+write :: (GlobalScope g eff v <: f, env ~ Env eff v) 
+    => EnvType -> [g (FreeEnv eff v)] -> env -> Free f env
 write ty defs env = Op . inj $ Write ty defs env Pure

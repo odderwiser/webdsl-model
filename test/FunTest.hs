@@ -29,18 +29,23 @@ import Stmt.Syntax as S
 import Utils.Environment
 import Program.Syntax
 import Program.Denotation (foldProgram)
+import Program.Handlers (defsHandler)
+import Program.Effects
 
 
 type Eff = MLState Address V + Cond + Abort V + End
 type V =  Fix (LitBool + LitInt + Null + [])
 type Module = Arith + Boolean + Eval VName + Fun + Stmt
 type Out = Maybe (Either Bool Int)
-type Envs = FDecl 
+type Envs = FDecl
+type Eff' = (GlobalScope Envs Eff V + End)
 
-runProgram (Fragment defs exp) = case 
-  refDefs defs Env { varEnv = [], Utils.Environment.defs = []} of
-    (Pure env) -> run exp env
+runProgram (Fragment defs exp) = case
+  unwrap $ handle defsHandler $ denoteDefs' defs of
+    env -> run exp env
 
+denoteDefs' :: [Envs (FreeEnv Eff V)] -> Free Eff' (Env Eff V)
+denoteDefs' defs = F.denoteDefs defs $ Pure $ Env {}
 runExp e = run e Env { varEnv = []}
 
 run :: FreeEnv Eff V -> Env Eff V

@@ -27,6 +27,7 @@ instance (Def sym1, Def sym2) => Def (sym1 + sym2) where
         (L f) -> inj $ foldDef f
         (R f) -> inj $ foldDef f
 
+
 foldD :: Denote f eff v => Fix f -> FreeEnv eff v
 foldD (In f) = denote $ fmap foldD f
 

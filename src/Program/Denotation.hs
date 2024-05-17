@@ -9,10 +9,14 @@ import Utils.Handler
 import Program.Effects (write, EnvType (..), GlobalScope)
 import Utils.Fix
 import Fun.Syntax (FDecl)
+import qualified Fun.Denotation as F
 
-foldProgram :: (Denote f2 eff2 v2, FDecl <: g, Def g, Denote f1 eff1 v1)
-    => Program (g (Fix f1)) (Fix f2) -> Program (g (FreeEnv eff1 v1)) (FreeEnv eff2 v2)
+foldProgram :: (Denote f eff v, FDecl <: g, Def g)
+    => Program (g (Fix f)) (Fix f) -> Program (g (FreeEnv eff v)) (FreeEnv eff v)
 foldProgram (Fragment defs program) = Fragment (map foldDef defs) (foldD program)  
+
+-- denoteDefProgram :: Program (g (FreeEnv eff v)) (FreeEnv eff v) -> 
+-- denoteDefProgram
 
 -- denoteProgram :: (Functor eff, GlobalScope () <: g)
 --   => Program (FreeEnv eff v) (FreeEnv eff v)
