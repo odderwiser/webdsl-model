@@ -30,10 +30,7 @@ genericEnvHandler envSubtype setter = Handler_
 --   -> Bool -> Handler_ (MLState t v) val t remEff (val, t)
 mkAHandler envSubtype finder setter = Handler_
   { ret_  = curry pure
-  , hdlr_ = \x env -> case envSubtype env of
-    ((), )
-    
-    case (envSubtype env, x) of
+  , hdlr_ = \x env -> case (envSubtype env, x) of
       (env', Deref key k)     -> k (fromJust $ finder key env') env
       (env', Assign record k) -> k $ setter record env}
 

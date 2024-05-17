@@ -26,20 +26,30 @@ import Fun.Syntax
 import Fun.Effects
 import Fun.Handlers (funReturn, defs)
 import Stmt.Syntax as S
+import Utils.Environment
+import Program.Syntax
+import Program.Denotation (foldProgram)
 
 
 type Eff = MLState Address V + Cond + Abort V + End
 type V =  Fix (LitBool + LitInt + Null + [])
-type Module = Arith + Boolean + Eval VName + Fun + Program + Stmt
+type Module = Arith + Boolean + Eval VName + Fun + Stmt
 type Out = Maybe (Either Bool Int)
+type Envs = FDecl 
 
-run :: FreeEnv Eff V
+runProgram (Fragment defs exp) = case 
+  refDefs defs Env { varEnv = [], Utils.Environment.defs = []} of
+    (Pure env) -> run exp env
+
+runExp e = run e Env { varEnv = []}
+
+run :: FreeEnv Eff V -> Env Eff V
   -> Maybe (Either Bool Int)
-run e = case unwrap
+run e env = case unwrap
     $ handle funReturn
     $ handle condition
     $ handle_ heap' (makeEnv [])
-    $ e $ Env { varEnv = [], Utils.Denote.defs = []}
+    $ e env
   of
     In (L (B.Lit val))     -> Just $ Left val
     In (R (L (A.Lit val))) -> Just $ Right val
@@ -60,8 +70,8 @@ instance Denote (Eval VName) Eff V where
 instance Denote Fun Eff V where
   denote = F.denote
 
-instance Denote Program Eff V where
-  denote = F.denoteProgram
+-- instance Denote Program Eff V where
+--   denote = F.denoteProgram
 
 instance Denote Stmt Eff V where
   denote = S.denote
@@ -69,7 +79,12 @@ instance Denote Stmt Eff V where
 testEq :: Denote m Eff V
   => String -> Out -> Fix m -> Test
 testEq id res syntax =  TestCase $
-  assertEqual id res $ run $ foldD syntax
+  assertEqual id res $ runExp $ foldD syntax
+
+-- testEqProgram :: Denote m Eff V
+--   => String -> Out -> Fix m -> Test
+testEqProgram id res syntax =  TestCase $
+  assertEqual id res $ runProgram $ foldProgram syntax
 
 --------------------------------
 
@@ -84,13 +99,12 @@ abortSyntax = injF
   $ injF $ Return $ injA 2
 
 testfCall :: Test
-testfCall = testEq "simple function call"
+testfCall = testEqProgram "simple function call"
   (Just $ Right 7)
   fCallSyntax
 
-fCallSyntax :: Fix Module
-fCallSyntax = injF
-  $ Program [FDecl "addThree" ["x"]
+fCallSyntax :: Program (FDecl (Fix Module)) (Fix Module)
+fCallSyntax = Fragment [FDecl "addThree" ["x"]
     (injF $ OpArith Add (injVar "x") (injA 3))]
   $ injF $ FCall "addThree" [injA 4]
 

@@ -12,6 +12,7 @@ import Bool.Handlers as B
 import Bool.Denotation as B 
 import Utils.Fix ( bin, Fix(In), injF )
 import TestSyntax (ifSyntax, ifComparison)
+import Utils.Environment
 
 type Eff = Cond + End
 type V = Fix (LitBool + LitInt)

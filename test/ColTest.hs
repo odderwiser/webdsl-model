@@ -15,6 +15,7 @@ import Arith.Syntax as A
 import Syntax
 import Bool.Syntax as B
 import Col.Syntax as C
+import Utils.Environment
 
 type Eff    = Cond + End
 type V      =  Fix (LitBool + LitInt + [])

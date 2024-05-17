@@ -8,6 +8,7 @@ import Utils.Composition
 import Test.HUnit 
 import Utils.Fix
 import Utils.Handler
+import Utils.Environment
 
 type Eff    = End
 type V      = Fix LitInt

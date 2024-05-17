@@ -10,6 +10,7 @@ import Bool.Handlers
 import Test.HUnit
 import Utils.Fix 
 import TestSyntax (ifSimple, ifComplicated)
+import Utils.Environment
 
 type Eff    = Cond + End
 type V      = Fix LitBool

@@ -1,5 +1,5 @@
 module Stmt.Denotation where
-import Utils.Denote (Env, FreeEnv)
+import Utils.Environment (Env, FreeEnv)
 import Stmt.Syntax
 import Utils.Free (Free)
 import Stmt.Effects as S hiding (filter)

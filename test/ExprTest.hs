@@ -18,6 +18,7 @@ import Syntax (Type(..))
 import Utils.Handler (End)
 import Utils.Fix
 import Utils.Composition
+import Utils.Environment
 
 type Eff    = Cond + End
 type V      = Fix (LitBool + LitInt)

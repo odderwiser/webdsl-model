@@ -3,9 +3,9 @@ import Utils.Free ( fold, Free(..) )
 import Utils.Composition
 
 data Handler f a f' b
-  = Handler { 
+  = Handler {
     ret  :: a -> Free f' b
-  , hdlr :: f (Free f' b) -> Free f' b 
+  , hdlr :: f (Free f' b) -> Free f' b
   }
 
 handle :: (Functor f, Functor f')
@@ -15,6 +15,8 @@ handle h = fold
   (\ x -> case x of
     L y -> hdlr h y
     R y -> Op y)
+
+
 
 -- permute :: (Functor f, Functor f')
 --   => (f ->: f') -> Free f a -> Free f' a
@@ -36,19 +38,19 @@ unwrap (Pure x) = x
 unwrap (Op f) = case f of
 
 data Handler_ handledEff val param remEff output
-  = Handler_ 
+  = Handler_
     { ret_  :: val -> (param -> Free remEff output)
-    , hdlr_ :: handledEff (param -> Free remEff output) 
+    , hdlr_ :: handledEff (param -> Free remEff output)
       -> (param -> Free remEff output) }
 
 handle_ :: (Functor handledEff, Functor remEff)
-  => Handler_ handledEff val param remEff output 
-  -> param -> Free (handledEff + remEff) val 
+  => Handler_ handledEff val param remEff output
+  -> param -> Free (handledEff + remEff) val
   -> Free remEff output
 
 handle_ handler param value = fold
   (ret_ handler)
-  (\case 
+  (\case
      L handledEff -> hdlr_ handler handledEff
      R remainder -> \param -> Op (fmap (\apply -> apply param) remainder))
   value param

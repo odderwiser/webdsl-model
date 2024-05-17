@@ -9,7 +9,11 @@ import Eval.Handlers (environment)
 import Utils.Handler (handle_)
 import Fun.Handlers (defs)
 import Utils.Fix
-import Utils.Environment (Env, FreeEnv)
+import Utils.Environment (Env, FreeEnv, Function)
+import Data.Maybe (mapMaybe)
+import Program.Syntax
+import Program.Effects
+import Utils.Denote
 
 refVars varNames locs env = handle_ environment env (mapM assign (zip varNames locs))
 
@@ -19,12 +23,15 @@ derefDefs :: Functor remEff
 derefDefs name env = handle_ Fun.Handlers.defs env (deref name) 
 
 refDefs :: (Functor eff, FDecl <: g)
-    => [g (Fix (FreeEnv eff v))] -> Env eff v 
-    -> Free eff ([FunName], Env eff v)
-refDefs decls env  = handle_ Fun.Handlers.defs env $ mapM (\dec -> 
-        case projF dec of
-            Just (dec' :: FDecl (FreeEnv eff v)) -> ref dec'
-            Nothing -> ()) decls
+    => [g (FreeEnv eff v)] -> Env eff v 
+    -> Free eff (Env eff v)
+refDefs decls env  = do 
+  (names :: [FunName], env') <- handle_ Fun.Handlers.defs env $ mapM ref 
+    $ mapMaybe (\dec ->
+        case proj dec of
+          Just (dec' :: FDecl (FreeEnv eff v)) -> Just dec'
+          Nothing -> Nothing) decls
+  return env'
 
 -- does this still work with how Variable Declaration is defined?
 denote :: (Abort (Fix v) <: eff, MLState Address (Fix v) <: eff, Null <: v)
@@ -45,11 +52,16 @@ denote (FCall name vars) env = do
     inj $ body env
 
 
--- denoteProgram :: (Functor eff)
---   => Program (FreeEnv eff v)
---   -> FreeEnv eff v
--- denoteProgram (Program decls program) env = do
---     (_, env') <- refDefs decls env
---     program env'
+-- denoteProgram :: forall g eff eff' v. (Functor eff, eff ~ GlobalScope FDecl eff' + eff')
+--   => Program (FDecl (FreeEnv eff' v)) (FreeEnv eff' v)
+--   -> FreeEnv eff' v
+-- denoteProgram (Fragment decls program) env = do
+--   (env' :: Env eff' v) <- write Defs decls env
+--   program env'
 
-    --- record or lens
+instance Def FDecl where
+  -- foldDef :: (Functor eff, Denote f eff v, FDecl <: g)
+  --   => FDecl (Fix f)
+  --   -> g (FreeEnv eff v)
+    foldDef :: (Def FDecl, Denote f eff v) => FDecl (Fix f) -> FDecl (FreeEnv eff v)
+    foldDef decl@(FDecl name vars body) = FDecl name vars $ foldD body

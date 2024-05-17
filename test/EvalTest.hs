@@ -20,6 +20,7 @@ import Test.HUnit
 import TestSyntax
 import Utils.Fix
 import Eval.Syntax
+import Utils.Environment
 
 type Eff    = MLState Address V + Cond + End
 type V      = Fix (LitBool + LitInt + Null)
@@ -135,7 +136,7 @@ testVDecl = testEq
 vDeclSyntax :: Fix Module
 vDeclSyntax = injF $
   VDecl "x" $ injF $
-  VAssign "x" (injB True) Bool
+  VAssign "x" (injB True)
 
 testVValDecl :: Test
 testVValDecl = testEq
@@ -145,7 +146,7 @@ testVValDecl = testEq
 
 vValDeclSyntax :: Fix Module
 vValDeclSyntax = injF $
-  VValDecl "x" (injA 4) Int 
+  VValDecl "x" (injA 4) 
     $ injF $ OpArith Mul (injVar "x") (injA 2)
 
 testVAssign :: Test
@@ -156,8 +157,8 @@ testVAssign = testEq
 
 vAssignSyntax :: Fix Module
 vAssignSyntax = injF 
-  $ VValDecl "x" (injA 4) Int
-  $ injF $ VAssign "x" (injA 8) Int
+  $ VValDecl "x" (injA 4)
+  $ injF $ VAssign "x" (injA 8)
 
 testTwoVarsA :: Test
 testTwoVarsA = testEq "two variables"
@@ -166,8 +167,8 @@ testTwoVarsA = testEq "two variables"
 
 twoVarsASyntax :: Fix Module
 twoVarsASyntax = injF 
-  $ VValDecl "x" (injA 4) Int
-  $ injF $ VValDecl "y" (injA 3) Int (injVar "x")
+  $ VValDecl "x" (injA 4)
+  $ injF $ VValDecl "y" (injA 3) (injVar "x")
 
 testTwoVarsB :: Test
 testTwoVarsB = testEq
@@ -177,8 +178,8 @@ testTwoVarsB = testEq
 
 twoVarsBSyntax :: Fix Module
 twoVarsBSyntax = injF 
-  $ VValDecl "x" (injA 4) Int
-  $ injF $ VValDecl "y" (injA 3) Int
+  $ VValDecl "x" (injA 4)
+  $ injF $ VValDecl "y" (injA 3)
   $ injVar "y"
 
 

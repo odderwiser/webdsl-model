@@ -11,6 +11,7 @@ import Entity.Syntax
 import Utils.Free
 import Entity.Handlers as H
 import Utils.Handler
+import Utils.Environment
 
 derefH :: (Functor eff)
     => a -> Handler_ (MLState a b) b env eff (b, env) 
@@ -38,10 +39,10 @@ getProperties (name : names) scope = do
   case projF obj of
     Just (entity :: EntityEnv (Fix v)) -> getProperties names entity
 
-denote (VDecl name k)        env = do
-    loc <- ref (injF Null :: Fix v)
-    env' <- refEnv name loc env 
-    k env'
+-- denote (VDecl name k)        env = do
+--     loc <- ref (injF Null :: Fix v)
+--     env' <- refEnv name loc env 
+--     k env'
 
 -- denote (VValDecl name e k) env = do
 --     v    <- e env
