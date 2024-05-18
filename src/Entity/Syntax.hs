@@ -5,7 +5,7 @@ import Syntax (Address)
 type EName = String --entity name
 type PName = String --property name
 
-data Entity e = EntityDecl EName (Maybe (Entity e)) [PName] [FDecl e]
+data Entity e = EntityDecl EName [PName] [FDecl e]
     deriving Functor
     
 data EntityEnv e = EEnv EName [((PName, ScopedType), Address)]
@@ -16,6 +16,6 @@ data ScopedType = Property | Function
 
 
 
-data Program e
-    = Program [FDecl e] [Entity e] e
-    deriving Functor
+-- data Program e
+--     = Program [FDecl e] [Entity e] e
+--     deriving Functor

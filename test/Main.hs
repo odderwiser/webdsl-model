@@ -10,6 +10,7 @@ import EvalTest (evalTests)
 import StmtTest (stmtTests)
 import FunTest (funTests)
 import ColTest (colTests)
+import EntityTest (entityTests)
 
 main :: IO ()
 main = do
@@ -22,6 +23,7 @@ main = do
     , funTests
     , stmtTests
     , colTests
+    , entityTests
     ]
   print result
   if failures result > 0 then exitFailure else exitSuccess

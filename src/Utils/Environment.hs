@@ -6,15 +6,17 @@ import Utils.Free
 import Eval.Syntax
 import Syntax
 import Data.Maybe (fromJust)
+import Entity.Syntax (EName, Entity)
 
 type Function eff v = FDecl (Env eff v -> Free eff v)
 type FreeEnv eff v = Env eff v -> Free eff v
 
 
 data Env eff v = Env
-    { varEnv   :: [(VName, Address)]
-    , defs     :: [Function eff v]
-    , eDefs    :: [(Address, Function eff v)]
+    { varEnv   :: [(VName, Address)] -- this is for variables
+    , defs     :: [Function eff v] -- this is for functions
+    , eDefs    :: [(Address, Function eff v)] -- this is for entity functions
+    , entities :: [(EName, Entity Address)] -- this is for entity environment (name collision wit variables)
     }
 
 genericEnvHandler :: (Functor remEff, Eq a)

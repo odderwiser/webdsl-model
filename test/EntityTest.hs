@@ -1,5 +1,4 @@
-module FunTest where
-
+module EntityTest where
 import Eval.Effects
 import Syntax
 import Bool.Effects
@@ -31,25 +30,25 @@ import Program.Syntax
 import Program.Denotation as P
 import Program.Handlers (defsHandler)
 import Program.Effects
+import Entity.Syntax
+import Entity.Denotation
+import Program.Handlers (entitiesDefsHandler)
+import qualified Entity.Denotation as E
 
 
 type Eff = MLState Address V + Cond + Abort V + End
 type V =  Fix (LitBool + LitInt + Null + [])
 type Module = Arith + Boolean + Eval VName + Fun + Stmt
 type Out = Maybe (Either Bool Int)
-type Envs = FDecl
+type Envs = Entity + FDecl
 type Eff' = (GlobalScope Envs Eff V + End)
 
-runProgram :: Program (Envs (FreeEnv Eff V)) (FreeEnv Eff V) 
-  -> Maybe (Either Bool Int)
-runProgram (Fragment defs exp) = case unwrap 
-  $ handle defsHandler $ denoteDefs' defs of
+runProgram (Fragment defs exp) = case
+  unwrap $ handle entitiesDefsHandler $ denoteDefs' defs of
     env -> run exp env
 
 denoteDefs' :: [Envs (FreeEnv Eff V)] -> Free Eff' (Env Eff V)
-denoteDefs' = F.denoteDefs
-
-runExp :: FreeEnv Eff V -> Maybe (Either Bool Int)
+denoteDefs' = E.denoteDefs
 runExp e = run e Env { varEnv = []}
 
 run :: FreeEnv Eff V -> Env Eff V
@@ -97,8 +96,8 @@ testEqProgram id res syntax =  TestCase $
 
 --------------------------------
 
-testAbort :: Test
-testAbort = testEq "two returns"
+testAbort' :: Test
+testAbort' = testEq "two returns"
   (Just $ Right 1)
   abortSyntax
 
@@ -107,18 +106,18 @@ abortSyntax = injF
   $ S (injF $ Return $ injA 1)
   $ injF $ Return $ injA 2
 
-testfCall :: Test
-testfCall = testEqProgram "simple function call"
+testfCall' :: Test
+testfCall' = testEqProgram "simple function call"
   (Just $ Right 7)
   fCallSyntax
 
-fCallSyntax :: Program (FDecl (Fix Module)) (Fix Module)
-fCallSyntax = Fragment [FDecl "addThree" ["x"]
+fCallSyntax :: Program (Envs (Fix Module)) (Fix Module)
+fCallSyntax = Fragment [inj $ FDecl "addThree" ["x"]
     (injF $ OpArith Add (injVar "x") (injA 3))]
   $ injF $ FCall "addThree" [injA 4]
 
-funTests :: Test
-funTests = TestList
-  [ testAbort
-  , testfCall
+entityTests :: Test
+entityTests = TestList
+  [ testAbort'
+  , testfCall'
   ]
