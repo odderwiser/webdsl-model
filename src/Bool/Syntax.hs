@@ -1,6 +1,8 @@
 module Bool.Syntax where
 import Utils.Composition ( type (<:) )
-import Utils.Fix ( injF, BinaryInject(..), Fix )
+import Utils.Fix ( injF, BinaryInject(..), Fix, projF )
+import Data.Maybe (fromJust)
+import Syntax (Type(Bool))
 
 data OpB = Or | And 
 
@@ -30,3 +32,7 @@ lit = LitB
 
 injB :: (Boolean <: f) => Bool -> Fix f
 injB =  injF . LitB
+
+-- projBool :: forall f. (LitBool <: f) => Fix f -> Bool
+projBool elem = case fromJust (projF elem) of
+  (Lit bool) -> bool

@@ -2,10 +2,7 @@ module Utils.Denote where
 import Utils.Free (Free)
 import Utils.Composition
 import Utils.Fix
-import Eval.Syntax
-import Syntax
 import Fun.Syntax (FunName, FDecl)
-import Entity.Syntax (EName, Entity)
 import Stmt.Syntax (Filter)
 import Utils.Environment (FreeEnv)
 

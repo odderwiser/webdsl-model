@@ -11,8 +11,7 @@ op :: (Functor f, LitInt <: v')
   -> Free f (Fix v')
 op operand e1 e2 = case (projF e1, projF e2) of
   (Just (Lit e1'), Just (Lit e2')) -> return 
-    $ injF 
-    $ Lit 
+    $ injF $ Lit 
     $ operand e1' e2'
 
 

@@ -1,6 +1,7 @@
 module Arith.Syntax where
 import Utils.Composition ( type (<:) )
-import Utils.Fix ( injF, BinaryInject(..), Fix )
+import Utils.Fix ( injF, BinaryInject(..), Fix, projF )
+import Data.Maybe (fromJust)
 
 data OpArith = Add | Div | Sub | Mul | Mod
 
@@ -28,3 +29,7 @@ lit = LitAr
 
 injA :: (Arith <: f) => Int -> Fix f
 injA =  injF . LitAr
+
+projArith :: (LitInt <: g) => Fix g -> Int
+projArith elem = case fromJust (projF elem) of
+  (Lit int) -> int

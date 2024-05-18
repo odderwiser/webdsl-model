@@ -29,13 +29,13 @@ defsFun x = case x of
             (Pure env'' ) -> k env'')
 
 entitiesDefsHandler :: forall remEff g eff v v'. 
-  (Functor eff, Functor remEff, Entity <: g, FDecl <: g)
+  (Functor eff, Functor remEff, EntityDef <: g, FDecl <: g)
   => Handler (GlobalScope g eff v) v' remEff v'
 entitiesDefsHandler = Handler
   { ret  = pure
   , hdlr = \x -> case x of
       (Write Entities (defs :: [g (FreeEnv eff v)] ) env k)   ->
-        let env' = env { E.entities = [], E.eDefs = [] } in
+        let env' = env { E.entityDefs = [], E.entities = [] } in
           (case writeEntities defs env' of
             (Pure env'' ) -> k env'')
       (Write Defs _ _ _) -> defsFun x

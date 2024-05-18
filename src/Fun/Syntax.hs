@@ -8,7 +8,7 @@ data FDecl e
     = FDecl FunName [VName] e
     deriving Functor
 
-data Fun e 
+data Fun name e 
     = Return e
-    | FCall FunName [e]
+    | FCall name [e]
     deriving Functor

@@ -5,10 +5,10 @@ import Col.Syntax
 import Utils.Fix
 import Bool.Syntax as B
 import Data.Maybe (mapMaybe)
-import Utils.Environment (FreeEnv)
+import Utils.Environment (FreeEnv, Env)
 import Stmt.Denotation (denoteFilters)
 import Eval.Effects (MLState, ref, assign)
-import Syntax
+import Syntax as S
 import Eval.Denotation (refEnv)
 import Arith.Syntax (LitInt)
 
@@ -21,10 +21,9 @@ elemContains e1 e2 = case projF e2 of
 
 foldList :: (Functor eff, [] <: g, LitBool <: g, LitBool <: g)
   => (Bool -> Bool -> Bool) -> Bool -> Fix g -> Free eff (Fix g)
-foldList op start e = case projF e of
-  (Just (e' :: [Fix g])) -> return
+foldList op start e = return
     $ injF $ B.Lit
-    $ foldr (op . (\x -> case projF x of (Just (B.Lit x')) -> x')) start e'
+    $ foldr (op . projBool) start $ projC e
 
 denote :: forall f eff. (Eq (f (Fix f)), LitBool <: f, [] <: f, LitInt <: f, Null <: f,
   MLState Address (Fix f) <: eff)
@@ -40,17 +39,12 @@ denote (OpIn a b) env = do
   elemContains a' b'
 
 denote (LComp exp name col filters) env = do
-  col'  <- col env
-  col'' <- denoteFilters name col' filters env
-  loc  <- ref (injF Null :: Fix f)
-  env' <- refEnv name loc env
-  case projF col'' of
-    Just (list :: [Fix f]) -> do
-      col''' <- mapM (\elem -> do
-        assign (loc, elem)
-        exp env'
-        ) list
-      return $ injF col'''
+  loc    <- ref (S.null :: Fix f)
+  env'   <- refEnv name loc env
+  col'   <- col env
+  col''  <- denoteFilters name col' filters env
+  col''' <- forAll exp env' loc $ projC col''
+  return $ injF col'''
 
 denote (UnOp And a) env = do
   a' <- a env
@@ -59,3 +53,10 @@ denote (UnOp And a) env = do
 denote (UnOp Or a) env = do
   a' <- a env
   foldList (||) False a'
+
+
+-- forAll :: (MLState Address (Fix v) <: eff) 
+--   => Env eff (Fix v) -> FreeEnv Address -> [Fix v] -> Free eff [Fix v]
+forAll exp env' loc = mapM (\elem -> do
+    assign (loc, elem)
+    exp env')

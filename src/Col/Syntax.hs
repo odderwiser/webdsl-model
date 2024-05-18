@@ -5,6 +5,7 @@ import Utils.Fix
 import Eval.Syntax (VName)
 import Bool.Syntax (OpB)
 import Stmt.Syntax
+import Data.Maybe (fromJust)
 
 data Col e 
   = LitC [e]                   -- List literal : []
@@ -15,3 +16,6 @@ data Col e
 
 injC :: (Col <: f) => [Fix f] -> Fix f
 injC =  injF . LitC
+
+projC :: ([] <: g) => Fix g -> [Fix g]
+projC col = fromJust (projF col)

@@ -21,11 +21,15 @@ op operand e1 e2 = return
 opCmp :: (fix ~ Fix v, Functor f, Num a, LitInt <: v, LitBool <: v)
   => (a -> a -> Bool) -> fix -> fix
   -> Free f fix
-opCmp operand exp1 exp2 = case (projF exp1, projF exp2) of
-  (Just (A.Lit e1'), Just (A.Lit e2')) ->
-    op operand (fromIntegral e1') (fromIntegral e2')
+opCmp operand exp1 exp2 = op operand (toNum exp1) (toNum exp2)  
 
-denote :: (fix ~ Fix v,  Eq (v (Fix v)), Functor eff, LitInt <: v, LitBool <: v)
+toNum :: (Num a, LitInt <: g) => Fix g -> a
+toNum = fromIntegral . projArith
+    
+    
+
+denote :: (fix ~ Fix v,  Eq (v (Fix v)), 
+  Functor eff, LitInt <: v, LitBool <: v)
   => Expr (Env eff fix -> Free eff fix)
   -> Env eff fix -> Free eff fix
 

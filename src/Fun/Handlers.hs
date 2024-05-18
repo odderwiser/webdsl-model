@@ -5,6 +5,7 @@ import Eval.Effects
 import Fun.Syntax
 import Utils.Environment as U
 import Data.List (find)
+import Utils.Free
 
 funReturn :: Functor remEff => Handler (Abort val) val remEff val
 funReturn = Handler
@@ -17,8 +18,14 @@ defs :: (Functor eff)
 defs = mkRHandler U.defs 
   (\name -> find (\(FDecl name' _ _) -> name == name' ))
   (\k value@(FDecl name _ _) env -> 
-    k name $ env { U.defs = value : U.defs env } ) 
-  
+    k name $ env { U.defs = value : U.defs env } )
+
+dropH :: (Functor eff) => Handler (Drop (Env eff v)) (Env eff v) eff (Env eff v)
+dropH = Handler {
+  ret = pure
+  , hdlr = \(DropEnvironment env k) -> 
+    k $ env { varEnv = [] }
+}
   -- Handler_
   -- { ret_ = \x map -> pure (x, map)
   -- , hdlr_ = \x map -> case (U.defs map, x) of

@@ -38,9 +38,9 @@ import qualified Entity.Denotation as E
 
 type Eff = MLState Address V + Cond + Abort V + End
 type V =  Fix (LitBool + LitInt + Null + [])
-type Module = Arith + Boolean + Eval VName + Fun + Stmt
+type Module = Arith + Boolean + Eval VName + (Fun FunName) + Stmt
 type Out = Maybe (Either Bool Int)
-type Envs = Entity + FDecl
+type Envs = EntityDef + FDecl
 type Eff' = (GlobalScope Envs Eff V + End)
 
 runProgram (Fragment defs exp) = case
@@ -75,7 +75,7 @@ instance Denote Expr Eff V where
 instance Denote (Eval VName) Eff V where
   denote = Ev.denote
 
-instance Denote Fun Eff V where
+instance Denote (Fun FunName) Eff V where
   denote = F.denote
 
 -- instance Denote Program Eff V where
@@ -103,8 +103,8 @@ testAbort' = testEq "two returns"
 
 abortSyntax :: Fix Module
 abortSyntax = injF
-  $ S (injF $ Return $ injA 1)
-  $ injF $ Return $ injA 2
+  $ S (injF (Return $ injA 1 :: Fun FunName (Fix Module)))
+  $ injF (Return $ injA 2 :: Fun FunName (Fix Module))
 
 testfCall' :: Test
 testfCall' = testEqProgram "simple function call"
