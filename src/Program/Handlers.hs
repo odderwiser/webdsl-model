@@ -9,7 +9,7 @@ import Utils.Free
 import Fun.Denotation (refDefs)
 import Fun.Syntax (FDecl)
 import Utils.Composition
-import Entity.Handlers (writeEntities)
+import Entity.Handlers (refEntities)
 import Entity.Syntax
 
 defsHandler :: forall remEff g eff v v'. 
@@ -36,7 +36,7 @@ entitiesDefsHandler = Handler
   , hdlr = \x -> case x of
       (Write Entities (defs :: [g (FreeEnv eff v)] ) env k)   ->
         let env' = env { E.entityDefs = [], E.entities = [] } in
-          (case writeEntities defs env' of
+          (case refEntities defs env' of
             (Pure env'' ) -> k env'')
       (Write Defs _ _ _) -> defsFun x
   }

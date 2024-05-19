@@ -42,10 +42,11 @@ mkRHandler envSubtype finder cont = Handler_
       (env', Deref key k) -> k (fromJust $  finder key env') env
       (env', Ref value k) -> cont k value env
   }
-  -- , hdlr_ = \x map -> case (U.defs map, x) of
-  --     (env, Deref key k) -> k (case lookup key env of 
-  --       Just fun -> fun ) map
-  --     (env, Ref val@(FDecl name vars body) k) -> k 
-  --       name 
-  --       (map { U.defs = (name, val) : U.defs map } )
-  -- }
+  
+  
+derefH :: (Functor eff)
+  => a -> Handler_ (MLState a b) b env eff (b, env) 
+  -> env -> Free eff b
+derefH key handler env = do
+  (loc, env) <- handle_ handler env (deref key)
+  return loc
