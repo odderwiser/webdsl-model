@@ -6,9 +6,9 @@ type FunName = String
 
 data FDecl e 
     = FDecl FunName [VName] e
-    deriving Functor
+    deriving (Functor, Eq)
 
-data Fun name e 
+data Fun e 
     = Return e
-    | FCall name [e]
+    | FCall FunName [e]
     deriving Functor

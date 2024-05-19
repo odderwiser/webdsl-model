@@ -1,25 +1,41 @@
 module Entity.Syntax where
 import Fun.Syntax (FDecl, FunName)
-import Syntax (Address)
+import Syntax (Address, Type)
 import Utils.Fix
 import Utils.Composition (type (<:))
+import Eval.Syntax (VName, Eval)
+import Data.Maybe (fromJust)
 
 type EName = String --entity name
 type PName = String --property name
 
-data EntityDef e = EDef EName [PName] [FDecl e]
+-- global only
+data EntityDef e = EDef EName [(PName, Type)] [FDecl e]
+    deriving (Functor, Eq)
+
+
+data EntityDecl e = EDecl EName [(PName, e)] --- e is type if unevaled and address if evaled
+    deriving (Functor, Eq)
+
+data Entity e 
+    = PropAccess e PName
+    | FCall e FunName [e]
+    | PropAssign e PName e
+    | PVar PName
     deriving Functor
-    
-data EntityDecl e = EDecl EName e -- e can be address or the Env
-    deriving Functor
 
-data AddressBox e = Box Address
-    deriving Functor 
+data LitAddress e = Box Address
+    deriving (Functor, Eq) 
 
-getAddress :: (EntityDecl <: g, AddressBox <: g) => Fix g -> Address
-getAddress entity = case projF entity of
-    Just (EDecl name address) -> case projF address of
-        Just (Box address) -> address
 
-getEnv entity = case projF entity of
-    Just (EDecl name address) -> address
+projParams :: (LitAddress <: g, EntityDecl <: g) => Fix g -> [(PName, Address)]
+projParams entity = case projF entity of
+    Just (EDecl _ addresses) -> map 
+        (\(a, b) -> (a, case fromJust $ projF b of Box b' -> b'))
+        addresses
+
+projEName entity = case projF entity of
+    Just (EDecl name _) -> name
+
+-- projEntity :: (EntityDecl param <: g) => Fix g -> EntityDecl param (Fix g)
+-- projEntity = fromJust . projF

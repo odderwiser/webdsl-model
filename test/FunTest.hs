@@ -35,7 +35,7 @@ import Program.Effects
 
 type Eff = MLState Address V + Cond + Abort V + End
 type V =  Fix (LitBool + LitInt + Null + [])
-type Module = Arith + Boolean + Eval VName + Fun FunName + Stmt
+type Module = Arith + Boolean + Eval + Fun + Stmt
 type Out = Maybe (Either Bool Int)
 type Envs = FDecl
 type Eff' = (GlobalScope Envs Eff V + End)
@@ -73,10 +73,10 @@ instance Denote Boolean Eff V where
 instance Denote Expr Eff V where
   denote = Ex.denote
 
-instance Denote (Eval VName) Eff V where
+instance Denote Eval Eff V where
   denote = Ev.denote
 
-instance Denote (Fun FunName) Eff V where
+instance Denote Fun Eff V where
   denote = F.denote
 
 -- instance Denote Program Eff V where
@@ -104,8 +104,8 @@ testAbort = testEq "two returns"
 
 abortSyntax :: Fix Module
 abortSyntax = injF
-  $ S (injF (Return $ injA 1 :: Fun FunName (Fix Module)))
-  $ injF (Return $ injA 2 :: Fun FunName (Fix Module))
+  $ S (injF $ Return $ injA 1 )
+  $ injF $ Return $ injA 2
 
 testfCall :: Test
 testfCall = testEqProgram "simple function call"

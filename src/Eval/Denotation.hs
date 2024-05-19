@@ -30,7 +30,7 @@ refEnv name loc env = do
 --     return env'
 
 denote :: forall v eff. ( MLState Address (Fix v) <: eff, Null <: v)
-  => Eval VName (FreeEnv eff (Fix v))
+  => Eval (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 
 denote (Var name)            env = do

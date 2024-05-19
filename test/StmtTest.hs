@@ -27,7 +27,7 @@ import Utils.Environment
 
 type Eff    = MLState Address V + Cond + End
 type V      = Fix (LitBool + LitInt + Null + [])
-type Module = Stmt + Arith + Boolean + Eval VName + Col + Expr
+type Module = Stmt + Arith + Boolean + Eval + Col + Expr
 type Out    = Fix (LitBool + LitInt + Null + [])
 
 run :: FreeEnv Eff V
@@ -47,7 +47,7 @@ instance Denote Boolean Eff V where
   denote = B.denote
 
 
-instance Denote (Eval VName) Eff V where
+instance Denote Eval Eff V where
   denote = E.denote
 
 instance Denote Stmt Eff V where

@@ -54,9 +54,6 @@ denote (UnOp Or a) env = do
   a' <- a env
   foldList (||) False a'
 
-
--- forAll :: (MLState Address (Fix v) <: eff) 
---   => Env eff (Fix v) -> FreeEnv Address -> [Fix v] -> Free eff [Fix v]
 forAll exp env' loc = mapM (\elem -> do
     assign (loc, elem)
     exp env')

@@ -22,16 +22,17 @@ defs = mkRHandler U.defs
   (\k value@(FDecl name _ _) env ->
     k name $ env { U.defs = value : U.defs env } )
 
-dropH :: (Functor eff) => Handler (MutateEnv (Env eff v)) (Env eff v) eff (Env eff v)
+dropH :: (Functor eff) => Handler (DropEnv (Env eff v)) (Env eff v) eff (Env eff v)
 dropH = Handler
   { ret = pure
-  , hdlr = \effect -> case effect of
-      DropLocalVars env k -> k $ env { varEnv = [] }
-      LiftObjectEnv global obj k -> k $ global 
-        { varEnv = varEnv obj ++ varEnv global
-        , U.defs = U.defs obj ++ U.defs global 
-        }
+  , hdlr = \(DropLocalVars env k) -> k $ dropAction env
+      -- LiftObjectEnv global obj k -> k $ global 
+      --   { varEnv = varEnv obj ++ varEnv global
+      --   , U.defs = U.defs obj ++ U.defs global 
+      --   }
   }
+
+dropAction env = env { varEnv = [] }
   -- Handler_
   -- { ret_ = \x map -> pure (x, map)
   -- , hdlr_ = \x map -> case (U.defs map, x) of

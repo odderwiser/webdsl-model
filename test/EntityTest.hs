@@ -21,7 +21,7 @@ import Test.HUnit
 import TestSyntax
 import Utils.Fix
 import Eval.Syntax
-import Fun.Syntax
+import Fun.Syntax as F
 import Fun.Effects
 import Fun.Handlers (funReturn, defs)
 import Stmt.Syntax as S
@@ -31,15 +31,22 @@ import Program.Denotation as P
 import Program.Handlers (defsHandler)
 import Program.Effects
 import Entity.Syntax
-import Entity.Denotation
+import Entity.Denotation as En
 import Program.Handlers (entitiesDefsHandler)
-import qualified Entity.Denotation as E
+import qualified Utils.Environment as U
+import qualified Entity.Syntax as En
 
 
+--IR
 type Eff = MLState Address V + Cond + Abort V + End
-type V =  Fix (LitBool + LitInt + Null + [])
-type Module = Arith + Boolean + Eval VName + (Fun FunName) + Stmt
+type V =  Fix (LitBool + LitInt + Null + [] + LitAddress + EntityDecl)
+
+--running syntax
+type Module = Arith + Boolean + Eval 
+  + Fun + Stmt + EntityDecl + Entity  
 type Out = Maybe (Either Bool Int)
+
+--preprocessing
 type Envs = EntityDef + FDecl
 type Eff' = (GlobalScope Envs Eff V + End)
 
@@ -48,7 +55,7 @@ runProgram (Fragment defs exp) = case
     env -> run exp env
 
 denoteDefs' :: [Envs (FreeEnv Eff V)] -> Free Eff' (Env Eff V)
-denoteDefs' = E.denoteDefs
+denoteDefs' = En.denoteDefs
 runExp e = run e Env { varEnv = []}
 
 run :: FreeEnv Eff V -> Env Eff V
@@ -72,10 +79,10 @@ instance Denote Boolean Eff V where
 instance Denote Expr Eff V where
   denote = Ex.denote
 
-instance Denote (Eval VName) Eff V where
+instance Denote Eval Eff V where
   denote = Ev.denote
 
-instance Denote (Fun FunName) Eff V where
+instance Denote Fun Eff V where
   denote = F.denote
 
 -- instance Denote Program Eff V where
@@ -83,6 +90,12 @@ instance Denote (Fun FunName) Eff V where
 
 instance Denote Stmt Eff V where
   denote = S.denote
+
+instance Denote EntityDecl Eff V where
+  denote = En.denoteEDecl
+
+instance Denote Entity Eff V where
+  denote = En.denote
 
 testEq :: Denote m Eff V
   => String -> Out -> Fix m -> Test
@@ -103,8 +116,8 @@ testAbort' = testEq "two returns"
 
 abortSyntax :: Fix Module
 abortSyntax = injF
-  $ S (injF (Return $ injA 1 :: Fun FunName (Fix Module)))
-  $ injF (Return $ injA 2 :: Fun FunName (Fix Module))
+  $ S (injF (Return $ injA 1))
+  $ injF (Return $ injA 2 )
 
 testfCall' :: Test
 testfCall' = testEqProgram "simple function call"
@@ -114,10 +127,50 @@ testfCall' = testEqProgram "simple function call"
 fCallSyntax :: Program (Envs (Fix Module)) (Fix Module)
 fCallSyntax = Fragment [inj $ FDecl "addThree" ["x"]
     (injF $ OpArith Add (injVar "x") (injA 3))]
-  $ injF $ FCall "addThree" [injA 4]
+  $ injF $ F.FCall "addThree" [injA 4]
+
+testGetProperty :: Test
+testGetProperty = testEqProgram "simple function call"
+  (Just $ Right 1)
+  propSyntax
+
+propSyntax :: Program (Envs (Fix Module)) (Fix Module)
+propSyntax = Fragment
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] []]
+  $ injF $ VValDecl "dummy" 
+    (injF $ EDecl "dummy1" [("y", injA 1)]) 
+    (injF $ PropAccess (injVar "dummy") "y")
+
+testMethodCall = testEqProgram "simple function call"
+  (Just $ Right 6)
+  objFunSyntax
+
+objFunSyntax :: Program (Envs (Fix Module)) (Fix Module)
+objFunSyntax = Fragment
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] 
+    [inj $ FDecl "dummy2" [ "z" ] 
+      $ injF $ Return $ injF $ OpArith Add (injVar "z") (injF $ PVar "y")]]
+  $ injF $ VValDecl "dummy" 
+    (injF $ EDecl "dummy1" [("y", injA 1)]) 
+    (injF $ En.FCall (injVar "dummy") "dummy2" [injA $ 5] )
+ 
+testDefsStoring = TestCase $
+  assertEqual "storing the def"
+  ("dummy1", [("x", Int), ("y", Int)])
+  (case
+  unwrap $ handle entitiesDefsHandler 
+    $ denoteDefs' (map foldDef dummy1Definition) of
+      env -> case U.entityDefs env of 
+        [EDef name params funs] -> (name, params))
+
+dummy1Definition :: [Envs (Fix Module)]
+dummy1Definition = [inj $ EDef "dummy1" [("x", Int), ("y", Int)] []]
 
 entityTests :: Test
 entityTests = TestList
   [ testAbort'
   , testfCall'
+  , testDefsStoring
+  , testGetProperty
+  , testMethodCall
   ]

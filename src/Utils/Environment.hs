@@ -8,16 +8,18 @@ import Syntax
 import Data.Maybe (fromJust)
 import Entity.Syntax
 
-type Function eff v = FDecl (Env eff v -> Free eff v)
+type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v
 
+-- data Entity eff e = Entity EName (Env eff e)  
 
 data Env eff v = Env
     { varEnv     :: [(VName, Address)] -- this is for variables
     , defs       :: [Function eff v] -- this is for functions
     , entityDefs :: [EntityDef (FreeEnv eff v)] -- this is for all the entity definitions
-    , entities   :: [(Address, EntityDecl (Env eff v))] -- this is for entity environments (declarations) (name collision wit variables)
+    , objVarEnv  :: [(PName, Address)]
     }
+
 
 genericEnvHandler :: (Functor remEff, Eq a)
   => (t -> [(a, v)]) -> ((a, v) -> t -> t) -> Handler_ (MLState a v) b t remEff (b, t)
@@ -50,3 +52,8 @@ derefH :: (Functor eff)
 derefH key handler env = do
   (loc, env) <- handle_ handler env (deref key)
   return loc
+
+refH :: (Functor remEff) 
+  => b -> Handler_ (MLState a b) a env remEff (a, env) 
+  -> env -> Free remEff (a, env)
+refH value handler env = handle_ handler env (ref value)

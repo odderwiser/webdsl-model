@@ -24,7 +24,7 @@ defsHandler = Handler
 
 defsFun x = case x of
       (Write Defs (defs :: [g (FreeEnv eff v)] ) env k)   ->
-        let env' = env { E.defs = [] } in
+        let env' = env { E.defs = [], varEnv = [] } in
           (case refDefs defs env' of
             (Pure env'' ) -> k env'')
 
@@ -35,7 +35,7 @@ entitiesDefsHandler = Handler
   { ret  = pure
   , hdlr = \x -> case x of
       (Write Entities (defs :: [g (FreeEnv eff v)] ) env k)   ->
-        let env' = env { E.entityDefs = [], E.entities = [] } in
+        let env' = env { E.entityDefs = [], E.objVarEnv = [] } in
           (case refEntities defs env' of
             (Pure env'' ) -> k env'')
       (Write Defs _ _ _) -> defsFun x

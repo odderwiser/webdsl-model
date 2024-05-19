@@ -25,7 +25,7 @@ import Eval.Denotation as Ev
 
 type Eff    = Cond + MLState Address V + End
 type V      =  Fix (LitBool + LitInt + Null + [])
-type Module = Arith + Boolean + Expr + Col + Eval VName
+type Module = Arith + Boolean + Expr + Col + Eval
 type Out    =  V
 
 run :: FreeEnv Eff V
@@ -49,7 +49,7 @@ instance Denote Expr Eff V where
 instance Denote Col Eff V where
   denote = C.denote
 
-instance Denote (Eval VName) Eff V where
+instance Denote Eval Eff V where
   denote = Ev.denote
 
 testEq :: Denote m Eff V 

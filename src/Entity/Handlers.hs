@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use lambda-case" #-}
+{-# OPTIONS_GHC -Wno-missing-fields #-}
 module Entity.Handlers where
 import Eval.Effects
 import Entity.Syntax
@@ -9,18 +12,14 @@ import Utils.Environment (Function, Env)
 import Utils.Free
 import Utils.Composition
 import Data.Maybe (mapMaybe)
-import Entity.Effects (Write(..), write)
+import Entity.Effects (Write(..), write, MutateEnv (..), DefaultValue (DefaultValue))
 import Data.Foldable (find)
-
--- entity :: (Functor g) => Handler_ (MLState (PName, ScopedType) Address)
---   a (EntityEnv v) g (a, EntityEnv v)
--- entity = Handler_
---   { ret_ = \x map -> pure (x, map)
---   , hdlr_ = \effectCon env -> case (env, effectCon) of
---       (EEnv _ eenv, Deref key k) -> k (case lookup key eenv of Just x -> x) env
---       (_, Assign record k) -> k $ insertEnv record env
---   }
--- insertEnv record (EEnv name env) = EEnv name (record : env)
+import Fun.Effects
+import Fun.Handlers (dropAction)
+import qualified Arith.Syntax as A
+import Utils.Fix
+import qualified Bool.Syntax as B
+import Syntax as S
 
 entityDefsH :: Functor eff 
   => Handler_ (MLState EName (EntityDef (FreeEnv eff v)))
@@ -41,3 +40,49 @@ refEntities entities env  = do
     $ mapMaybe (\dec -> (proj dec :: Maybe eDef)) entities
   return env'
 
+-- entityDeclsH :: Functor eff 
+--   => Handler_ (MLState Address (EName, Env eff v))
+--   a (Env eff v) eff (a, Env eff v)
+-- entityDeclsH = mkRHandler U.entities
+--   lookup
+--   (\k val env -> 
+--     let loc = length (U.entities env) in
+--       k loc $ env { U.entities = (loc, val) : U.entities env})
+
+defaultTypeH :: (Functor eff, A.LitInt <: v, B.LitBool <: v,
+  [] <: v, Null <: v) 
+  => Handler (DefaultValue (Fix v)) 
+  (Fix v) eff (Fix v)
+defaultTypeH = Handler
+  { ret = pure
+  , hdlr = \(DefaultValue ty k) -> case ty of
+      Int -> k $ injF $ A.Lit 0
+      Bool -> k $ injF $ B.Lit False
+      List -> k $ injF $ []
+      S.Entity -> k $ injF $ Null
+  }
+
+mutateH :: (Functor eff) 
+  => Handler (MutateEnv (Env eff v)) 
+  (Env eff v) eff (Env eff v)
+mutateH = Handler
+  { ret = pure
+  , hdlr = \effect -> case effect of
+      Drop (DropLocalVars env k) -> k $ dropAction env
+      LiftObjectEnv global obj k -> k $ global 
+        {U.defs = U.defs obj ++ U.defs global }
+      -- GenerateEmptyEnv k -> k 
+      --   $ Env { varEnv = [], defs = []}
+      -- GenerateDefaultEnv (EDef name props funs) k -> 
+  }
+
+objEnvH :: (Functor eff) 
+  => Handler_   (MLState PName Address) val 
+  [(PName, Address)] eff (val, [(PName, Address)])
+objEnvH = mkAHandler id lookup (:)
+
+propertyVarEnvH ::(Functor eff) 
+  => Handler_   (MLState PName Address) val 
+    (Env eff v) eff (val, Env eff v)
+propertyVarEnvH = mkAHandler U.objVarEnv lookup 
+  (\record env -> env { U.objVarEnv = record : U.objVarEnv env})

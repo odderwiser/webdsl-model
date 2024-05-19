@@ -17,8 +17,8 @@ import Data.Maybe (mapMaybe)
 import Program.Syntax
 import Program.Effects
 import Utils.Denote
-import Entity.Syntax
-import qualified Program.Denotation as P
+import Program.Denotation as P
+import Eval.Syntax
 
 derefDefs :: Functor eff => FunName -> Env eff (Fix v) 
   -> Free eff (FDecl (FreeEnv eff (Fix v)))
@@ -35,7 +35,7 @@ refDefs decls env  = do
 
 -- does this still work with how Variable Declaration is defined?
 denote :: (Abort (Fix v) <: eff, MLState Address (Fix v) <: eff, Null <: v)
-  => Fun FunName (FreeEnv eff (Fix v))
+  => Fun (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 denote (Return e)       env = do
     e' <- e env
@@ -46,23 +46,30 @@ denote (FCall name vars) env = do
   env'                  <- populateEnv env varNames vars
   body env'
 
+populateEnv :: (MLState Address v <: f) 
+  => Env f v 
+  -> [VName] -> [FreeEnv f v] -> Free f (Env f v)
 populateEnv env varNames vars = do
-  (locs :: [Address])       <- storeVars env vars
-  env'                      <- dropEnv env
-  refVars varNames locs env'
+  locs       <- storeVars env vars
+  env'       <- dropEnv env
+  refVars (zip varNames locs) env'
 
 dropEnv :: (Functor f') 
   => Env f' v -> Free f' (Env f' v)
 dropEnv env = handle dropH $ Fun.Effects.drop env
 
+storeVars :: (MLState Address v <: f) 
+  => Env f v -> [FreeEnv f v] -> Free f [Address]
 storeVars env = mapM (\e -> do
   e' <- e env
-  ref e')
+  ref e') 
 
-refVars varNames locs env = do
+refVars :: (Functor eff,  
+  MLState Address v <: eff) 
+  => [(VName, Address)] -> Env eff v -> Free eff (Env eff v)
+refVars envTuples env = do
   (_, env') <- handle_ environment env 
-    $ mapM assign 
-    $ zip varNames locs
+    $ mapM assign envTuples
   return env'
 
 
