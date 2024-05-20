@@ -55,3 +55,6 @@ handle_ handler param value = fold
      R remainder -> \param -> Op (fmap (\apply -> apply param) remainder))
   value param
 
+  -- defsH :: (Functor eff, Functor eff')
+  -- => Handler_ (FunctionEnv eff v)
+  -- a (Env eff v) eff' (a, Env eff v

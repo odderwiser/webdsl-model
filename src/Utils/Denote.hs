@@ -16,16 +16,20 @@ instance  (Denote sym1 eff v, Denote sym2 eff v) => Denote (sym1 + sym2) eff v w
         (L f) -> denote f
         (R f) -> denote f
 
-class (Functor sym) => Def sym where
-    foldDef :: (Def sym, Denote f eff v) => sym (Fix f) -> sym (FreeEnv eff v)
-
-instance (Def sym1, Def sym2) => Def (sym1 + sym2) where
-    foldDef a = case a of
-        (L f) -> inj $ foldDef f
-        (R f) -> inj $ foldDef f
-
 
 foldD :: Denote f eff v => Fix f -> FreeEnv eff v
 foldD (In f) = denote $ fmap foldD f
+
+
+class (Functor eff, Functor eff', Functor sym) => DenoteDef sym eff eff' v where
+    denoteDef :: sym (FreeEnv eff v) -> Free eff' ()
+    denoteDefList ::  [sym (FreeEnv eff v)] -> Free eff' [()]
+    denoteDefList = mapM denoteDef
+
+
+instance  (DenoteDef sym1 eff eff' v, DenoteDef sym2 eff eff' v) => DenoteDef (sym1 + sym2) eff eff' v where
+    denoteDef a = case a of
+        (L f) -> denoteDef f
+        (R f) -> denoteDef f
 
 -- foldS :: Denote f eff v => Fix f -> FreeEnv eff v

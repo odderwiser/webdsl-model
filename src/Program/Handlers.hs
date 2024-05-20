@@ -9,7 +9,7 @@ import Utils.Free
 import Fun.Denotation (refDefs)
 import Fun.Syntax (FDecl)
 import Utils.Composition
-import Entity.Handlers (refEntities)
+-- import Entity.Handlers (refEntities)
 import Entity.Syntax
 
 defsHandler :: forall remEff g eff v v'. 
@@ -28,15 +28,15 @@ defsFun x = case x of
           (case refDefs defs env' of
             (Pure env'' ) -> k env'')
 
-entitiesDefsHandler :: forall remEff g eff v v'. 
-  (Functor eff, Functor remEff, EntityDef <: g, FDecl <: g)
-  => Handler (GlobalScope g eff v) v' remEff v'
-entitiesDefsHandler = Handler
-  { ret  = pure
-  , hdlr = \x -> case x of
-      (Write Entities (defs :: [g (FreeEnv eff v)] ) env k)   ->
-        let env' = env { E.entityDefs = [], E.objVarEnv = [] } in
-          (case refEntities defs env' of
-            (Pure env'' ) -> k env'')
-      (Write Defs _ _ _) -> defsFun x
-  }
+-- entitiesDefsHandler :: forall remEff g eff v v'. 
+--   (Functor eff, Functor remEff, EntityDef <: g, FDecl <: g)
+--   => Handler (GlobalScope g eff v) v' remEff v'
+-- entitiesDefsHandler = Handler
+--   { ret  = pure
+--   , hdlr = \x -> case x of
+--       (Write Entities (defs :: [g (FreeEnv eff v)] ) env k)   ->
+--         let env' = env { E.entityDefs = [], E.objVarEnv = [] } in
+--           (case refEntities defs env' of
+--             (Pure env'' ) -> k env'')
+--       (Write Defs _ _ _) -> defsFun x
+--   }

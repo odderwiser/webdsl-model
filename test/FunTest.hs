@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Eta reduce" #-}
+{-# LANGUAGE RankNTypes #-}
 module FunTest where
 
 import Eval.Effects
@@ -24,13 +27,14 @@ import Utils.Fix
 import Eval.Syntax
 import Fun.Syntax
 import Fun.Effects
-import Fun.Handlers (funReturn, defs)
+import Fun.Handlers as F
 import Stmt.Syntax as S
-import Utils.Environment
+import Utils.Environment as UEnv
 import Program.Syntax
 import Program.Denotation as P
 import Program.Handlers (defsHandler)
 import Program.Effects
+import Data.Maybe (mapMaybe)
 
 
 type Eff = MLState Address V + Cond + Abort V + End
@@ -38,16 +42,31 @@ type V =  Fix (LitBool + LitInt + Null + [])
 type Module = Arith + Boolean + Eval + Fun + Stmt
 type Out = Maybe (Either Bool Int)
 type Envs = FDecl
-type Eff' = (GlobalScope Envs Eff V + End)
+type Eff' = FunctionEnv Eff V + End
 
-runProgram :: Program (Envs (FreeEnv Eff V)) (FreeEnv Eff V) 
+runProgram :: Program (Envs (FreeEnv Eff V)) (FreeEnv Eff V)
   -> Maybe (Either Bool Int)
-runProgram (Fragment defs exp) = case unwrap 
-  $ handle defsHandler $ denoteDefs' defs of
-    env -> run exp env
+runProgram (Fragment defs exp) = case unwrap
+  $ handle_ F.defsH (Env { varEnv = [], UEnv.defs =[]} :: Env Eff V ) 
+  $ denoteDefList defs of
+    (_, env) -> run exp env
 
-denoteDefs' :: [Envs (FreeEnv Eff V)] -> Free Eff' (Env Eff V)
-denoteDefs' = F.denoteDefs
+-- denoteDefs' :: [Envs (FreeEnv Eff V)] -> Free Eff' (Env Eff V)
+-- denoteDefs' = F.denoteDefs
+
+
+-- preprocess defs handler filters = (denoteGenericDefs'' defs filters)
+
+
+--this also should be more general and instantiated for specific Eff' (because of global vars)
+-- denoteDefList ::  [Envs (FreeEnv Eff V)]
+--   -> Free Eff' [()]
+-- denoteDefList defs = mapM denoteDef defs
+
+--this is a class list
+-- denoteDef :: f (FreeEnv Eff V) -> Free Eff' ()
+-- denoteDef = _
+
 
 runExp :: FreeEnv Eff V -> Maybe (Either Bool Int)
 runExp e = run e Env { varEnv = []}
@@ -84,6 +103,9 @@ instance Denote Fun Eff V where
 
 instance Denote Stmt Eff V where
   denote = S.denote
+
+instance DenoteDef FDecl Eff Eff' V where
+  denoteDef = F.denoteDef
 
 testEq :: Denote m Eff V
   => String -> Out -> Fix m -> Test

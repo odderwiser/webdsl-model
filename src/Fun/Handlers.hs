@@ -14,13 +14,20 @@ funReturn = Handler
   { ret = pure
   , hdlr = \(Abort v) -> pure v }
 
-defs :: (Functor eff)
-  => Handler_ (MLState FunName (FDecl (FreeEnv eff v)))
-  a (Env eff v) eff (a, Env eff v)
-defs = mkRHandler U.defs
+type FunctionEnv eff v = MLState FunName (FDecl (FreeEnv eff v))
+
+defsH :: (Functor eff, Functor eff')
+  => Handler_ (FunctionEnv eff v)
+  a (Env eff v) eff' (a, Env eff v)
+defsH = mkRHandler U.defs
   (\name -> find (\(FDecl name' _ _) -> name == name' ))
   (\k value@(FDecl name _ _) env ->
     k name $ env { U.defs = value : U.defs env } )
+
+scopeDefs :: (Functor eff)
+  => Handler_ (MLState FunName (FDecl (FreeEnv eff v)))
+  a (Env eff v) eff (a, Env eff v)
+scopeDefs = defsH
 
 dropH :: (Functor eff) => Handler (DropEnv (Env eff v)) (Env eff v) eff (Env eff v)
 dropH = Handler

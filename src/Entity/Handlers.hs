@@ -21,24 +21,30 @@ import Utils.Fix
 import qualified Bool.Syntax as B
 import Syntax as S
 
-entityDefsH :: Functor eff 
-  => Handler_ (MLState EName (EntityDef (FreeEnv eff v)))
-  a (Env eff v) eff (a, Env eff v)
+type EntityDefsEnv eff v = (MLState EName (EntityDef (FreeEnv eff v)))
+
+entityDefsH :: (Functor eff, Functor eff')
+  => Handler_ (EntityDefsEnv eff v)
+  a (Env eff v) eff' (a, Env eff v)
 entityDefsH = mkRHandler U.entityDefs
   (\name -> find (\(EDef name' _ _) -> name == name' ))
   (\k val@(EDef name props funs) env -> k name
     $ env { U.entityDefs = val : U.entityDefs env  }
   )
 
-refEntities :: forall eff g v eDef. (Functor eff, EntityDef <: g,
-    eDef ~ EntityDef (FreeEnv eff v))
-    => [g (FreeEnv eff v)] -> Env eff v
-    -> Free eff (Env eff v)
-refEntities entities env  = do
-  (_ :: [EName], env') <- handle_ entityDefsH env 
-    $ mapM ref
-    $ mapMaybe (\dec -> (proj dec :: Maybe eDef)) entities
-  return env'
+scopedEntityDefsH :: Functor eff 
+  => Handler_ (EntityDefsEnv eff v)
+  a (Env eff v) eff (a, Env eff v)
+scopedEntityDefsH = entityDefsH
+-- refEntities :: forall eff g v eDef. (Functor eff, EntityDef <: g,
+--     eDef ~ EntityDef (FreeEnv eff v))
+--     => [g (FreeEnv eff v)] -> Env eff v
+--     -> Free eff (Env eff v)
+-- refEntities entities env  = do
+--   (_ :: [EName], env') <- handle_ entityDefsH env 
+--     $ mapM ref
+--     $ mapMaybe (\dec -> (proj dec :: Maybe eDef)) entities
+--   return env'
 
 -- entityDeclsH :: Functor eff 
 --   => Handler_ (MLState Address (EName, Env eff v))

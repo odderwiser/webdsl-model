@@ -13,6 +13,9 @@ type PName = String --property name
 data EntityDef e = EDef EName [(PName, Type)] [FDecl e]
     deriving (Functor, Eq)
 
+data GlobalVar e = VarDecl VName e 
+
+-- inside program too
 
 data EntityDecl e = EDecl EName [(PName, e)] --- e is type if unevaled and address if evaled
     deriving (Functor, Eq)

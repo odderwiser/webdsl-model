@@ -22,14 +22,14 @@ import Eval.Syntax
 
 derefDefs :: Functor eff => FunName -> Env eff (Fix v) 
   -> Free eff (FDecl (FreeEnv eff (Fix v)))
-derefDefs name env = derefH name Fun.Handlers.defs env 
+derefDefs name env = derefH name defsH env 
 
 refDefs :: forall eff fDecl g v. (Functor eff, FDecl <: g, 
   fDecl ~ FDecl (FreeEnv eff v))
   => [g (FreeEnv eff v)] -> Env eff v
   -> Free eff (Env eff v)
 refDefs decls env  = do
-  (_ :: [FunName], env') <- handle_ Fun.Handlers.defs env $ mapM ref
+  (_ :: [FunName], env') <- handle_ defsH env $ mapM ref
     $ mapMaybe (\dec -> (proj dec :: Maybe fDecl)) decls
   return env'
 
@@ -72,11 +72,12 @@ refVars envTuples env = do
     $ mapM assign envTuples
   return env'
 
+denoteDef :: (MLState FunName (Function eff v) <: eff') 
+  => FDecl (FreeEnv eff v) -> Free eff' ()
+denoteDef decl@(FDecl name _ _) = do
+  (name :: FunName) <- ref decl
+  return ()
 
 denoteDefs :: (GlobalScope envs eff v <: eff',FDecl <: envs)
   => [envs (FreeEnv eff v)] -> Free eff' (Env eff v)
 denoteDefs defs = P.denoteDefs Defs defs $ Pure $ Env {}
-
-instance Def FDecl where
-    foldDef :: (Def FDecl, Denote f eff v) => FDecl (Fix f) -> FDecl (FreeEnv eff v)
-    foldDef decl@(FDecl name vars body) = FDecl name vars $ foldD body
