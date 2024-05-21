@@ -28,19 +28,24 @@ denote (S s1 s2) env = do
   s1' <- s1 env
   s2 env
 
-denote (ForCol name col stmts filters) env = do
+denoteLoop :: forall v eff. (Null <: v, [] <: v, LitBool <: v, LitInt <: v,
+  Cond <: eff, MLState Address (Fix v) <: eff)
+  => Loop (FreeEnv eff (Fix v))
+  -> FreeEnv eff (Fix v)
+
+denoteLoop (ForCol name col stmts filters) env = do
   col' <- col env
   col'' <- denoteFilters name col' filters env
   executeLoop (projC col'') name env stmts
   -- return $ injF Null
 
-denote (ForArith name e1 e2 stmts) env = do
+denoteLoop (ForArith name e1 e2 stmts) env = do
   e1' <- e1 env
   e2' <- e2 env
   executeLoop (halfOpenRange e1' e2')
     name env stmts
 
-denote (While e stmts) env = whileLoop e stmts env
+denoteLoop (While e stmts) env = whileLoop e stmts env
 
 executeLoop col' name env stmts = do
   mapM_ (\id -> do

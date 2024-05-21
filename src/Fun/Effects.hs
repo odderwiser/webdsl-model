@@ -7,6 +7,7 @@ data Abort v k = Abort v
 
 data DropEnv env k 
   = DropLocalVars env (env ->  k)
+  | DropAttributes env (env -> k)
   --objects only
   deriving Functor
 

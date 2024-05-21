@@ -11,6 +11,7 @@ import StmtTest (stmtTests)
 import FunTest (funTests)
 import ColTest (colTests)
 import EntityTest (entityTests)
+import LoopTest (loopTests)
 
 main :: IO ()
 main = do
@@ -22,6 +23,7 @@ main = do
     , evalTests
     , funTests
     , stmtTests
+    , loopTests
     , colTests
     , entityTests
     ]

@@ -7,9 +7,14 @@ import Eval.Syntax
 import Syntax
 import Data.Maybe (fromJust)
 import Entity.Syntax
+import Layout.Syntax (CName)
+import Attributes.Syntax (AttName)
+import Page.Syntax (PageDef, PgName)
 
 type Function eff v = FDecl (FreeEnv eff v)
-type FreeEnv eff v = Env eff v -> Free eff v
+type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
+type PEnv eff eff' v = Env eff v -> Env eff' () -> Free eff' ()
+
 
 -- data Entity eff e = Entity EName (Env eff e)  
 
@@ -18,8 +23,14 @@ data Env eff v = Env
     , defs       :: [Function eff v] -- this is for functions
     , entityDefs :: [EntityDef (FreeEnv eff v)] -- this is for all the entity definitions
     , objVarEnv  :: [(PName, Address)]
+    -- , attributes :: [(AttName, String)]
+    -- , pages      :: [(PgName, PageDef (FreeEnv eff v))]
     }
 
+data TEnv eff eff' v = TEnv
+  {  attributes :: [(AttName, String)]
+  , pages      :: [(PEnv eff eff' v)]
+  }
 
 genericEnvHandler :: (Functor remEff, Eq a)
   => (t -> [(a, v)]) -> ((a, v) -> t -> t) -> Handler_ (MLState a v) b t remEff (b, t)

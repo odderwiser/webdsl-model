@@ -9,6 +9,7 @@ data GlobalScope g eff v k
     = Write EnvType [g (FreeEnv eff v)] (Env eff v) (Env eff v -> k)
     deriving Functor
 
+
 data EnvType = Vars | Defs | Entities
 
 write :: (GlobalScope g eff v <: f, env ~ Env eff v)

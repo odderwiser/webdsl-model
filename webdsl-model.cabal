@@ -23,15 +23,19 @@ extra-source-files: CHANGELOG.md
 
 library
     exposed-modules:    Arith.Syntax, Arith.Denotation,
+                        Attributes.Syntax, Attributes.Denotation, Attributes.Effects, Attributes.Handlers,
                         Bool.Syntax,  Bool.Denotation,   Bool.Effects, Bool.Handlers,
                         Entity.Syntax, Entity.Denotation, Entity.Effects, Entity.Handlers,
                         Expr.Syntax,  Expr.Denotation, 
                         Eval.Syntax,  Eval.Denotation,   Eval.Effects, Eval.Handlers,
                         Fun.Syntax,   Fun.Denotation,    Fun.Effects,  Fun.Handlers,
                         Col.Syntax,   Col.Denotation,
+                        Layout.Syntax,Layout.Denotation, Layout.Effects, Layout.Handlers,
+                        Page.Syntax, Page.Denotation,
                         Program.Syntax, Program.Denotation, Program.Effects, Program.Handlers,
                         Stmt.Syntax,  Stmt.Denotation,   Stmt.Effects, Stmt.Handlers,
                         Syntax,
+                        Template.Syntax,
                         Utils.Free, Utils.Handler, Utils.Composition,
                         Utils.Fix, Utils.Denote, Utils.Environment
 
@@ -73,6 +77,7 @@ test-suite webdsl-tests
                         ExprTest,
                         EvalTest,
                         FunTest,
+                        LoopTest,
                         StmtTest
     build-depends:      base ^>=4.17.2.0, 
                         HUnit ^>=1.6,
