@@ -78,7 +78,8 @@ test-suite webdsl-tests
                         EvalTest,
                         FunTest,
                         LoopTest,
-                        StmtTest
+                        StmtTest,
+                        LayoutTest
     build-depends:      base ^>=4.17.2.0, 
                         HUnit ^>=1.6,
                         webdsl-model

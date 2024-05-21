@@ -32,6 +32,33 @@ instance {-# OVERLAPPABLE #-} (Functor f, Functor g, f <: g', h ~ g + g') => f <
     L g -> Nothing
     R g' -> proj g'
 
+infix 6 +:
+data (f +: g) a b 
+  = L' (f a b)
+  | R' (g a b)
+
+infix 5 <::
+class f <:: g where
+  inj'  :: f a k -> g a k
+  proj' :: g a k -> Maybe (f a k)
+
+instance  f  <:: f  where
+  inj' = id
+  proj' =  Just
+
+instance f  <:: f +: g where
+  inj' = L'
+  proj' = \case
+    L' f -> Just f
+    _ -> Nothing
+
+instance {-# OVERLAPPABLE #-}  (f <:: g', h ~ g +: g') 
+  => f <:: h where
+  inj' = R' . inj' 
+  proj' = \case
+    L' g -> Nothing
+    R' g' -> proj' g'
+
 --- VALUE COMPOSITION
 
 infix 5 <

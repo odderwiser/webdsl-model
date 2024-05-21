@@ -1,7 +1,6 @@
 module Page.Syntax where
 import Syntax (Type)
 import Entity.Syntax (PName)
-import Layout.Effects (Attribute)
 import Attributes.Syntax
 
 type PgName = String

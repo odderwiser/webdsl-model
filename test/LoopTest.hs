@@ -24,6 +24,7 @@ import qualified Col.Denotation as C
 import Expr.Syntax
 import Expr.Denotation as Ex
 import Utils.Environment
+import LayoutTest (lookupTests)
 
 
 type Eff    = MLState Address V + Cond + End
@@ -172,4 +173,5 @@ loopTests = TestList
     , testForCount
     , testForCountDown
     , testWhile
+    , lookupTests
     ]

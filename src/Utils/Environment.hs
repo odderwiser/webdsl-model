@@ -7,13 +7,13 @@ import Eval.Syntax
 import Syntax
 import Data.Maybe (fromJust)
 import Entity.Syntax
-import Layout.Syntax (CName)
+-- import Layout.Syntax (CName)
 import Attributes.Syntax (AttName)
 import Page.Syntax (PageDef, PgName)
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
-type PEnv eff eff' v = Env eff v -> Env eff' () -> Free eff' ()
+type PEnv eff eff' v = Env eff v -> TEnv eff eff' v -> Free eff' ()
 
 
 -- data Entity eff e = Entity EName (Env eff e)  
@@ -29,7 +29,7 @@ data Env eff v = Env
 
 data TEnv eff eff' v = TEnv
   {  attributes :: [(AttName, String)]
-  , pages      :: [(PEnv eff eff' v)]
+  , pages      :: [PEnv eff eff' v]
   }
 
 genericEnvHandler :: (Functor remEff, Eq a)
@@ -55,16 +55,16 @@ mkRHandler envSubtype finder cont = Handler_
       (env', Deref key k) -> k (fromJust $  finder key env') env
       (env', Ref value k) -> cont k value env
   }
-  
-  
+
+
 derefH :: (Functor eff)
-  => a -> Handler_ (MLState a b) b env eff (b, env) 
+  => a -> Handler_ (MLState a b) b env eff (b, env)
   -> env -> Free eff b
 derefH key handler env = do
   (loc, env) <- handle_ handler env (deref key)
   return loc
 
-refH :: (Functor remEff) 
-  => b -> Handler_ (MLState a b) a env remEff (a, env) 
+refH :: (Functor remEff)
+  => b -> Handler_ (MLState a b) a env remEff (a, env)
   -> env -> Free remEff (a, env)
 refH value handler env = handle_ handler env (ref value)

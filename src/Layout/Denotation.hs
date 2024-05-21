@@ -10,7 +10,7 @@ import Attributes.Syntax (AttName, AttList)
 
 denote :: forall eff eff' v. (Attribute <: eff', RenderHtml <: eff',
     State (AttList String) <: eff')
-  => Layout (PEnv eff eff' v) (FreeEnv eff v)
+  => Layout (FreeEnv eff v) (PEnv eff eff' v)
   -> PEnv eff eff' v
 denote (Header False e) eEnv pEnv = do
     renderStartTag "header section1" Nothing "h1" 
