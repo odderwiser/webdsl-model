@@ -6,7 +6,7 @@ import Utils.Composition
 
 data Fix f = In (f (Fix f))
 
-data Fix' e f = In' (e f (Fix' e f))
+data BiFix e f = BIn (e f (BiFix e f))
 
 -- instance Eq (Fix f) where
 --   (==) :: Fix f -> Fix f -> Bool
@@ -21,8 +21,8 @@ data Fix' e f = In' (e f (Fix' e f))
 deriving instance (Eq (f (Fix f))) => Eq (Fix f)
 deriving instance (Show (f (Fix f))) => Show (Fix f)
 
-injF'Fst :: (f <:: g) => f h (Fix' g h) -> Fix' g h
-injF'Fst elem = In' (inj' elem)
+injBf :: (f <:: g) => f h (BiFix g h) -> BiFix g h
+injBf elem = BIn (inj' elem)
 
 injF :: (f <: g) => f (Fix g) -> Fix g 
 injF = In . inj

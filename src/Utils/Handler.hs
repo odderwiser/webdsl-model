@@ -30,8 +30,6 @@ mask = fold Pure (Op . R)
 -- hup h = case forephism of
 --   Forephism i -> permute (from i) . mask . h . permute (to i)
 
-data End k
-  deriving Functor
 
 unwrap :: Free End a -> a
 unwrap (Pure x) = x

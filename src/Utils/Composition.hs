@@ -1,7 +1,11 @@
+{-# LANGUAGE QuantifiedConstraints #-}
 module Utils.Composition where
 import Prelude hiding (sum)
 
 --- FUNCTOR COMPOSITION
+
+data End k
+  deriving Functor
 
 infixr 6 +
 data (f + g) a
@@ -13,6 +17,9 @@ infix 5 <:
 class (Functor f, Functor g) => f <: g where
   inj  :: f k -> g k
   proj :: g k -> Maybe (f k)
+  -- cmap :: (forall f. f <: g, forall i. i <: h) => g k -> h k
+
+-- cmap :: (forall f. f <: g, f <: h) => g k -> g k
 
 instance {-# OVERLAPPING #-} (Functor f) => f <: f where
   inj :: f k -> f k
@@ -25,6 +32,8 @@ instance (Functor f, Functor g) =>f  <: f + g where
   proj = \case
     L f -> Just f
     _ -> Nothing
+
+
 
 instance {-# OVERLAPPABLE #-} (Functor f, Functor g, f <: g', h ~ g + g') => f <: h where
   inj = R . inj 
@@ -59,6 +68,22 @@ instance {-# OVERLAPPABLE #-}  (f <:: g', h ~ g +: g')
     L' g -> Nothing
     R' g' -> proj' g'
 
+-- natural transformation from type to type
+infix ~>
+class (Functor g, Functor h) => g ~> h where
+  cmap :: g k -> h k
+
+instance {-# OVERLAPPING #-}  (Functor f, Functor h,
+   f <: h, f' <: h) => (f + f') ~> h where
+  cmap = \case
+    L f -> inj f
+    R f -> inj f
+
+instance {-# OVERLAPPABLE #-} (Functor f, Functor g', g ~> h,
+  f <: h, (g + g')~> h) => (f + (g + g')) ~> h where
+  cmap = \case
+    L f -> inj f
+    R f -> cmap f
 --- VALUE COMPOSITION
 
 infix 5 <

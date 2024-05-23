@@ -13,7 +13,8 @@ import Page.Syntax (PageDef, PgName)
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
-type PEnv eff eff' v = Env eff v -> TEnv eff eff' v -> Free eff' ()
+type PEnv eff eff' v = Env eff v -> TEnv eff eff' v 
+  -> (Free eff v -> Free eff' v) -> Free eff' ()
 
 
 -- data Entity eff e = Entity EName (Env eff e)  

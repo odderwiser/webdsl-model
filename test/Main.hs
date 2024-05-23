@@ -12,6 +12,7 @@ import FunTest (funTests)
 import ColTest (colTests)
 import EntityTest (entityTests)
 import LoopTest (loopTests)
+import XmlTest (xmlTests)
 
 main :: IO ()
 main = do
@@ -26,6 +27,7 @@ main = do
     , loopTests
     , colTests
     , entityTests
+    , xmlTests
     ]
   print result
   if failures result > 0 then exitFailure else exitSuccess

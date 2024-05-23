@@ -5,6 +5,7 @@ import Utils.Fix
 import Fun.Syntax (FunName, FDecl)
 import Stmt.Syntax (Filter)
 import Utils.Environment (FreeEnv, PEnv)
+import Data.Bifunctor (Bifunctor (bimap))
 
 class Functor sym => Denote sym eff v where
     denote:: sym (FreeEnv eff v) -> FreeEnv eff v
@@ -46,13 +47,9 @@ instance  (DenoteT sym1 eff eff' v,
 
 -- data (Functor f) => Fix' e f = In' (e (Fix f) (Fix' e f))
 
-foldDT :: (Denote f eff v, DenoteT g eff eff' v, Functor' g, Functor (g (FreeEnv eff v)))
-    => Fix' g (Fix f) -> PEnv eff  eff' v
-foldDT (In' elem) = denoteT $ gmap (foldD) (fmap foldDT) elem
-
-class Functor' f  where
-    gmap :: (a -> b) -> (f b c -> f b d) -> f a c -> f b d
-    -- (<$) :: a -> f b -> f a
+foldDT :: (Denote f eff v, DenoteT g eff eff' v, Bifunctor g)
+    => BiFix g (Fix f) -> PEnv eff  eff' v
+foldDT (BIn elem) = denoteT $ bimap foldD foldDT elem
 
 
 

@@ -15,7 +15,6 @@ import Test.HUnit
 import Utils.Fix ( Fix, injF ) 
 import TestSyntax 
 import Syntax (Type(..))
-import Utils.Handler (End)
 import Utils.Fix
 import Utils.Composition
 import Utils.Environment

@@ -13,6 +13,7 @@ import qualified Test.HUnit as T
 import Utils.Denote (foldDT)
 import Utils.Denote
 import qualified Layout.Denotation as L
+import Utils.Free
 
 --Actions
 type Eff = End
@@ -22,7 +23,7 @@ type V =  (Fix End)
 type Eff' = Attribute + RenderHtml + State (AttList String) + End
 
 --running syntax
-type Module = Fix' Layout V   
+type Module = BiFix Layout V   
 type Out = String
 
 run :: PEnv Eff Eff' (V)
@@ -31,9 +32,22 @@ run e = case unwrap
     $ handle_ stateH []
     $ handle_ renderHtmlH (PageR { title = Nothing, body = ""})
     $ handle_ attributeH ("section", 1)
-    $ e  (Env {}) (TEnv {})
+    $ e  (Env {}) (TEnv {}) handleExp
   of
     (_, str)    -> str
+
+
+handleExp :: () => Free Eff V
+  -> Free Eff' V
+handleExp e = case e
+    of
+    exp -> bubbleDown exp
+
+-- probably a beeter way to implement this??
+bubbleDown :: 
+    (eff <: eff')
+    => Free eff v -> Free eff' v
+bubbleDown = fold Pure (Op . inj)
 
 --- example test::
 
@@ -60,8 +74,8 @@ testSyntax = testEq
 
 
 sectionSyntax :: Module
-sectionSyntax = injF'Fst (Section False 
-    $ injF'Fst (String "a section"))
+sectionSyntax = injBf (Section False 
+    $ injBf (String "a section"))
 
 lookupTests = T.TestList [
     testSyntax
