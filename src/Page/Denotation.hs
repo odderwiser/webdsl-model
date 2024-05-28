@@ -30,7 +30,7 @@ denote :: (RenderHtml <: eff) =>
 -- this should do something with vars. DOesnt yet.
 denote (PNavigate name vars text) env = do
     renderLink name
-    renderString text
+    renderPlainText text
     renderEndTag "a"
 
 -- denote (TCall name atts vars body elem) env = do

@@ -16,7 +16,7 @@ renderHtmlH :: forall remEff val v. (Functor remEff)
   val PageR remEff (val, String)
 renderHtmlH = Handler_ {
   ret_ = \x pageR -> pure (x, writeOut pageR),
-  hdlr_ = \effect pageR -> case effect of
+  hdlr_ = \effect pageR         -> case effect of
     (RenderStartTag cName atts tag k) ->
       let  renderedTag = case atts of
             Nothing     -> "<" ++ tag ++ " "
@@ -26,7 +26,8 @@ renderHtmlH = Handler_ {
               ++ " " ++ mapAttributes atts ++ ">"
       in
       k $ writeBody renderedTag pageR
-    (RenderString string k)      -> k $  writeBody string pageR
+    (RenderPlainText string k)   -> k $  writeBody string pageR
+    (RenderString string k)      -> k $  writeBody ("\""++string++"\"") pageR
     (RenderEndTag tag k)         ->
       let renderedTag = "</" ++ tag ++ ">" in
       k $ writeBody renderedTag pageR

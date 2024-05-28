@@ -1,9 +1,10 @@
 module Str.Syntax where
 import Utils.Composition
 import Utils.Fix
+import Data.Maybe (fromJust)
 
 data LitStr e = Lit String
-    deriving Functor
+    deriving (Functor, Eq)
 
 data Str e 
     = LitS String 
@@ -12,3 +13,7 @@ data Str e
 
 injS :: (Str <: f) => String -> Fix f
 injS =  injF . LitS
+
+projS :: (LitStr <: g) => Fix g -> String
+projS elem = case fromJust (projF elem) of
+  (Lit int) -> int

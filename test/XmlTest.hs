@@ -25,11 +25,13 @@ import Expr.Denotation as Ex
 import Eval.Syntax
 import Eval.Denotation as Ev
 import Render.Denotation as X
+import Str.Syntax as Str
+import Str.Denotation as Str
 
 --Actions
 type Eff    = Cond + MLState Address V + End
-type V      = Fix (LitBool + LitInt + Null)
-type Sym = Arith + Boolean + Expr + Eval
+type V      = Fix (LitBool + LitInt + Null + LitStr)
+type Sym = Arith + Boolean + Expr + Eval + Str
 
 --templates 
 type Eff' = MLState Address V + RenderHtml + End
@@ -57,7 +59,7 @@ handleExp e = case handle condition
     exp -> bubbleDown exp
 
 -- probably a beeter way to implement this??
-bubbleDown :: 
+bubbleDown ::
     (eff ~> eff')
     => Free eff v -> Free eff' v
 bubbleDown = fold Pure (Op . cmap)
@@ -75,6 +77,9 @@ instance Denote Expr Eff V where
 
 instance Denote Eval Eff V where
   denote = Ev.denote
+  
+instance Denote Str Eff V where
+  denote = Str.denote
 
 instance DenoteT Xml Eff Eff' V where
   denoteT :: Xml (FreeEnv Eff V) (PEnv Eff Eff' V) -> PEnv Eff Eff' V
@@ -94,17 +99,25 @@ litXmlTest = testEq
 
 
 litXmlSyntax :: Module
-litXmlSyntax = injBf (Xml 
-  "<div id=\"header\">header()</div>" 
+litXmlSyntax = injBf (Xml
+  "<div id=\"header\">header()</div>"
   Nothing)
+
+recXmlTest = testEq
+    "test if recursive xml works"
+    ( "<html><head></head><body>"
+    ++"<div id=\"pagewrapper\" />"
+    ++ "</body></html>")
+    recXmlSyntax
 
 
 recXmlSyntax :: Module
-recXmlSyntax = injBf (Xml 
-  "<div id=\"header\">header()</div>" 
-  Nothing)
+recXmlSyntax = injBf (Xml
+  "<div id=" $
+  Just (injF $ Str.Add (injS "page") (injS "wrapper"), Xml " />" Nothing))
 
-xmlTests = T.TestList [
-    litXmlTest
-    ]
+xmlTests = T.TestList 
+  [ litXmlTest
+  , recXmlTest
+  ]
 

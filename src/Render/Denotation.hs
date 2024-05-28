@@ -1,20 +1,23 @@
 module Render.Denotation where
 import Utils.Environment
 import Render.Syntax
-import Layout.Effects (renderString, RenderHtml)
+import Layout.Effects
 import Utils.Composition
 import Utils.Free
+import Str.Syntax
+import Utils.Fix
 
-denote :: forall eff eff' v. (Functor eff, Functor eff',
-    RenderHtml <: eff')
+denote :: (Functor eff, Functor eff',
+    RenderHtml <: eff', v~ Fix v', LitStr <: v')
   => Xml (FreeEnv eff v) (PEnv eff eff' v)
   -> Env eff v -> TEnv eff eff' v 
   -> (Free eff v -> Free eff' v) 
   -> Free eff' ()
 denote (Xml xml Nothing) env env' lift = do
-    renderString xml
+    renderPlainText xml
 
 denote (Xml xml (Just (exp, xml'))) env env' lift = do
-    renderString xml
+    renderPlainText xml
     exp <- lift $ exp env
+    renderString $ projS exp
     denote xml' env env' lift

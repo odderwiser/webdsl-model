@@ -7,17 +7,12 @@ import Utils.Fix
 
 data RenderHtml k 
     = RenderStartTag CName (Maybe (AttList String)) String k
+    | RenderPlainText String k
     | RenderString String k
     | RenderEndTag String k
     | WriteTitle String k
     | RenderLink String k
     deriving Functor
-
--- instance (Functor RenderHtml) where
---   fmap f (WriteTitle s k)           = WriteTitle s $ f k
---   fmap f (RenderStartTag n ats s k) = RenderStartTag n ats s $ f k
---   fmap f (RenderEndTag s k)    = RenderEndTag s $ f k
---   fmap f (RenderString s k)    = RenderEndTag s $ f k
 
 renderStartTag :: (RenderHtml <: f) 
     => CName -> Maybe (AttList String) -> String -> Free f ()
@@ -27,9 +22,13 @@ renderStartTag name list tag = Op $ inj
 renderEndTag tag = Op $ inj 
     $ RenderEndTag tag $ Pure ()
 
+renderPlainText string = Op $ inj
+    $ RenderPlainText string $ Pure ()
+
 renderString string = Op $ inj
     $ RenderString string $ Pure ()
 
+renderTitle :: (RenderHtml <: f) => String -> Free f ()
 renderTitle title = Op $ inj
     $ WriteTitle title $ Pure ()
 
