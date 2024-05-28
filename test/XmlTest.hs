@@ -94,7 +94,15 @@ litXmlTest = testEq
 
 
 litXmlSyntax :: Module
-litXmlSyntax = injBf (Xml "<div id=\"header\">header()</div>" Nothing)
+litXmlSyntax = injBf (Xml 
+  "<div id=\"header\">header()</div>" 
+  Nothing)
+
+
+recXmlSyntax :: Module
+recXmlSyntax = injBf (Xml 
+  "<div id=\"header\">header()</div>" 
+  Nothing)
 
 xmlTests = T.TestList [
     litXmlTest

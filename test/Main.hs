@@ -13,6 +13,7 @@ import ColTest (colTests)
 import EntityTest (entityTests)
 import LoopTest (loopTests)
 import XmlTest (xmlTests)
+import StrTest (strTests)
 
 main :: IO ()
 main = do
@@ -24,6 +25,7 @@ main = do
     , evalTests
     , funTests
     , stmtTests
+    , strTests
     , loopTests
     , colTests
     , entityTests
