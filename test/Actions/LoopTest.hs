@@ -1,4 +1,4 @@
-module LoopTest where
+module Actions.LoopTest where
 
 import Syntax
 import Eval.Effects

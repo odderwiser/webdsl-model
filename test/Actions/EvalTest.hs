@@ -1,4 +1,4 @@
-module EvalTest where
+module Actions.EvalTest where
 import Eval.Effects
 import Syntax hiding (unwrap)
 import Utils.Composition

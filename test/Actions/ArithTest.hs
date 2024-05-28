@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
-module ArithTest where
+module Actions.ArithTest where
 import Utils.Denote
 import Utils.Free
 import Arith.Denotation as A

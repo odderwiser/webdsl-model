@@ -1,4 +1,4 @@
-module ArithBoolTest where
+module Actions.ArithBoolTest where
 import Utils.Denote
 import Utils.Free
 import Bool.Effects

@@ -1,4 +1,4 @@
-module StrTest where
+module Actions.StrTest where
 import Utils.Environment
 import Utils.Composition
 import Str.Syntax as S

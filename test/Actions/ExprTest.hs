@@ -1,4 +1,4 @@
-module ExprTest where
+module Actions.ExprTest where
 import Bool.Effects (Cond)
 import Utils.Composition (type (+), type (\/))
 import Utils.Denote 

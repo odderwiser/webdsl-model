@@ -1,4 +1,4 @@
-module ColTest where
+module Actions.ColTest where
 import Utils.Composition
 import Expr.Syntax
 import Bool.Effects (Cond)

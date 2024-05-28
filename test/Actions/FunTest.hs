@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Eta reduce" #-}
 {-# LANGUAGE RankNTypes #-}
-module FunTest where
+module Actions.FunTest where
 
 import Eval.Effects
 import Syntax

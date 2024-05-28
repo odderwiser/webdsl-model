@@ -1,4 +1,4 @@
-module BoolTest where
+module Actions.BoolTest where
 import Utils.Denote
 import Utils.Free
 import Bool.Effects
