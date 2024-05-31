@@ -1,35 +1,23 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 {-# LANGUAGE DataKinds #-}
 module Entity.Denotation where
-import Eval.Effects
+import Actions.Effects
 import Syntax as S
-import Utils.Fix
-import Utils.Composition
-import Eval.Syntax
-import Utils.Denote
-import Fun.Denotation (derefDefs)
-import Fun.Handlers
-import Eval.Denotation (derefEnv, refEnv)
-import Entity.Syntax as E
-import Utils.Free
-import Utils.Handler
-import Utils.Environment as E
-import Fun.Syntax
-import Program.Effects
-import Entity.Handlers as H
-import Program.Denotation as P
-import Fun.Denotation as F
-import Eval.Handlers (heap'', environment, heap')
-import Fun.Effects as F
-import Entity.Effects
-import Arith.Syntax
-import Bool.Syntax
+import Utils as U
 import Data.Maybe (mapMaybe)
+import Entity.Syntax
+import Actions.Syntax
+import Actions.Arith
+import Actions.Bool
+import Entity.Handlers
+import Actions.Handlers.Env
+import qualified Actions.Modules.Fun.Denotation as F
+import Entity.Effects
 
 getProperty name = derefH name objEnvH
 
 -- derefObj obj env = derefH (getAddress obj) heap'' (entities env)
-liftDefs defs = Env {E.defs = defs}
+liftDefs defs = Env {U.defs = defs}
 
 denote :: forall e v eff.
   (e ~ FreeEnv eff (Fix v),
@@ -54,12 +42,12 @@ denote (PropAssign object propName e)  env = do
 --   MLState Address (Fix v) <: eff,
 --   Null <: v, EntityDecl <: v, LitAddress <: v)
 --   => Fun (e, FunName) e -> e
-denote (E.FCall obj fname vars) env = do
+denote (ECall obj fname vars) env = do
   obj'                <- obj env
   -- case projEntity obj' of
   --   (EDecl name params) -> do
   (EDef _ _ funs)       <- derefH (projEName obj') entityDefsH env
-  FDecl _ varNames body <- derefDefs fname $ liftDefs funs
+  FDecl _ varNames body <- F.derefDefs fname $ liftDefs funs
   env'                  <- F.populateEnv env varNames vars
   env''                 <- refProperties (projParams obj') env'-- possibly different orfder? check
   env'''                <- liftEnv env'' $ liftDefs funs

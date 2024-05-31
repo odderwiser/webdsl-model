@@ -1,11 +1,12 @@
 module Actions.Modules.Col.Syntax where
-import Syntax (Type)
+import Actions.Modules.Eval.Syntax (VName)
+import Actions.Modules.Stmt.Syntax (Filter)
+import Actions.Modules.Bool.Syntax (OpB)
+
 import Utils.Composition
 import Utils.Fix
-import Eval.Syntax (VName)
-import Stmt.Syntax
+
 import Data.Maybe (fromJust)
-import Actions.Modules.Bool.Syntax (OpB)
 
 data Col e 
   = LitC [e]                   -- List literal : []

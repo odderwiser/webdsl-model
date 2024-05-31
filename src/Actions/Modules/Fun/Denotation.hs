@@ -1,24 +1,19 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 
 
-module Fun.Denotation where
-import Fun.Effects
+module Actions.Modules.Fun.Denotation where
+import Actions.Effects as E
 import Utils.Composition
-import Fun.Syntax
-import Utils.Free
-import Eval.Effects
+import Actions.Modules.Fun.Syntax
+import Utils
 import Syntax
-import Eval.Handlers (environment)
-import Utils.Handler (handle_, handle)
-import Fun.Handlers
-import Utils.Fix
-import Utils.Environment (Env (Env), FreeEnv, Function, derefH)
+import Actions.Handlers.Heap (environment)
+import Actions.Handlers.Env
 import Data.Maybe (mapMaybe)
 import Program.Syntax
 import Program.Effects
-import Utils.Denote
 import Program.Denotation as P
-import Eval.Syntax
+import Actions.Modules.Eval.Syntax
 
 derefDefs :: Functor eff => FunName -> Env eff (Fix v) 
   -> Free eff (FDecl (FreeEnv eff (Fix v)))
@@ -56,7 +51,7 @@ populateEnv env varNames vars = do
 
 dropEnv :: (Functor f') 
   => Env f' v -> Free f' (Env f' v)
-dropEnv env = handle dropH $ Fun.Effects.drop env
+dropEnv env = handle dropH $ E.drop env
 
 storeVars :: (MLState Address v <: f) 
   => Env f v -> [FreeEnv f v] -> Free f [Address]

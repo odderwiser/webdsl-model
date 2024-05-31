@@ -2,24 +2,30 @@
 {-# HLINT ignore "Use lambda-case" #-}
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 module Entity.Handlers where
-import Eval.Effects
+import Actions.Effects
 import Entity.Syntax
 import Syntax
-import Utils.Handler
-import Utils.Environment as U
-import Fun.Syntax
-import Utils.Environment (Function, Env)
-import Utils.Free
-import Utils.Composition
-import Data.Maybe (mapMaybe)
-import Entity.Effects (Write(..), write, MutateEnv (..), DefaultValue (DefaultValue))
-import Data.Foldable (find)
-import Fun.Effects
-import Fun.Handlers (dropAction)
-import qualified Arith.Syntax as A
-import Utils.Fix
-import qualified Bool.Syntax as B
-import Syntax as S
+import Utils as U
+import Entity.Effects
+import qualified Actions.Modules.Bool.Syntax as B
+import qualified Actions.Modules.Arith.Syntax as A
+import qualified Syntax as S
+import Actions.Handlers.Env (dropAction, mkAHandler, mkRHandler)
+import Data.List (find)
+
+-- import Fun.Syntax
+-- import Utils.Environment (Function, Env)
+-- import Utils.Free
+-- import Utils.Composition
+-- import Data.Maybe (mapMaybe)
+-- import Entity.Effects (Write(..), write, MutateEnv (..), DefaultValue (DefaultValue))
+-- import Data.Foldable (find)
+-- import Fun.Effects
+-- import Fun.Handlers (dropAction)
+-- import qualified Actions.Modules.Arith.Syntax as A
+-- import Utils.Fix
+-- import qualified Actions.Modules.Bool.Syntax as B
+-- import Syntax as S
 
 type EntityDefsEnv eff v = (MLState EName (EntityDef (FreeEnv eff v)))
 

@@ -6,6 +6,10 @@ import Data.Maybe (fromJust)
 data LitStr e = Lit String
     deriving (Functor, Eq)
 
+instance Show (LitStr a) where
+  show :: LitStr a -> String
+  show (Lit v) = show v 
+
 data Str e 
     = LitS String 
     | Add e e 

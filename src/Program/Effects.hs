@@ -3,7 +3,6 @@ import Entity.Syntax
 import Utils.Composition
 import Utils.Environment
 import Utils.Free
-import Fun.Syntax (FDecl)
 
 data GlobalScope g eff v k
     = Write EnvType [g (FreeEnv eff v)] (Env eff v) (Env eff v -> k)

@@ -1,8 +1,8 @@
 module Actions.Handlers.Cond where
 
 import Utils.Handler
-import Bool.Effects   (Cond (..))
-import Bool.Syntax    ( Boolean(OpB), OpB(..))
+import Actions.Effects   (Cond (..))
+
 import Data.Bits (xor)
 
 condition :: (Functor g) => Handler Cond a g a

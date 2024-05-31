@@ -2,10 +2,9 @@ module Render.Denotation where
 import Utils.Environment
 import Render.Syntax
 import Layout.Effects
-import Utils.Composition
-import Utils.Free
-import Str.Syntax
-import Utils.Fix
+import Utils hiding (denote)
+import Actions.Str hiding (denote)
+-- import qualified Actions.Modules.Str.Syntax as Str
 
 denote :: (Functor eff, Functor eff',
     RenderHtml <: eff', v~ Fix v', LitStr <: v')

@@ -1,7 +1,7 @@
 module Page.Denotation where
 import Page.Syntax
 import Utils.Environment (FreeEnv, Env)
-import Eval.Effects (MLState, ref)
+import Actions.Effects (MLState, ref)
 import Utils.Free
 import Utils.Composition
 import Entity.Syntax (PName)
@@ -9,7 +9,7 @@ import Syntax (Type)
 import Utils.Fix
 import Layout.Effects
 import qualified Attributes.Denotation as A
-import qualified Fun.Denotation as F
+import qualified Actions.Modules.Fun.Denotation as F
 
 type PageDefs eff v = MLState PgName (PageDef (Env eff v -> Free eff ()))
 type TDefs eff v = MLState (TName, [Type]) (Env eff v -> Free eff ())

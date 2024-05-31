@@ -1,16 +1,16 @@
 module Actions.Modules.Col.Denotation where
-import Utils.Composition
-import Utils.Free
-import Col.Syntax
-import Utils.Fix
-import Bool.Syntax as B
-import Data.Maybe (mapMaybe)
-import Utils.Environment (FreeEnv, Env)
-import Stmt.Denotation (denoteFilters)
-import Eval.Effects (MLState, ref, assign)
+
+import Actions.Modules.Stmt.Denotation (denoteFilters)
+import Actions.Modules.Eval.Denotation (refEnv)
+import Actions.Modules.Col.Syntax
+import Actions.Arith as A 
+import Actions.Bool as B
+
+import Utils
 import Syntax as S
-import Eval.Denotation (refEnv)
-import Arith.Syntax (LitInt)
+
+import Data.Maybe (mapMaybe)
+import Actions.Effects (MLState, assign, ref)
 
 elemContains :: ([] <: g, Functor f, LitBool <: g, Eq (g (Fix g)))
     => Fix g -> Fix g -> Free f (Fix g)

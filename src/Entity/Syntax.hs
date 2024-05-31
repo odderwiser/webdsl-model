@@ -1,10 +1,11 @@
 module Entity.Syntax where
-import Fun.Syntax (FDecl, FunName)
+--import Actions.Syntax (F( FDecl, FunName), Ev(VName, Eval))
 import Syntax (Address, Type)
 import Utils.Fix
 import Utils.Composition (type (<:))
-import Eval.Syntax (VName, Eval)
 import Data.Maybe (fromJust)
+import Actions.Modules.Eval.Syntax
+import Actions.Modules.Fun.Syntax
 
 type EName = String --entity name
 type PName = String --property name
@@ -22,7 +23,7 @@ data EntityDecl e = EDecl EName [(PName, e)] --- e is type if unevaled and addre
 
 data Entity e 
     = PropAccess e PName
-    | FCall e FunName [e]
+    | ECall e FunName [e]
     | PropAssign e PName e
     | PVar PName
     deriving Functor

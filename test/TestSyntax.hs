@@ -1,9 +1,9 @@
 module TestSyntax where
-import Arith.Syntax as A
+import Actions.Arith as A
 import Utils.Fix
 import Utils.Composition (type (+))
-import Bool.Syntax as B
-import Expr.Syntax 
+import Actions.Bool as B
+import Actions.Syntax 
 import Syntax (Type(..))
 
 

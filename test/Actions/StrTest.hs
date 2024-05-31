@@ -1,12 +1,7 @@
 module Actions.StrTest where
-import Utils.Environment
-import Utils.Composition
-import Str.Syntax as S
-import Str.Denotation as S
-import Utils.Fix
-import Utils.Denote
-import Test.HUnit
-import Utils.Handler
+import Utils
+import Actions.Str as S
+import Test.HUnit (Test (..), assertEqual)
 
 type Eff    = End
 type V      = Fix LitStr

@@ -1,10 +1,6 @@
 module Actions.Modules.Arith.Denotation (denote) where
-import Arith.Syntax (Arith (..), OpArith (..), LitInt (Lit))
-import Utils.Composition
-import Utils.Free (Free (Op, Pure))
-import Syntax (Type(Int))
-import Utils.Fix
-import Utils.Environment (FreeEnv)
+import Actions.Modules.Arith.Syntax 
+import Utils hiding (denote)
 
 op :: (Functor f, LitInt <: v') 
   => (Int -> Int -> Int) -> Fix v' -> Fix v' 
@@ -13,7 +9,6 @@ op operand e1 e2 = case (projF e1, projF e2) of
   (Just (Lit e1'), Just (Lit e2')) -> return 
     $ injF $ Lit 
     $ operand e1' e2'
-
 
 denote :: (Functor eff, LitInt <: v) 
   => Arith (FreeEnv eff (Fix v)) 

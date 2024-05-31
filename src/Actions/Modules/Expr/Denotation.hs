@@ -1,16 +1,10 @@
 module Actions.Modules.Expr.Denotation where
-import Expr.Syntax
-import Arith.Syntax as A
-import Bool.Syntax as B
-import Utils.Composition (type (<:), type (<) (injV), projV)
-import Utils.Free (Free)
-import qualified Arith.Denotation as A
-import qualified Bool.Denotation as B
+import Actions.Modules.Expr.Syntax
+import Actions.Modules.Bool.Syntax as B
+import Actions.Arith
+import Utils
 import Syntax (Type (..))
-import qualified Arith.Syntax as A
 import Foreign (fromBool)
-import Utils.Fix
-import Utils.Environment
 
 op :: (Functor f, LitBool <: v)
   => (a -> a -> Bool) -> a -> a -> Free f (Fix v)

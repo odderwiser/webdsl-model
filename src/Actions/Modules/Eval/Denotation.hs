@@ -1,13 +1,11 @@
 module Actions.Modules.Eval.Denotation where
-import Eval.Syntax
-import Utils.Free (Free)
-import Eval.Effects
-import Utils.Composition (type (<:), type (<) (injV), type (+), inj)
-import Syntax --(Val (..), unwrap, Address, wrap)
-import Utils.Handler (handle_, Handler_)
-import Eval.Handlers (environment)
-import Utils.Fix (Fix, injF)
-import Utils.Environment
+import Actions.Modules.Eval.Syntax
+
+import Actions.Effects
+
+import Utils
+import Syntax
+import Actions.Handlers.Heap (environment)
 
 
 derefEnv :: (Functor eff) 

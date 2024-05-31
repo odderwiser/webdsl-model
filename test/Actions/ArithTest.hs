@@ -1,14 +1,9 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 module Actions.ArithTest where
-import Utils.Denote
-import Utils.Free
-import Arith.Denotation as A
-import Arith.Syntax
-import Utils.Composition
+import Utils
+import Actions.Modules.Arith.Syntax as A
+import Actions.Modules.Arith.Denotation as A
 import Test.HUnit 
-import Utils.Fix
-import Utils.Handler
-import Utils.Environment
 
 type Eff    = End
 type V      = Fix LitInt
@@ -25,7 +20,7 @@ instance Denote Arith Eff V where
     -> FreeEnv Eff V
   denote = A.denote
 
-testEq :: String -> Output -> Fix Module -> Test
+testEq :: String -> Int -> Fix Module -> Test
 testEq id res syntax =  TestCase $
   assertEqual id res $ run $ foldD syntax
 

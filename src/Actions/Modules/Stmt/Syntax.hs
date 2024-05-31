@@ -1,6 +1,6 @@
 module Actions.Modules.Stmt.Syntax where
 import GHC.OldList (elemIndex)
-import Eval.Syntax (VName)
+import Actions.Modules.Eval.Syntax (VName)
 import Entity.Syntax (EName)
 
 data Stmt e = S e e -- Statement concat

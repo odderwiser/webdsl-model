@@ -1,7 +1,7 @@
 module Entity.Effects where
 import Utils.Composition
 import Utils.Free
-import Fun.Effects
+import Actions.Effects
 import Entity.Syntax (EntityDef)
 import Syntax (Type)
 

@@ -1,13 +1,14 @@
 module Actions.Handlers.Heap where
 
 import Utils.Handler (Handler_ (..))
-import Eval.Effects (MLState (..))
+import Actions.Effects (MLState (..))
 import qualified Data.Map as Map
 import Syntax (Address)
 import Data.Map (fromList)
-import Eval.Syntax (VName)
+import Actions.Modules.Eval.Syntax (VName)
 import Data.Maybe (mapMaybe, fromJust)
 import Utils.Environment
+import Actions.Handlers.Env (mkAHandler)
 
 newLoc :: Map.Map Address v -> Address
 newLoc = Map.size

@@ -6,8 +6,8 @@ import Program.Effects
 import Utils.Handler
 import Utils.Environment as E
 import Utils.Free
-import Fun.Denotation (refDefs)
-import Fun.Syntax (FDecl)
+import Actions.Modules.Fun.Denotation (refDefs)
+import Actions.Syntax (FDecl)
 import Utils.Composition
 -- import Entity.Handlers (refEntities)
 import Entity.Syntax

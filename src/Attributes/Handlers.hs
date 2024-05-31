@@ -1,6 +1,5 @@
 module Attributes.Handlers where
 import Attributes.Syntax (AttName)
-import Eval.Effects (MLState)
 import Utils.Handler
 import Utils.Environment
 import qualified Utils.Environment as U

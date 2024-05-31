@@ -1,16 +1,10 @@
 module Actions.BoolTest where
-import Utils.Denote
-import Utils.Free
-import Bool.Effects
-import Bool.Syntax 
-import Bool.Denotation as B
-import Utils.Composition
-import Utils.Handler
-import Bool.Handlers
+import Utils
+import Actions.Effects
+import Actions.Bool as B 
+import Actions.Handlers.Cond
 import Test.HUnit
-import Utils.Fix 
 import TestSyntax (ifSimple, ifComplicated)
-import Utils.Environment
 
 type Eff    = Cond + End
 type V      = Fix LitBool

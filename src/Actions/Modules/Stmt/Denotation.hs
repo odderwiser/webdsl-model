@@ -1,22 +1,16 @@
 module Actions.Modules.Stmt.Denotation where
-import Utils.Environment (Env, FreeEnv)
-import Stmt.Syntax
-import Utils.Free (Free)
-import Utils.Fix
-import Utils.Composition
-import Eval.Handlers (environment)
+import Utils
+import Actions.Modules.Stmt.Syntax
+import Actions.Handlers.Heap (environment)
 import Syntax (Null(Null), Address)
-import Eval.Effects
-import Eval.Denotation (refEnv)
-import qualified Bool.Syntax as B
-import Eval.Syntax (VName)
+import Actions.Effects as E
+import Actions.Modules.Eval.Denotation (refEnv)
+import Actions.Modules.Bool.Syntax as B
+import Actions.Modules.Eval.Syntax (VName)
 import Data.Maybe (mapMaybe, catMaybes)
-import Bool.Syntax (LitBool, projBool)
-import qualified Arith.Syntax as A
-import Arith.Syntax
+import Actions.Modules.Arith.Syntax as A
 import Data.List (sort, sortOn)
-import Bool.Effects
-import Col.Syntax (projC)
+import Actions.Modules.Col.Syntax (projC)
 
 denote :: forall v eff. (Null <: v, [] <: v, LitBool <: v, LitInt <: v,
   Cond <: eff, MLState Address (Fix v) <: eff)
@@ -96,7 +90,7 @@ denoteFilter name col (OrdBy e False) env = applyFunction sortOn
 denoteFilter name col (Limit e) env = applyDecrease take
   col e env
 
-denoteFilter name col (Offset e) env = applyDecrease drop
+denoteFilter name col (Offset e) env = applyDecrease Prelude.drop
   col e env
 
 applyDecrease f col e env = do

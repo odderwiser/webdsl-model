@@ -1,61 +1,15 @@
 module Actions.ColTest where
-import Utils.Composition
-import Expr.Syntax
-import Bool.Effects (Cond)
-import Utils.Denote
-import Utils.Fix
-import Test.HUnit
-import Utils.Handler
-import Bool.Handlers
-import Arith.Denotation as A
-import Bool.Denotation as B
-import Expr.Denotation as E
-import Col.Denotation as C
-import Arith.Syntax as A
-import Syntax
-import Bool.Syntax as B
-import Col.Syntax as C
-import Utils.Environment
-import Eval.Effects
-import Eval.Handlers 
-import Eval.Handlers (heap)
-import Eval.Handlers (heap')
-import Eval.Syntax 
-import Eval.Denotation as Ev
+import Actions.Framework
+import Utils
+import Test.HUnit (Test (..), assertEqual)
+import Actions.Bool as B 
+import Actions.Syntax
+import Actions.Arith as A
 
-type Eff    = Cond + MLState Address V + End
-type V      =  Fix (LitBool + LitInt + Null + [])
-type Module = Arith + Boolean + Expr + Col + Eval
-type Out    =  V
 
-run :: FreeEnv Eff V
-  -> Out
-run e = case unwrap
-    $ handle_ heap' (makeEnv [])
-    $ handle condition
-    $ e $ Env { varEnv = [] }
-  of 
-    res -> res
-
-instance Denote Arith Eff V where
-  denote = A.denote
-
-instance Denote Boolean Eff V where
-  denote = B.denote
-
-instance Denote Expr Eff V where
-  denote = E.denote
-
-instance Denote Col Eff V where
-  denote = C.denote
-
-instance Denote Eval Eff V where
-  denote = Ev.denote
-
-testEq :: Denote m Eff V 
-  => String -> Out -> Fix m -> Test
+testEq :: String -> Out -> Fix Module -> Test
 testEq id res syntax =  TestCase $
-  assertEqual id res $ run $ foldD syntax
+  assertEqual id res $ runExp $ foldD syntax
 
 testInt = testEq
   "contains int"

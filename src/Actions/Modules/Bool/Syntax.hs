@@ -2,7 +2,6 @@ module Actions.Modules.Bool.Syntax where
 import Utils.Composition ( type (<:) )
 import Utils.Fix ( injF, BinaryInject(..), Fix, projF )
 import Data.Maybe (fromJust)
-import Syntax (Type(Bool))
 
 data OpB = Or | And 
 

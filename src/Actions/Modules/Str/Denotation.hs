@@ -1,9 +1,6 @@
 module Actions.Modules.Str.Denotation where
-import Str.Syntax
-import Utils.Composition
-import Utils.Fix
-import Utils.Free
-import Utils.Environment
+import Actions.Modules.Str.Syntax
+import Utils
 
 op :: (Functor f, LitStr <: v') 
   => (String -> String -> String) -> Fix v' -> Fix v' 

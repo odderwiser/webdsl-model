@@ -1,18 +1,11 @@
 module Actions.ArithBoolTest where
-import Utils.Denote
-import Utils.Free
-import Bool.Effects
-import Bool.Syntax as B
-import Utils.Composition
-import Arith.Syntax as A
-import Arith.Denotation as A (denote)
+import Utils
+import Actions.Effects
 import Test.HUnit
-import Utils.Handler
-import Bool.Handlers as B
-import Bool.Denotation as B 
-import Utils.Fix ( bin, Fix(In), injF )
+import Actions.Handlers.Cond
 import TestSyntax (ifSyntax, ifComparison)
-import Utils.Environment
+import Actions.Bool  as B
+import Actions.Arith as A
 
 type Eff = Cond + End
 type V = Fix (LitBool + LitInt)

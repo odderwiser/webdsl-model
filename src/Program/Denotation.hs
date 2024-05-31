@@ -1,14 +1,9 @@
 module Program.Denotation where
 import Program.Syntax
-import Utils.Denote
-import Eval.Effects (MLState, ref)
-import Utils.Composition
-import Utils.Free
-import Utils.Environment 
-import Utils.Handler
+import Utils
+import Actions.Effects (MLState, ref)
 import Program.Effects (write, EnvType (..), GlobalScope)
-import Utils.Fix
-import Fun.Syntax (FDecl)
+import Actions.Syntax (FDecl)
 
 foldProgram :: (Denote f eff v, Functor g)
     => Program (g (Fix f)) (Fix f) -> Program (g (FreeEnv eff v)) (FreeEnv eff v)

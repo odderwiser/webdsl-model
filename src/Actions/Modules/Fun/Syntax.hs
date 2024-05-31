@@ -1,5 +1,5 @@
 module Actions.Modules.Fun.Syntax where
-import Eval.Syntax (VName)
+import Actions.Modules.Eval.Syntax (VName)
 
 type FunName = String
 
