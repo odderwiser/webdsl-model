@@ -1,15 +1,14 @@
 module Utils.Environment where
 import Utils.Handler
-import Actions.Modules.Fun.Syntax
 import Utils.Free
 import Actions.Modules.Eval.Syntax
 import Syntax
 import Data.Maybe (fromJust)
-import Entity.Syntax
 -- import Layout.Syntax (CName)
 import Attributes.Syntax (AttName)
 import Page.Syntax (PageDef, PgName)
 import Definitions.Fun.Syntax
+import Definitions.Entity.Syntax
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env

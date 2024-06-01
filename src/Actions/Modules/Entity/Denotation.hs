@@ -1,19 +1,18 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 {-# LANGUAGE DataKinds #-}
-module Entity.Denotation where
+module Actions.Modules.Entity.Denotation where
 import Actions.Effects
 import Syntax as S
 import Utils as U
 import Data.Maybe (mapMaybe)
-import Entity.Syntax
-import Actions.Syntax
-import Actions.Arith
-import Actions.Bool
-import Entity.Handlers
+import Actions.Arith as A
+import Actions.Bool as B
+import Actions.Handlers.Entity
 import Actions.Handlers.Env
 import qualified Actions.Modules.Fun.Denotation as F
-import Entity.Effects
 import Definitions.Fun.Syntax (FDecl(FDecl))
+import Definitions.Entity.Syntax
+import Actions.Modules.Entity.Syntax
 
 getProperty name = derefH name objEnvH
 
@@ -39,14 +38,8 @@ denote (PropAssign object propName e)  env = do
   assign (loc, e')
   return S.null
 
--- denoteFCall :: (e ~ FreeEnv eff (Fix v),
---   MLState Address (Fix v) <: eff,
---   Null <: v, EntityDecl <: v, LitAddress <: v)
---   => Fun (e, FunName) e -> e
 denote (ECall obj fname vars) env = do
   obj'                <- obj env
-  -- case projEntity obj' of
-  --   (EDecl name params) -> do
   (EDef _ _ funs)       <- derefH (projEName obj') entityDefsH env
   FDecl _ varNames body <- F.derefDefs fname $ liftDefs funs
   env'                  <- F.populateEnv env varNames vars
@@ -76,7 +69,6 @@ extractDefaultValues :: forall f' v a. (LitInt <: v,
 extractDefaultValues = mapM ((\param -> do
   handle defaultTypeH $ defaultType param) . snd)
 
--- populateObjEnv :: Functor eff => Free eff (Env eff v)
 populateObjEnv objEnv defaultEnv = handle mutateH
   $ populateMissingDefault objEnv defaultEnv
 
@@ -87,9 +79,9 @@ mapProperties (EDecl entity props) locs =
     props locs  
 
 denoteEDecl :: forall eff v.
-  (Functor eff, LitAddress <: v,
+  (Functor eff,
   MLState Address (Fix v) <: eff,
-  EntityDecl <: v)
+  EntityDecl <: v, LitAddress <: v)
   => EntityDecl (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 denoteEDecl decl@(EDecl entity props) env = do
@@ -97,24 +89,3 @@ denoteEDecl decl@(EDecl entity props) env = do
   locs           <- F.storeVars env (map snd props)
   return $ injF 
     $ mapProperties decl locs
-
--- denoteDefs :: (GlobalScope envs eff v <: eff',FDecl <: envs)
---   => [envs (FreeEnv eff v)] -> Free eff' (Env eff v)
--- denoteDefs defs = P.denoteDefs Entities defs
---   $ F.denoteDefs defs
-  
-denoteDef :: (EntityDefsEnv eff v <: f) 
-  => EntityDef (FreeEnv eff v) -> Free f ()
-denoteDef entity@(EDef name _ _) = do
-  (name :: EName) <- ref entity 
-  return ()  
-
--- refEntities :: forall eff g v eDef. (Functor eff, EntityDef <: g,
---     eDef ~ EntityDef (FreeEnv eff v))
---     => [g (FreeEnv eff v)] -> Env eff v
---     -> Free eff (Env eff v)
--- refEntities entities env  = do
---   (_ :: [EName], env') <- handle_ entityDefsH env 
---     $ mapM ref
---     $ mapMaybe (\dec -> (proj dec :: Maybe eDef)) entities
---   return env'

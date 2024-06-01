@@ -1,5 +1,4 @@
 module Definitions.Program.Effects where
-import Entity.Syntax 
 import Utils.Composition
 import Utils.Environment
 import Utils.Free

@@ -4,6 +4,7 @@ import Utils.Composition
 import Utils.Free
 import Utils.Fix
 import Actions.Modules.Bool.Syntax (LitBool, projBool)
+import Syntax (Type)
 
 --- ABORT ---
 
@@ -51,3 +52,39 @@ data DropEnv env k
 
 drop :: DropEnv env <: f => env -> Free f env
 drop env = Op $ inj $ DropLocalVars env Pure
+
+--- Entity stuff --
+
+data Write e k = Write e k
+  deriving Functor
+
+write :: Write e <: f => e -> Free f ()
+write value = Op $ inj $ Write value $ Pure ()
+
+data MutateEnv env k =
+  Drop (DropEnv env k)
+  | LiftObjectEnv env env (env -> k)
+  | GenerateEmptyEnv   (env -> k) 
+  | PopulateObjEnv env env (env -> k)  
+  deriving Functor
+
+lift :: forall f env eff free. 
+  (eff ~ MutateEnv env, free ~ Free f env, 
+  eff <: f) => env -> env -> free
+lift globalEnv objEnv = Op $ inj 
+  $ LiftObjectEnv globalEnv objEnv Pure
+
+genEnv :: forall f env eff free. 
+  (eff ~ MutateEnv env, free ~ Free f env, 
+  eff <: f) => free
+genEnv = Op $ inj 
+  $ GenerateEmptyEnv Pure
+
+data DefaultValue e k = 
+  DefaultValue Type (e -> k)
+  deriving Functor
+
+defaultType ty = Op $ inj $ DefaultValue ty Pure
+
+populateMissingDefault objEnv defaultObjEnv = Op $ inj
+  $ PopulateObjEnv objEnv defaultObjEnv Pure

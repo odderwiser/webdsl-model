@@ -4,7 +4,7 @@ import Utils.Environment (FreeEnv, Env)
 import Actions.Effects (MLState, ref)
 import Utils.Free
 import Utils.Composition
-import Entity.Syntax (PName)
+import Definitions.Entity.Syntax (PName)
 import Syntax (Type)
 import Utils.Fix
 import Layout.Effects

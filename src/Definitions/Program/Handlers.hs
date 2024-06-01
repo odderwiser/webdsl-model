@@ -9,7 +9,7 @@ import Utils.Free
 import Actions.Modules.Fun.Denotation (refDefs)
 import Utils.Composition
 -- import Entity.Handlers (refEntities)
-import Entity.Syntax
+-- import Entity.Syntax
 import Definitions.Fun.Syntax (FDecl)
 
 defsHandler :: forall remEff g eff v v'. 

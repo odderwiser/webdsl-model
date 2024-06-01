@@ -10,6 +10,7 @@ import Actions.ExprTest (exprTests)
 import Actions.FunTest (funTests)
 import Actions.LoopTest (loopTests)
 import Actions.StmtTest (stmtTests)
+import Actions.EntityTest (entityTests)
 
 actionsTests :: Test
 actionsTests = TestList 
@@ -23,4 +24,5 @@ actionsTests = TestList
   , funTests
   , loopTests
   , stmtTests
+  , entityTests
   ]

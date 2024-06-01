@@ -15,6 +15,7 @@ import Actions.Handlers.Heap
 import Actions.Modules.Arith.Denotation as A
 import Actions.Modules.Bool.Denotation as B 
 import Actions.Modules.Col.Denotation as C
+import Actions.Modules.Entity.Denotation as En 
 import Actions.Modules.Eval.Denotation as Ev 
 import Actions.Modules.Expr.Denotation as Ex
 import Actions.Modules.Fun.Denotation as F 
@@ -24,10 +25,10 @@ import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
 
 type Eff     = MLState Address V + Cond + Abort V + End
-type V       = Fix ([] + LitBool + LitInt + LitStr + Null)
+type V       = Fix ([] + LitBool + LitInt + LitStr + Null + EntityDecl + LitAddress)
 type ModuleV = Col + Arith + Boolean + Str
-type Module  = Loop + Stmt + Fun + Eval + Expr + ModuleV
-type Out     = V
+type Module  = EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
+type Out     = V --todo: make different!
 
 runExp :: FreeEnv Eff V -> Out
 runExp e = run e (Env { varEnv = []}) []
@@ -68,3 +69,9 @@ instance Denote Loop Eff V where
 
 instance Denote Fun Eff V where
   denote = F.denote
+
+instance Denote Entity Eff V where
+  denote = En.denote
+
+instance Denote EntityDecl Eff V where
+  denote = En.denoteEDecl

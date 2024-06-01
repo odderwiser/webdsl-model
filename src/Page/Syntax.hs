@@ -1,6 +1,6 @@
 module Page.Syntax where
 import Syntax (Type)
-import Entity.Syntax (PName)
+import Definitions.Entity.Syntax (PName)
 import Attributes.Syntax
 
 type PgName = String

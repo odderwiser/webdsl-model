@@ -1,17 +1,19 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use lambda-case" #-}
 {-# OPTIONS_GHC -Wno-missing-fields #-}
-module Entity.Handlers where
+module Actions.Handlers.Entity where
 import Actions.Effects
-import Entity.Syntax
+import Actions.Modules.Entity.Syntax
 import Syntax
 import Utils as U
-import Entity.Effects
+import Actions.Effects
 import qualified Actions.Modules.Bool.Syntax as B
 import qualified Actions.Modules.Arith.Syntax as A
 import qualified Syntax as S
 import Actions.Handlers.Env (dropAction, mkAHandler, mkRHandler)
 import Data.List (find)
+import Definitions.Entity.Denotation
+import Definitions.Entity.Syntax
 
 -- import Fun.Syntax
 -- import Utils.Environment (Function, Env)
@@ -27,8 +29,6 @@ import Data.List (find)
 -- import qualified Actions.Modules.Bool.Syntax as B
 -- import Syntax as S
 
-type EntityDefsEnv eff v = (MLState EName (EntityDef (FreeEnv eff v)))
-
 entityDefsH :: (Functor eff, Functor eff')
   => Handler_ (EntityDefsEnv eff v)
   a (Env eff v) eff' (a, Env eff v)
@@ -42,24 +42,6 @@ scopedEntityDefsH :: Functor eff
   => Handler_ (EntityDefsEnv eff v)
   a (Env eff v) eff (a, Env eff v)
 scopedEntityDefsH = entityDefsH
--- refEntities :: forall eff g v eDef. (Functor eff, EntityDef <: g,
---     eDef ~ EntityDef (FreeEnv eff v))
---     => [g (FreeEnv eff v)] -> Env eff v
---     -> Free eff (Env eff v)
--- refEntities entities env  = do
---   (_ :: [EName], env') <- handle_ entityDefsH env 
---     $ mapM ref
---     $ mapMaybe (\dec -> (proj dec :: Maybe eDef)) entities
---   return env'
-
--- entityDeclsH :: Functor eff 
---   => Handler_ (MLState Address (EName, Env eff v))
---   a (Env eff v) eff (a, Env eff v)
--- entityDeclsH = mkRHandler U.entities
---   lookup
---   (\k val env -> 
---     let loc = length (U.entities env) in
---       k loc $ env { U.entities = (loc, val) : U.entities env})
 
 defaultTypeH :: (Functor eff, A.LitInt <: v, B.LitBool <: v,
   [] <: v, Null <: v) 
