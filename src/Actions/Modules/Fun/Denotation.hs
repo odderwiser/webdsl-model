@@ -10,10 +10,8 @@ import Syntax
 import Actions.Handlers.Heap (environment)
 import Actions.Handlers.Env
 import Data.Maybe (mapMaybe)
-import Program.Syntax
-import Program.Effects
-import Program.Denotation as P
 import Actions.Modules.Eval.Syntax
+import Definitions.Fun.Syntax
 
 derefDefs :: Functor eff => FunName -> Env eff (Fix v) 
   -> Free eff (FDecl (FreeEnv eff (Fix v)))
@@ -66,13 +64,3 @@ refVars envTuples env = do
   (_, env') <- handle_ environment env 
     $ mapM assign envTuples
   return env'
-
-denoteDef :: (MLState FunName (Function eff v) <: eff') 
-  => FDecl (FreeEnv eff v) -> Free eff' ()
-denoteDef decl@(FDecl name _ _) = do
-  (name :: FunName) <- ref decl
-  return ()
-
-denoteDefs :: (GlobalScope envs eff v <: eff',FDecl <: envs)
-  => [envs (FreeEnv eff v)] -> Free eff' (Env eff v)
-denoteDefs defs = P.denoteDefs Defs defs $ Pure $ Env {}

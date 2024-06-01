@@ -1,11 +1,5 @@
 module Actions.Modules.Fun.Syntax where
-import Actions.Modules.Eval.Syntax (VName)
-
-type FunName = String
-
-data FDecl e 
-    = FDecl FunName [VName] e
-    deriving (Functor, Eq)
+import Definitions.Fun.Syntax 
 
 data Fun e 
     = Return e

@@ -49,6 +49,13 @@ library
         Actions.Modules.Stmt.Syntax,
         Actions.Modules.Str.Denotation,
         Actions.Modules.Str.Syntax,
+        Definitions.Fun.Syntax,
+        Definitions.Fun.Denotation,
+        Definitions.Fun.Framework,
+        Definitions.Program.Syntax,
+        Definitions.Program.Denotation,
+        Definitions.Program.Effects, 
+        Definitions.Program.Handlers,
         Utils,
         
         -- Arith.Syntax, Arith.Denotation,
@@ -61,7 +68,6 @@ library
                         -- Col.Syntax,   Col.Denotation,
                         Layout.Syntax,Layout.Denotation, Layout.Effects, Layout.Handlers,
                         Page.Syntax, Page.Denotation,
-                        Program.Syntax, Program.Denotation, Program.Effects, Program.Handlers,
                         -- Stmt.Syntax,  Stmt.Denotation,   Stmt.Effects, Stmt.Handlers,
                         Syntax,
                         Template.Syntax,
@@ -114,7 +120,6 @@ test-suite webdsl-tests
                         LayoutTest,
                         XmlTest,
                         ActionsTest,
-                        FunTesta
     build-depends:      base ^>=4.17.2.0, 
                         HUnit ^>=1.6,
                         webdsl-model

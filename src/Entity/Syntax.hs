@@ -6,6 +6,7 @@ import Utils.Composition (type (<:))
 import Data.Maybe (fromJust)
 import Actions.Modules.Eval.Syntax
 import Actions.Modules.Fun.Syntax
+import Definitions.Fun.Syntax (FDecl, FunName)
 
 type EName = String --entity name
 type PName = String --property name

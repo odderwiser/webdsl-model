@@ -9,6 +9,7 @@ import Entity.Syntax
 -- import Layout.Syntax (CName)
 import Attributes.Syntax (AttName)
 import Page.Syntax (PageDef, PgName)
+import Definitions.Fun.Syntax
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env

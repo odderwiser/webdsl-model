@@ -1,4 +1,4 @@
-module Program.Syntax where
+module Definitions.Program.Syntax where
 import Utils.Denote
 import Utils.Fix
 import Utils.Environment

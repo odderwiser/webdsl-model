@@ -7,6 +7,7 @@ import Utils.Environment as U
 import Data.List (find)
 import Utils.Free
 import Data.Maybe (fromJust)
+import Definitions.Fun.Syntax
 
 type FunctionEnv eff v = MLState FunName (FDecl (FreeEnv eff v))
 

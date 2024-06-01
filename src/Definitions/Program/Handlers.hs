@@ -1,16 +1,16 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use lambda-case" #-}
 {-# HLINT ignore "Use lambda" #-}
-module Program.Handlers where
-import Program.Effects
+module Definitions.Program.Handlers where
+import Definitions.Program.Effects
 import Utils.Handler
 import Utils.Environment as E
 import Utils.Free
 import Actions.Modules.Fun.Denotation (refDefs)
-import Actions.Syntax (FDecl)
 import Utils.Composition
 -- import Entity.Handlers (refEntities)
 import Entity.Syntax
+import Definitions.Fun.Syntax (FDecl)
 
 defsHandler :: forall remEff g eff v v'. 
   (Functor eff, Functor remEff, FDecl <: g)

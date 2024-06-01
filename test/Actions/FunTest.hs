@@ -2,19 +2,24 @@
 {-# HLINT ignore "Eta reduce" #-}
 {-# LANGUAGE RankNTypes #-}
 module Actions.FunTest where
-import Syntax
 import Utils
 import Actions.Bool as B
 import Actions.Arith as A
 import Actions.Syntax
 import Actions.Framework
 import Test.HUnit
-import TestSyntax
+import Definitions.Program.Syntax
+import Definitions.Fun.Syntax
+import Definitions.Fun.Framework
+import Definitions.Program.Denotation (foldProgram)
 
 testEq :: Denote m Eff V
   => String -> Out -> Fix m -> Test
 testEq id res syntax =  TestCase $
   assertEqual id res $ runExp $ foldD syntax
+
+testEqProgram id res syntax =  TestCase $
+  assertEqual id res $ runProgram $ foldProgram syntax
 
 --------------------------------
 
@@ -28,8 +33,18 @@ abortSyntax = injF
   $ S (injF $ Return $ injA 1 )
   $ injF $ Return $ injA 2
 
+testfCall :: Test
+testfCall = testEqProgram "simple function call"
+  (injF $ A.Lit 7)
+  fCallSyntax
+
+fCallSyntax :: Program (FDecl (Fix Module)) (Fix Module)
+fCallSyntax = Fragment [FDecl "addThree" ["x"]
+    (injF $ OpArith Add (injVar "x") (injA 3))]
+  $ injF $ FCall "addThree" [injA 4]
 
 funTests :: Test
 funTests = TestList
   [ testAbort
+  , testfCall
   ]

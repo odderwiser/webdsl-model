@@ -13,6 +13,7 @@ import Entity.Handlers
 import Actions.Handlers.Env
 import qualified Actions.Modules.Fun.Denotation as F
 import Entity.Effects
+import Definitions.Fun.Syntax (FDecl(FDecl))
 
 getProperty name = derefH name objEnvH
 

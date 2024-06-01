@@ -2,7 +2,6 @@ module Utils.Denote where
 import Utils.Free (Free)
 import Utils.Composition
 import Utils.Fix
-import Actions.Modules.Fun.Syntax (FunName, FDecl)
 import Utils.Environment (FreeEnv, PEnv)
 import Data.Bifunctor (Bifunctor (bimap))
 
