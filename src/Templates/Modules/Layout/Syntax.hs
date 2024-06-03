@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
-module Layout.Syntax where
+module Templates.Modules.Layout.Syntax where
 import Utils.Denote
 import Data.Bifunctor (Bifunctor (bimap))
 

@@ -5,10 +5,10 @@ import Actions.Modules.Eval.Syntax
 import Syntax
 import Data.Maybe (fromJust)
 -- import Layout.Syntax (CName)
-import Attributes.Syntax (AttName)
-import Page.Syntax (PageDef, PgName)
+import Definitions.Templates.Syntax (PageDef)
 import Definitions.Fun.Syntax
 import Definitions.Entity.Syntax
+import Templates.Modules.Attributes.Syntax (AttName)
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env

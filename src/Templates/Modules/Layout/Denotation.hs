@@ -1,12 +1,9 @@
-module Layout.Denotation where
+module Templates.Modules.Layout.Denotation where
 import Syntax
-import Utils.Composition
-import Layout.Syntax
-import Utils.Environment
-import Utils.Fix
-import Layout.Effects
-import Utils.Free
-import Attributes.Syntax (AttName, AttList)
+import Utils
+import Templates.Modules.Layout.Syntax
+import Templates.Effects
+import Templates.Modules.Attributes.Syntax (AttName, AttList)
 
 denote :: forall eff eff' v. (Attribute <: eff', RenderHtml <: eff',
     State (AttList String) <: eff')

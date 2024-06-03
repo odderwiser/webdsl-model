@@ -24,7 +24,7 @@ import Actions.Modules.Stmt.Denotation as S
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
 
-type Eff     = MLState Address V + Cond + Abort V + End
+type Eff     =  Cond + Abort V + MLState Address V + End
 type V       = Fix ([] + LitBool + LitInt + LitStr + Null + EntityDecl + LitAddress)
 type ModuleV = Col + Arith + Boolean + Str
 type Module  = EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
@@ -36,9 +36,9 @@ runExp e = run e (Env { varEnv = []}) []
 run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)]
   -> Out
 run e env store = unwrap
+    $ handle_ heap' (makeEnv store)
     $ handle funReturn
     $ handle condition
-    $ handle_ heap' (makeEnv store)
     $ e env
 
 

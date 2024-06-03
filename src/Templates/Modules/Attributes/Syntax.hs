@@ -1,4 +1,4 @@
-module Attributes.Syntax where
+module Templates.Modules.Attributes.Syntax where
 import Utils.Fix
 
 type AttName = String

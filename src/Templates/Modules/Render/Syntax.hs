@@ -1,4 +1,4 @@
-module Render.Syntax where
+module Templates.Modules.Render.Syntax where
 import Data.Bifunctor (Bifunctor (bimap))
 
 data Xml f e = Xml String (Maybe (f, Xml f e))

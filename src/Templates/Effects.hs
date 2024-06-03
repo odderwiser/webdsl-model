@@ -1,9 +1,10 @@
-module Layout.Effects where
-import Layout.Syntax
-import Utils.Free
-import Utils.Composition
-import Attributes.Syntax (Attributes, AttName, AttList)
-import Utils.Fix
+module Templates.Effects where
+
+import Utils
+import Templates.Modules.Layout.Syntax
+import Templates.Modules.Attributes.Syntax
+
+-- Layout ---
 
 data RenderHtml k 
     = RenderStartTag CName (Maybe (AttList String)) String k
@@ -59,3 +60,8 @@ get :: (State v <: f) => Free f v
 get = Op $ inj $ GetS Pure
 
 put v = Op $ inj $ PutS v $ Pure ()
+
+data Render v k 
+    = Render (Fix v) k
+
+render v = Op $ inj $ Render v $ Pure ()

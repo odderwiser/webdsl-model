@@ -1,7 +1,7 @@
-module Render.Denotation where
+module Templates.Modules.Render.Denotation where
 import Utils.Environment
-import Render.Syntax
-import Layout.Effects
+import Templates.Modules.Render.Syntax
+import Templates.Effects
 import Utils hiding (denote)
 import Actions.Str hiding (denote)
 -- import qualified Actions.Modules.Str.Syntax as Str

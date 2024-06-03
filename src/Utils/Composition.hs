@@ -1,6 +1,7 @@
 {-# LANGUAGE QuantifiedConstraints #-}
 module Utils.Composition where
 import Prelude hiding (sum)
+import Data.Bifunctor (Bifunctor (bimap))
 
 --- FUNCTOR COMPOSITION
 
@@ -45,6 +46,11 @@ infix 6 +:
 data (f +: g) a b 
   = L' (f a b)
   | R' (g a b)
+
+instance (Bifunctor f, Bifunctor g) => Bifunctor (f +: g) where
+  bimap :: (a -> b) -> (c -> d) -> (+:) f g a c -> (+:) f g b d
+  bimap f g (L' a) = L' $ bimap f g a
+  bimap f g (R' b) = R' $ bimap f g b
 
 infix 5 <::
 class f <:: g where
