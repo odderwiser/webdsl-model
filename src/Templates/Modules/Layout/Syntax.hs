@@ -14,7 +14,6 @@ data Layout f e
     | String String
     | Block Bool (Maybe CName) e
 
-data Output e = Output e
 
 instance Bifunctor Layout where  
   bimap :: (a -> b) -> (c -> d) -> Layout a c -> Layout b d

@@ -64,7 +64,7 @@ denote (Block True (Just cName) e) eEnv pEnv h = do
     renderBlockRmdr e eEnv pEnv h
 
 denote (String string) eEnv pEnv h = do
-    renderPlainText string
+    renderPlainText string False
 
 renderSectionBody e eEnv pEnv h = do 
     increment

@@ -90,7 +90,7 @@ instance {-# OVERLAPPABLE #-} (Functor f, Functor g', g ~> h,
   cmap = \case
     L f -> inj f
     R f -> cmap f
---- VALUE COMPOSITION
+
 
 infix 5 <
 class u < v where

@@ -25,7 +25,8 @@ import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
 
 type Eff     =  Cond + Abort V + MLState Address V + End
-type V       = Fix ([] + LitBool + LitInt + LitStr + Null + EntityDecl + LitAddress)
+type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + LitAddress
+type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
 type Module  = EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
 type Out     = V --todo: make different!

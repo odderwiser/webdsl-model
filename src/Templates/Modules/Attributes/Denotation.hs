@@ -22,7 +22,7 @@ denoteSel (AllAttributes list) env = do
 
 denoteSel (AttDef name e) env = do
     e' <- e env
-    e'' <- render e'
+    e'' <- render e' -- this probably doesn't do what I want it to 
     put (name, e'')
 
 getAllExcept env = map ((`delete` env) 

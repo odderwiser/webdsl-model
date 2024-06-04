@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 module Templates.Framework where
-import Templates.Effects
+import Templates.Effects as E
 import Utils
 import Templates.Modules.Attributes.Syntax
-import Templates.Syntax
+import Templates.Syntax as S
 import Actions.Framework
 import Templates.Handlers.Render
 import Templates.Handlers.Layout
@@ -15,8 +15,8 @@ import Actions.Handlers.Heap (heap, makeEnv)
 import Templates.Modules.Layout.Denotation as L
 import Templates.Modules.Render.Denotation as X
 
-type Eff' = Attribute + RenderHtml + State (AttList String) + MLState Address V + End
-type T = Layout +: Xml
+type Eff' = Attribute + RenderHtml + State (AttList String) + E.Render V' + MLState Address V + End
+type T = Layout +: S.Render
 --running syntax
 type Module' = BiFix T (Fix Module)   
 type Out' = String
@@ -25,6 +25,7 @@ run :: PEnv Eff Eff' V
   -> Out'
 run e = case unwrap
     $ handle_ heap (makeEnv [])
+    $ handle renderH
     $ handle_ stateH []
     $ handle_ renderHtmlH (PageR { title = Nothing, body = ""})
     $ handle_ attributeH ("section", 1)
@@ -52,6 +53,6 @@ instance DenoteT Layout Eff Eff' V where
   denoteT :: Layout (FreeEnv Eff V) (PEnv Eff Eff' V) -> PEnv Eff Eff' V
   denoteT = L.denote
 
-instance DenoteT Xml Eff Eff' V where
-  denoteT :: Xml (FreeEnv Eff V) (PEnv Eff Eff' V) -> PEnv Eff Eff' V
+instance DenoteT S.Render Eff Eff' V where
+  denoteT :: S.Render (FreeEnv Eff V) (PEnv Eff Eff' V) -> PEnv Eff Eff' V
   denoteT = X.denote

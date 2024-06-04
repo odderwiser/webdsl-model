@@ -78,7 +78,7 @@ litXmlTest = testEq
 
 
 litXmlSyntax :: Module'
-litXmlSyntax = injBf (Xml
+litXmlSyntax = injBf (XmlR $ Xml
   "<div id=\"header\">header()</div>"
   Nothing)
 
@@ -91,7 +91,7 @@ recXmlTest = testEq
 
 
 recXmlSyntax :: Module'
-recXmlSyntax = injBf (Xml
+recXmlSyntax = injBf (XmlR $ Xml
   "<div id=" $
   Just (injF $ Str.Add (injS "page") (injS "wrapper"), Xml " />" Nothing))
 

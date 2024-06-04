@@ -5,11 +5,12 @@ import Templates.Modules.Layout.Syntax
 import Templates.Modules.Attributes.Syntax
 
 -- Layout ---
+type IsEscaped = Bool
 
 data RenderHtml k 
     = RenderStartTag CName (Maybe (AttList String)) String k
-    | RenderPlainText String k
-    | RenderString String k
+    | RenderOutput String IsEscaped k
+    | RenderString String k -- should this perhaps be escaped?
     | RenderEndTag String k
     | WriteTitle String k
     | RenderLink String k
@@ -23,8 +24,8 @@ renderStartTag name list tag = Op $ inj
 renderEndTag tag = Op $ inj 
     $ RenderEndTag tag $ Pure ()
 
-renderPlainText string = Op $ inj
-    $ RenderPlainText string $ Pure ()
+renderPlainText string isEscaped = Op $ inj
+    $ RenderOutput string isEscaped $ Pure ()
 
 renderString string = Op $ inj
     $ RenderString string $ Pure ()
@@ -62,6 +63,9 @@ get = Op $ inj $ GetS Pure
 put v = Op $ inj $ PutS v $ Pure ()
 
 data Render v k 
-    = Render (Fix v) k
+    = Render (Fix v) (String -> k)
+    deriving Functor
 
-render v = Op $ inj $ Render v $ Pure ()
+--todo: rename to renderValue
+render :: (Render v <: f) => Fix v -> Free f String
+render v = Op $ inj $ Render v Pure
