@@ -28,28 +28,28 @@ testEqProgram id res syntax =  TestCase $
 
 testGetProperty :: Test
 testGetProperty = testEqProgram "simple function call"
-  (injF $ A.Lit 1)
+  (A.lit 1)
   propSyntax
 
 propSyntax :: Program (Envs (Fix Module)) (Fix Module)
 propSyntax = Fragment
   [inj $ EDef "dummy1" [("x", Int), ("y", Int)] []]
-  $ injF $ VValDecl "dummy" 
+  $ varInit "dummy" 
     (injF $ EDecl "dummy1" [("y", injA 1)]) 
     (injF $ PropAccess (injVar "dummy") "y")
 
 testMethodCall = testEqProgram "simple function call"
-  (injF $ A.Lit 6)
+  (A.lit 6)
   objFunSyntax
 
 objFunSyntax :: Program (Envs (Fix Module)) (Fix Module)
 objFunSyntax = Fragment
   [inj $ EDef "dummy1" [("x", Int), ("y", Int)] 
     [inj $ FDecl "dummy2" [ "z" ] 
-      $ injF $ Return $ injF $ OpArith Add (injVar "z") (injF $ PVar "y")]]
-  $ injF $ VValDecl "dummy" 
+      $ return' $ A.bin Add (injVar "z") (injF $ PVar "y")]]
+  $ varInit "dummy" 
     (injF $ EDecl "dummy1" [("y", injA 1)]) 
-    (injF $ ECall (injVar "dummy") "dummy2" [injA $ 5] )
+    (injF $ ECall (injVar "dummy") "dummy2" [injA 5] )
  
 testDefsStoring :: Test
 testDefsStoring = TestCase $

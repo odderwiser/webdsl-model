@@ -33,9 +33,9 @@ testSimple = testEq "terminal" True
 
 testOr :: Test
 testOr = testEq "add" True
-  $ injF $ OpB Or
-    (injB False)
-    (injB True)
+  $ B.bin Or
+    false
+    true
 
 testIf :: Test
 testIf = testEq "add" True ifSimple

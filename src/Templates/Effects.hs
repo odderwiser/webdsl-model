@@ -8,7 +8,7 @@ import Templates.Modules.Attributes.Syntax
 type IsEscaped = Bool
 
 data RenderHtml k 
-    = RenderStartTag CName (Maybe (AttList String)) String k
+    = RenderStartTag ClassName (Maybe (AttList String)) String k
     | RenderOutput String IsEscaped k
     | RenderString String k -- should this perhaps be escaped?
     | RenderEndTag String k
@@ -17,7 +17,7 @@ data RenderHtml k
     deriving Functor
 
 renderStartTag :: (RenderHtml <: f) 
-    => CName -> Maybe (AttList String) -> String -> Free f ()
+    => ClassName -> Maybe (AttList String) -> String -> Free f ()
 renderStartTag name list tag = Op $ inj 
     $ RenderStartTag name list tag $ Pure ()
 

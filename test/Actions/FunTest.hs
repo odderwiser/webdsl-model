@@ -25,23 +25,22 @@ testEqProgram id res syntax =  TestCase $
 
 testAbort :: Test
 testAbort = testEq "two returns"
-  (injF $ A.Lit 1)
+  (A.lit 1)
   abortSyntax
 
 abortSyntax :: Fix Module
-abortSyntax = injF
-  $ S (injF $ Return $ injA 1 )
-  $ injF $ Return $ injA 2
+abortSyntax = cons (return' $ injA 1)
+  $ return' $ injA 2
 
 testfCall :: Test
 testfCall = testEqProgram "simple function call"
-  (injF $ A.Lit 7)
+  (A.lit 7)
   fCallSyntax
 
 fCallSyntax :: Program (FDecl (Fix Module)) (Fix Module)
 fCallSyntax = Fragment [FDecl "addThree" ["x"]
-    (injF $ OpArith Add (injVar "x") (injA 3))]
-  $ injF $ FCall "addThree" [injA 4]
+    (A.bin Add (injVar "x") (injA 3))]
+  $ funCall "addThree" [injA 4]
 
 funTests :: Test
 funTests = TestList

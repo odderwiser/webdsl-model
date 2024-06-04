@@ -32,7 +32,7 @@ testSimple = testEq "literal" 1
 
 testAddition :: Test
 testAddition = testEq "add" 3 
-  $ injF $ OpArith Add (injA 1) (injA 2)
+  $ A.bin Add (injA 1) (injA 2)
 
 
 arithTests :: Test

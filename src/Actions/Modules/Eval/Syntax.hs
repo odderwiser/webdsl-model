@@ -15,3 +15,12 @@ data Eval e
 
 injVar :: (Eval <: f) => VName -> Fix f
 injVar = injF . Var
+
+varDecl :: (Eval <: g) => VName -> Fix g -> Fix g
+varDecl name k = injF $ VDecl name k
+
+varInit :: (Eval <: g) => VName -> Fix g -> Fix g -> Fix g
+varInit name exp k = injF $ VValDecl name exp k
+
+varAssign :: (Eval <: g) => VName -> Fix g -> Fix g
+varAssign name exp = injF $ VAssign name exp

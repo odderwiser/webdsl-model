@@ -21,7 +21,7 @@ testStmt = testEq "Stmt"
 
 stmtSyntax :: Fix Module
 stmtSyntax = injF $ 
-  VValDecl "x" (injF $ A.lit 4)
+  VValDecl "x" (injA 4)
     (injF $ S 
       (injF $ VAssign "x" (injA 8))
       (injVar "x")

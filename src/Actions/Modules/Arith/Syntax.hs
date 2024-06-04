@@ -1,9 +1,9 @@
 module Actions.Modules.Arith.Syntax where
 import Utils.Composition ( type (<:) )
-import Utils.Fix ( injF, BinaryInject(..), Fix, projF )
+import Utils.Fix ( injF, Fix, projF )
 import Data.Maybe (fromJust)
 
-data OpArith = Add | Div | Sub | Mul | Mod
+-- VALUES
 
 data LitInt v = Lit Int
   deriving (Functor, Eq)
@@ -12,20 +12,24 @@ instance Show (LitInt a) where
   show :: LitInt a -> String
   show (Lit v) = show v 
 
+-- smart constructor
+
+lit :: (LitInt <: v) => Int -> Fix v
+lit = injF . Lit 
+
+--- SYNTAX
+
+data OpArith = Add | Div | Sub | Mul | Mod
+
 data Arith e = LitAr Int 
     | OpArith OpArith e e
     deriving Functor
 
-instance (Arith <: g) => BinaryInject Arith g OpArith where
-  bin :: (Arith <: g) 
-    => OpArith 
-    -> g (Fix g) 
-    -> g (Fix g) 
-    -> Arith (Fix g)
-  bin op left right = OpArith op (injF left) (injF right)
+-- smart constructors
 
-lit :: Int -> Arith e
-lit = LitAr  
+bin :: (Arith <: g) 
+  => OpArith -> Fix g -> Fix g -> Fix g
+bin op left right = injF $ OpArith op left right
 
 injA :: (Arith <: f) => Int -> Fix f
 injA =  injF . LitAr

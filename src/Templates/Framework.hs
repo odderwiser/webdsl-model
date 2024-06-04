@@ -5,7 +5,7 @@ import Utils
 import Templates.Modules.Attributes.Syntax
 import Templates.Syntax as S
 import Actions.Framework
-import Templates.Handlers.Render
+import Templates.Handlers.Render as R
 import Templates.Handlers.Layout
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
@@ -27,7 +27,7 @@ run e = case unwrap
     $ handle_ heap (makeEnv [])
     $ handle renderH
     $ handle_ stateH []
-    $ handle_ renderHtmlH (PageR { title = Nothing, body = ""})
+    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
     $ handle_ attributeH ("section", 1)
     $ e  (Env {}) (TEnv {}) handleExp
   of

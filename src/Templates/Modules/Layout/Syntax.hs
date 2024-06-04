@@ -3,16 +3,19 @@
 module Templates.Modules.Layout.Syntax where
 import Utils.Denote
 import Data.Bifunctor (Bifunctor (bimap))
+import Utils.Composition (type (<::))
+import Utils.Fix
 
-type CName = String
+type ClassName = String
+type IsAttAssigned = Bool
 
 data Layout f e
-    = Header Bool e
+    = Header IsAttAssigned e
     | Title String
     -- | Description e  -- doesnt work anymore?
-    | Section Bool e 
+    | Section IsAttAssigned e 
     | String String
-    | Block Bool (Maybe CName) e
+    | Block IsAttAssigned (Maybe ClassName) e
 
 
 instance Bifunctor Layout where  
@@ -23,3 +26,17 @@ instance Bifunctor Layout where
   bimap f g (String s)    = String s
   bimap f g (Block a b c) = Block a b $ g c
 
+header :: (Layout <:: f) => IsAttAssigned -> BiFix f (Fix e) -> BiFix f (Fix e)  
+header iAtAsgd content = injBf $ Header iAtAsgd content
+
+title :: (Layout <:: f) => String -> BiFix f (Fix e)
+title = injBf . Title
+
+section :: (Layout <:: f) => IsAttAssigned -> BiFix f (Fix e) -> BiFix f (Fix e)  
+section iAtAsgd content = injBf $ Section iAtAsgd content
+
+str :: (Layout <:: f) => String -> BiFix f (Fix e)
+str = injBf . String
+
+block :: (Layout <:: f) => IsAttAssigned -> Maybe ClassName -> BiFix f (Fix e) -> BiFix f (Fix e)  
+block iAtAsgd cName content = injBf $ Block iAtAsgd cName content

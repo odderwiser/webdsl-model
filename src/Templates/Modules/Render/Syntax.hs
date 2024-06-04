@@ -19,3 +19,5 @@ instance Bifunctor Render where
   bimap f g (XmlR xml)       = XmlR $ bimap f g xml 
   bimap f g (Output actions) = Output (f actions) 
   bimap f g (Raw actions)    = Raw (f actions)
+
+

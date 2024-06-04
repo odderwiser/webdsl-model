@@ -43,38 +43,38 @@ testEq id res syntax =  TestCase $
 testIf :: Test
 testIf = testEq 
   "ifSimple" 
-  (injF $  B.Lit True)
+  (B.lit True)
   ifSimple
     
 
 testIfComplicated :: Test
 testIfComplicated = testEq
   "ifComplicated"
-  (injF $  B.Lit True)
+  (B.lit True)
   ifComplicated
 
 testIfAB :: Test
 testIfAB = testEq "ifAB"
-  (injF $  A.Lit 2)
+  (A.lit 2)
   ifSyntax
 
 testIfComp :: Test
 testIfComp = testEq
  "ifComparison"
-  (injF $  A.Lit 1)
+  (A.lit 1)
   ifComparison
 
 ----------- new feature tests ------------
 
 testEqu :: Test
 testEqu = testEq "eq"
-  (injF $  B.Lit True)
+  (B.lit True)
   eqSyntax
 
 testCmp :: Test
 testCmp = testEq
  "comparison"
-  (injF $  B.Lit True)
+  (B.lit True)
   cmpSyntax
 
 exprTests :: Test

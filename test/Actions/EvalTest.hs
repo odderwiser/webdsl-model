@@ -22,14 +22,13 @@ testEqEnv id res syntax env heap = TestCase
 testVar :: Test
 testVar = testEqEnv
  "var with env"
-  (injF $ A.Lit 5)
+  (A.lit 5)
   varSyntax
   (Env { varEnv = [("x", 0)]})
   [(0, injF $ A.Lit 3)] 
 
 varSyntax :: Fix Module
-varSyntax = injF $
-    OpArith Add
+varSyntax = A.bin Add
         (injVar "x")
         (injA 2)
 
@@ -40,20 +39,17 @@ testVDecl = testEq
   vDeclSyntax
 
 vDeclSyntax :: Fix Module
-vDeclSyntax = injF $
-  VDecl "x" $ injF $
-  VAssign "x" (injB True)
+vDeclSyntax = varDecl "x" $ varAssign "x" true
 
 testVValDecl :: Test
 testVValDecl = testEq
  "vValDecl"
-  (injF $ A.Lit 8)
+  (A.lit 8)
   vValDeclSyntax
 
 vValDeclSyntax :: Fix Module
-vValDeclSyntax = injF $
-  VValDecl "x" (injA 4) 
-    $ injF $ OpArith Mul (injVar "x") (injA 2)
+vValDeclSyntax = varInit "x" (injA 4) 
+    $ A.bin Mul (injVar "x") (injA 2)
 
 testVAssign :: Test
 testVAssign = testEq
@@ -62,30 +58,27 @@ testVAssign = testEq
   vAssignSyntax
 
 vAssignSyntax :: Fix Module
-vAssignSyntax = injF 
-  $ VValDecl "x" (injA 4)
-  $ injF $ VAssign "x" (injA 8)
+vAssignSyntax = varInit "x" (injA 4)
+  $ varAssign "x" (injA 8)
 
 testTwoVarsA :: Test
 testTwoVarsA = testEq "two variables"
-  (injF $ A.Lit 4)
+  (A.lit 4)
   twoVarsASyntax
 
 twoVarsASyntax :: Fix Module
-twoVarsASyntax = injF 
-  $ VValDecl "x" (injA 4)
-  $ injF $ VValDecl "y" (injA 3) (injVar "x")
+twoVarsASyntax = varInit "x" (injA 4)
+  $ varInit "y" (injA 3) (injVar "x")
 
 testTwoVarsB :: Test
 testTwoVarsB = testEq
  "two variables"
-  (injF $ A.Lit 3)
+  (A.lit 3)
   twoVarsBSyntax
 
 twoVarsBSyntax :: Fix Module
-twoVarsBSyntax = injF 
-  $ VValDecl "x" (injA 4)
-  $ injF $ VValDecl "y" (injA 3)
+twoVarsBSyntax = varInit "x" (injA 4)
+  $ varInit "y" (injA 3)
   $ injVar "y"
 
 
