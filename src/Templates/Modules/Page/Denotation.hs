@@ -6,14 +6,15 @@ import Definitions.Entity.Syntax (PName)
 import Syntax (Type)
 import Utils
 import Templates.Effects
+import Text.HTML.TagSoup (Tag(TagClose, TagOpen))
 
-denote :: (RenderHtml <: eff) =>
+denote :: (Stream HtmlOut <: eff) =>
     Page (FreeEnv eff (Fix v))
   -> Env eff (Fix v) -> Free eff ()
 -- this should do something with vars. DOesnt yet.
 denote (PNavigate name vars text) env = do
-    renderLink name
+    renderTag $ TagOpen "a" [("href", name)]
     renderPlainText text False
-    renderEndTag "a"
+    renderTag $ TagClose "a"
 
     

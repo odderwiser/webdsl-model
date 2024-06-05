@@ -7,7 +7,7 @@ import Data.List (delete)
 import Data.Maybe (fromJust)
 import Templates.Handlers.Env (attsH)
 denote :: forall eff v. (
-    State (AttList (Fix v)) <: eff)
+    State (AttList) <: eff)
   => Attributes (Env eff (Fix v) -> Free eff (Fix v))
   -> Env eff (Fix v) -> Free eff ()
 denote (SelectionList list) env = do

@@ -32,6 +32,12 @@ bin :: (Boolean <: g) =>
   OpB -> Fix g -> Fix g -> Fix g
 bin op left right = injF $ OpB op left right
 
+or :: (Boolean <: g) =>  Fix g -> Fix g -> Fix g
+or = bin Or
+
+and :: (Boolean <: g) =>  Fix g -> Fix g -> Fix g
+and = bin And
+
 if' :: (Boolean <: g) => 
   Fix g -> Fix g -> Fix g  
   -> Fix g

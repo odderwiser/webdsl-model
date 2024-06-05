@@ -8,6 +8,9 @@ import Data.Maybe (fromJust)
 data EntityDecl e = EDecl EName [(PName, e)] --- e is type if unevaled and address if evaled
     deriving (Functor, Eq, Show)
 
+eDecl :: (EntityDecl <: f) => EName ->  [(PName, Fix f)] -> Fix f
+eDecl eName params = injF $ EDecl eName params
+
 data LitAddress e = Box Address
     deriving (Functor, Eq, Show)
 
@@ -18,6 +21,14 @@ data Entity e
     | PVar PName
     deriving Functor 
 
+pAccess :: (Entity <: f) => Fix f -> PName -> Fix f 
+pAccess entity pName = injF $ PropAccess entity pName
+
+eCall :: (Entity <: f) => Fix f -> FunName -> [ Fix f] -> Fix f
+eCall entity fName args = injF $ ECall entity fName args
+
+pVar :: (Entity <: f) => PName -> Fix f
+pVar = injF . PVar
 
 projParams :: (LitAddress <: g, EntityDecl <: g) => Fix g -> [(PName, Address)]
 projParams entity = case projF entity of

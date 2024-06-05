@@ -11,5 +11,7 @@ data Type  = Int | Bool | List | NullType | Entity
 data Null e = Null
     deriving (Functor, Eq, Show)
 
+    
+
 null :: (Null <: v) => Fix v 
 null = injF Null

@@ -14,27 +14,14 @@ data PageR = PageR {
 }
 
 renderHtmlH :: forall remEff val v. (Functor remEff)
-  => Handler_ RenderHtml
+  => Handler_ (Stream HtmlOut)
   val PageR remEff (val, String)
 renderHtmlH = Handler_ {
   ret_ = \x pageR -> pure (x, writeOut pageR),
   hdlr_ = \effect pageR -> case effect of
-    (RenderStartTag cName atts tag k) ->
-      let  renderedTag = case atts of
-            Nothing     -> "<" ++ tag ++ " "
-              ++ renderAtt "class" cName ++ ">"
-            (Just atts) -> "<" ++ tag ++ " "
-              ++ renderAtt "class" cName
-              ++ " " ++ mapAttributes atts ++ ">"
-      in
-      k $ writeBody renderedTag pageR
-    (RenderOutput string False k)   -> k $ writeBody string pageR
-    (RenderOutput string True k)    -> k $ writeBody (escapeHTML string) pageR
-    (RenderString string k)         -> k $ writeBody (show string) pageR
-    (RenderEndTag tag k)            ->
-      let renderedTag = "</" ++ tag ++ ">" in
-      k $ writeBody renderedTag pageR
-    (WriteTitle title k)            -> k $ pageR { title = Just title }
+    (Out BodyOut str k)    ->
+      k $ writeBody str pageR
+    (Out TitleOut title k) -> k $ pageR { title = Just title }
   }
 
 -- mapAttributes :: [(String, String)] -> String

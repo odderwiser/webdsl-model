@@ -7,7 +7,7 @@ import Actions.Str hiding (denote)
 -- import qualified Actions.Modules.Str.Syntax as Str
 
 denote :: (Functor eff, Functor eff', Functor v',
-    RenderHtml <: eff', v~ Fix v', LitStr <: v',
+    Stream HtmlOut <: eff', v~ Fix v', LitStr <: v',
      E.Render v' <: eff')
   => S.Render (FreeEnv eff v) (PEnv eff eff' v)
   -> PEnv eff eff' v
@@ -25,7 +25,7 @@ denote (Raw e) env env' lift = do
 
 
 denoteXml :: (Functor eff, Functor eff',
-    RenderHtml <: eff', v~ Fix v', LitStr <: v')
+    Stream HtmlOut <: eff', v~ Fix v', LitStr <: v')
   => Xml (FreeEnv eff v) (PEnv eff eff' v)
   -> PEnv eff eff' v
 denoteXml (Xml xml Nothing) env env' lift = do
@@ -34,5 +34,5 @@ denoteXml (Xml xml Nothing) env env' lift = do
 denoteXml (Xml xml (Just (exp, xml'))) env env' lift = do
     renderPlainText xml False
     exp <- lift $ exp env
-    renderString $ projS exp
+    renderAttributeValue $ projS exp
     denoteXml xml' env env' lift

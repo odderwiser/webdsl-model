@@ -20,11 +20,10 @@ testStmt = testEq "Stmt"
   stmtSyntax
 
 stmtSyntax :: Fix Module
-stmtSyntax = injF $ 
-  VValDecl "x" (injA 4)
-    (injF $ S 
-      (injF $ VAssign "x" (injA 8))
-      (injVar "x")
+stmtSyntax = varInit "x" (int 4)
+    (cons 
+      (varAssign "x" (int 8))
+      (var "x")
   )
 
 stmtTests :: Test

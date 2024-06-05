@@ -14,60 +14,55 @@ testEq id res syntax =  TestCase $
 testInt = testEq
   "contains int"
   (B.lit True)
-  (in' (injA 1)
-    (injC [injA  2
-      , injA  4
-      , A.bin Sub (injA 3) (injA 2)
+  (in' (int 1)
+    (list [int  2
+      , int  4
+      , A.subtract (int 3) (int 2)
     ]) :: Fix Module)
 
 testBool = testEq
   "contains bool"
   (B.lit False)
-  (in' true (injC
+  (in' true (list
       [ false
-      , B.bin   And true false
-      , Syn.bin Neq (injA 3) (injA 3)
+      , B.and true false
+      , neq (int 3) (int 3)
       ]) :: Fix Module)
 
 testList = testEq
   "contains list"
   (B.lit True)
-  (in'
-    (injC [injA 1])
-    (injC
-      [ injC []
-      , injC [A.bin Sub (injA 3) (injA 2)]
-      , injC
-        [ A.bin Add (injA 2) (injA 3)
-        , A.bin Mul (injA 3) (injA 3)
-        ]]) :: Fix Module)
+  (in' (list [int 1]) (list [ list []
+    , list [A.subtract (int 3) (int 2)]
+    , list [ A.add (int 2) (int 3)
+      , multiply (int 3) (int 3)
+    ]]) :: Fix Module)
 
 testComprehension = testEq
   "comprehension"
   (injF [B.lit False, B.lit True])
-  (lComp Nothing (Syn.bin Gt (injVar "exp") (injA 5))
+  (lComp Nothing (gt (var "exp") (int 5))
     "exp"
-    (injC [injA 1, A.bin Add (injA 3) (injA 6)]) [] :: Fix Module)
+    (list [int 1, A.add (int 3) (int 6)]) [] :: Fix Module)
 
 testAnd = testEq
   "andList list"
   (B.lit True)
-  (lComp (Just And) (injVar "exp") "exp"
-      (injC [ true
-      , B.bin Or true false
-      , Syn.bin Lt (injA 2) (injA 3)
-      , Syn.bin Gte (injA 3) (injA 3)
+  (lComp (Just And) (var "exp") "exp"
+      (list [ true
+      , B.or true false
+      , lt (int 2) (int 3)
+      , gte (int 3) (int 3)
       ]) [] :: Fix Module)
 
 testOr = testEq
   "orList list"
   (B.lit False)
-  (lComp (Just Or) (injVar "exp") "exp"
-    (injC
-      [ false
-      , B.bin And true false
-      , Syn.bin Gt (injA 2) (injA 3)
-      , Syn.bin Neq (injA 3) (injA 3)
+  (lComp (Just Or) (var "exp") "exp"
+    (list [ false
+      , B.and true false
+      , gt (int 2) (int 3)
+      , neq (int 3) (int 3)
       ]) [] :: Fix Module)
 
 colTests :: Test

@@ -29,13 +29,11 @@ testEq id res syntax =  TestCase $
 
 testSimple :: Test
 testSimple = testEq "terminal" True
-  $ injB True
+  true
 
 testOr :: Test
 testOr = testEq "add" True
-  $ B.bin Or
-    false
-    true
+  $ B.or false true
 
 testIf :: Test
 testIf = testEq "add" True ifSimple

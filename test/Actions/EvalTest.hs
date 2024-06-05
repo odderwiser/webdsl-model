@@ -1,6 +1,6 @@
 module Actions.EvalTest where
 import Actions.Framework
-import Syntax hiding (unwrap)
+import Syntax as S hiding (unwrap)
 import Utils
 import Actions.Bool as B
 import Actions.Arith as A
@@ -28,14 +28,12 @@ testVar = testEqEnv
   [(0, injF $ A.Lit 3)] 
 
 varSyntax :: Fix Module
-varSyntax = A.bin Add
-        (injVar "x")
-        (injA 2)
+varSyntax = A.add (var "x") (int 2)
 
 testVDecl :: Test
 testVDecl = testEq
  "vDecl"
-  (injF Null)
+  S.null
   vDeclSyntax
 
 vDeclSyntax :: Fix Module
@@ -48,8 +46,8 @@ testVValDecl = testEq
   vValDeclSyntax
 
 vValDeclSyntax :: Fix Module
-vValDeclSyntax = varInit "x" (injA 4) 
-    $ A.bin Mul (injVar "x") (injA 2)
+vValDeclSyntax = varInit "x" (int 4) 
+    $ multiply (var "x") (int 2)
 
 testVAssign :: Test
 testVAssign = testEq
@@ -58,8 +56,8 @@ testVAssign = testEq
   vAssignSyntax
 
 vAssignSyntax :: Fix Module
-vAssignSyntax = varInit "x" (injA 4)
-  $ varAssign "x" (injA 8)
+vAssignSyntax = varInit "x" (int 4)
+  $ varAssign "x" (int 8)
 
 testTwoVarsA :: Test
 testTwoVarsA = testEq "two variables"
@@ -67,8 +65,8 @@ testTwoVarsA = testEq "two variables"
   twoVarsASyntax
 
 twoVarsASyntax :: Fix Module
-twoVarsASyntax = varInit "x" (injA 4)
-  $ varInit "y" (injA 3) (injVar "x")
+twoVarsASyntax = varInit "x" (int 4)
+  $ varInit "y" (int 3) (var "x")
 
 testTwoVarsB :: Test
 testTwoVarsB = testEq
@@ -77,9 +75,9 @@ testTwoVarsB = testEq
   twoVarsBSyntax
 
 twoVarsBSyntax :: Fix Module
-twoVarsBSyntax = varInit "x" (injA 4)
-  $ varInit "y" (injA 3)
-  $ injVar "y"
+twoVarsBSyntax = varInit "x" (int 4)
+  $ varInit "y" (int 3)
+  $ var "y"
 
 
 evalTests :: Test

@@ -2,6 +2,7 @@ module Actions.StrTest where
 import Utils
 import Actions.Str as S
 import Test.HUnit (Test (..), assertEqual)
+import Actions.Effects (Abort(Abort))
 
 type Eff    = End
 type V      = Fix LitStr
@@ -24,12 +25,12 @@ testEq id res syntax =  TestCase $
 
 testSimple :: Test
 testSimple = testEq "literal" "helloworld" 
-  $ injS "helloworld"
+  $ str "helloworld"
   
 
 testAddition :: Test
 testAddition = testEq "add" "helloworld" 
-  $ injF $ Add (injS "hello") (injS "world")
+  $ add (str "hello") (str "world")
 
 
 strTests :: Test

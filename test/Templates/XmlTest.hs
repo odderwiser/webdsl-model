@@ -93,7 +93,7 @@ recXmlTest = testEq
 recXmlSyntax :: Module'
 recXmlSyntax = injBf (XmlR $ Xml
   "<div id=" $
-  Just (injF $ Str.Add (injS "page") (injS "wrapper"), Xml " />" Nothing))
+  Just (add (Str.str "page") (Str.str "wrapper"), Xml " />" Nothing))
 
 xmlTests = T.TestList 
   [ litXmlTest

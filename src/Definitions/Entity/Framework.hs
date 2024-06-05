@@ -32,3 +32,7 @@ instance DenoteDef FDecl Eff Eff' V where
 
 instance DenoteDef EntityDef Eff Eff' V where
   denoteDef = E.denoteDef
+
+
+  -- indexed family to model datatypes
+  

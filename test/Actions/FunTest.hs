@@ -29,8 +29,8 @@ testAbort = testEq "two returns"
   abortSyntax
 
 abortSyntax :: Fix Module
-abortSyntax = cons (return' $ injA 1)
-  $ return' $ injA 2
+abortSyntax = cons (return' $ int 1)
+  $ return' $ int 2
 
 testfCall :: Test
 testfCall = testEqProgram "simple function call"
@@ -39,8 +39,8 @@ testfCall = testEqProgram "simple function call"
 
 fCallSyntax :: Program (FDecl (Fix Module)) (Fix Module)
 fCallSyntax = Fragment [FDecl "addThree" ["x"]
-    (A.bin Add (injVar "x") (injA 3))]
-  $ funCall "addThree" [injA 4]
+    (A.add (var "x") (int 3))]
+  $ funCall "addThree" [int 4]
 
 funTests :: Test
 funTests = TestList

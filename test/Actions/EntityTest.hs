@@ -35,8 +35,8 @@ propSyntax :: Program (Envs (Fix Module)) (Fix Module)
 propSyntax = Fragment
   [inj $ EDef "dummy1" [("x", Int), ("y", Int)] []]
   $ varInit "dummy" 
-    (injF $ EDecl "dummy1" [("y", injA 1)]) 
-    (injF $ PropAccess (injVar "dummy") "y")
+    (eDecl "dummy1" [("y", int 1)]) 
+    (pAccess (var "dummy") "y")
 
 testMethodCall = testEqProgram "simple function call"
   (A.lit 6)
@@ -46,10 +46,10 @@ objFunSyntax :: Program (Envs (Fix Module)) (Fix Module)
 objFunSyntax = Fragment
   [inj $ EDef "dummy1" [("x", Int), ("y", Int)] 
     [inj $ FDecl "dummy2" [ "z" ] 
-      $ return' $ A.bin Add (injVar "z") (injF $ PVar "y")]]
+      $ return' $ add (var "z") (pVar "y")]]
   $ varInit "dummy" 
-    (injF $ EDecl "dummy1" [("y", injA 1)]) 
-    (injF $ ECall (injVar "dummy") "dummy2" [injA 5] )
+    (eDecl "dummy1" [("y", int 1)]) 
+    (eCall (var "dummy") "dummy2" [int 5] )
  
 testDefsStoring :: Test
 testDefsStoring = TestCase $

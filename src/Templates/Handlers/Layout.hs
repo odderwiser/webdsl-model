@@ -15,7 +15,7 @@ attributeH = Handler_ {
 }
 
 stateH :: (Functor remEff) =>
-  Handler_ (State (AttList String)) val (AttList String) remEff val
+  Handler_ (State AttList) val AttList remEff val
 stateH = Handler_ {
   ret_ = \val rep -> pure val,
   hdlr_= \eff atts -> case eff of

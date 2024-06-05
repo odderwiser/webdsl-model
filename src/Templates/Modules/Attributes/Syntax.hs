@@ -1,8 +1,9 @@
 module Templates.Modules.Attributes.Syntax where
 import Utils.Fix
+import Text.HTML.TagSoup (Attribute)
 
 type AttName = String
-type AttList v = [(AttName, v)]
+type AttList = [Attribute String]
 
 data Attributes e = SelectionList [e]
     deriving Functor

@@ -1,41 +1,52 @@
 module Templates.Effects where
 
 import Utils
-import Templates.Modules.Layout.Syntax
+import Templates.Modules.Layout.Syntax hiding (Title)
 import Templates.Modules.Attributes.Syntax
+import Text.HTML.TagSoup (Tag (TagText, TagOpen), renderTags, escapeHTML)
 
 -- Layout ---
 type IsEscaped = Bool
 
-data RenderHtml k 
-    = RenderStartTag ClassName (Maybe (AttList String)) String k
-    | RenderOutput String IsEscaped k
-    | RenderString String k -- should this perhaps be escaped?
-    | RenderEndTag String k
-    | WriteTitle String k
-    | RenderLink String k
+-- data RenderHtml k 
+--     = RenderStartTag ClassName (Maybe (AttList String)) String k
+--     | RenderOutput String IsEscaped k
+--     | RenderString String k -- should this perhaps be escaped?
+--     | RenderEndTag String k
+--     | WriteTitle String k
+--     | RenderLink String k
+--     deriving Functor
+
+data HtmlOut = HeaderOut | TitleOut | BodyOut 
+-- data Content =  
+data HtmlContent = Tag (Tag String) | Content 
+
+data Stream t k 
+    = Out t String k
     deriving Functor
 
-renderStartTag :: (RenderHtml <: f) 
-    => ClassName -> Maybe (AttList String) -> String -> Free f ()
-renderStartTag name list tag = Op $ inj 
-    $ RenderStartTag name list tag $ Pure ()
+renderTag :: (Stream HtmlOut  <: f) 
+    => Tag String -> Free f ()
+renderTag tag = Op $ inj 
+    $ Out BodyOut (renderTags [tag]) $ Pure ()
 
-renderEndTag tag = Op $ inj 
-    $ RenderEndTag tag $ Pure ()
+renderPlainText :: (Stream HtmlOut  <: f) 
+    => String -> Bool -> Free f ()
+renderPlainText string True = Op $ inj
+    $ Out BodyOut (escapeHTML string)  $ Pure ()
 
-renderPlainText string isEscaped = Op $ inj
-    $ RenderOutput string isEscaped $ Pure ()
+renderPlainText string False = Op $ inj
+    $ Out BodyOut string  $ Pure ()
 
-renderString string = Op $ inj
-    $ RenderString string $ Pure ()
+renderAttributeValue string = Op $ inj
+    $ Out BodyOut (show string) $ Pure ()
 
-renderTitle :: (RenderHtml <: f) => String -> Free f ()
+renderTitle :: (Stream HtmlOut <: f) => String -> Free f ()
 renderTitle title = Op $ inj
-    $ WriteTitle title $ Pure ()
+    $ Out TitleOut title  $ Pure ()
 
 renderLink text = Op $ inj
-    $ RenderLink text $ Pure ()
+    $ Out BodyOut (renderTags [TagOpen "a" [("href", text)]]) $ Pure ()
 
 data Attribute k
     = Increment k

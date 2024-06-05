@@ -15,7 +15,7 @@ import Actions.Handlers.Heap (heap, makeEnv)
 import Templates.Modules.Layout.Denotation as L
 import Templates.Modules.Render.Denotation as X
 
-type Eff' = Attribute + RenderHtml + State (AttList String) + E.Render V' + MLState Address V + End
+type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + End
 type T = Layout +: S.Render
 --running syntax
 type Module' = BiFix T (Fix Module)   

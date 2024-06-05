@@ -18,8 +18,8 @@ data Str e
     | Add e e 
     deriving Functor
 
-injS :: (Str <: f) => String -> Fix f
-injS =  injF . LitS
+str :: (Str <: f) => String -> Fix f
+str =  injF . LitS
 
 add :: (Str <: f) => Fix f -> Fix f -> Fix f 
 add left right = injF $ Add left right

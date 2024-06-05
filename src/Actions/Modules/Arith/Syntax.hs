@@ -1,4 +1,4 @@
-module Actions.Modules.Arith.Syntax where
+module Actions.Modules.Arith.Syntax  where
 import Utils.Composition ( type (<:) )
 import Utils.Fix ( injF, Fix, projF )
 import Data.Maybe (fromJust)
@@ -31,8 +31,23 @@ bin :: (Arith <: g)
   => OpArith -> Fix g -> Fix g -> Fix g
 bin op left right = injF $ OpArith op left right
 
-injA :: (Arith <: f) => Int -> Fix f
-injA =  injF . LitAr
+add :: (Arith <: f) => Fix f -> Fix f -> Fix f
+add = bin Add 
+
+subtract :: (Arith <: f) => Fix f -> Fix f -> Fix f
+subtract = bin Sub
+
+multiply :: (Arith <: f) => Fix f -> Fix f -> Fix f
+multiply = bin Mul
+
+divide :: (Arith <: f) => Fix f -> Fix f -> Fix f
+divide = bin Div
+
+modulo :: (Arith <: f) => Fix f -> Fix f -> Fix f
+modulo = bin Mod
+
+int :: (Arith <: f) => Int -> Fix f
+int =  injF . LitAr
 
 projArith :: (LitInt <: g) => Fix g -> Int
 projArith elem = case fromJust (projF elem) of

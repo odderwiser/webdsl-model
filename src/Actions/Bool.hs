@@ -4,5 +4,5 @@ module Actions.Bool
     ) 
   where
 
-import Actions.Modules.Bool.Denotation as D 
-import Actions.Modules.Bool.Syntax     as S
+import Actions.Modules.Bool.Denotation as D
+import Actions.Modules.Bool.Syntax     as S hiding (bin)

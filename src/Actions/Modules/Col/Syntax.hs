@@ -8,14 +8,15 @@ import Utils.Fix
 
 import Data.Maybe (fromJust)
 
+
 data Col e 
   = LitC [e]                   -- List literal : []
   | OpIn e e                   -- Contains: e1 in e2
   | LComp (Maybe OpB) e VName e [Filter e] -- List Comprehension: (Maybe AND / OR) [ e1 | VName : type in e2 filter ]. Syntactic sugar for ForLoop?
   deriving Functor
 
-injC :: (Col <: f) => [Fix f] -> Fix f
-injC =  injF . LitC
+list :: (Col <: f) => [Fix f] -> Fix f
+list =  injF . LitC
 
 in' :: (Col <: g) 
   => Fix g -> Fix g -> Fix g

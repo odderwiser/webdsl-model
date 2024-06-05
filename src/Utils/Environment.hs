@@ -31,3 +31,6 @@ data TEnv eff eff' v = TEnv
   {  attributes :: [(AttName, String)]
   , pages      :: [PEnv eff eff' v]
   }
+
+-- discussion: couuld it be modelled differently, for example with higher order effects?
+-- separation of effecta (ho effects)

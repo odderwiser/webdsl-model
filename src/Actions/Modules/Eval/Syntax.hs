@@ -13,8 +13,8 @@ data Eval e
     | VAssign   VName e    -- assign value to an existing variable
     deriving Functor
 
-injVar :: (Eval <: f) => VName -> Fix f
-injVar = injF . Var
+var :: (Eval <: f) => VName -> Fix f
+var = injF . Var
 
 varDecl :: (Eval <: g) => VName -> Fix g -> Fix g
 varDecl name k = injF $ VDecl name k
