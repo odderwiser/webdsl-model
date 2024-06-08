@@ -6,13 +6,22 @@ import Data.Bifunctor (Bifunctor (bimap))
 --- FUNCTOR COMPOSITION
 
 data End k
-  deriving Functor
+  deriving (Functor)
+
+instance Show (End k) where
+  show :: End k -> String
+  show x = "x" 
 
 infixr 6 +
 data (f + g) a
   = L (f a)
   | R (g a)
-  deriving (Functor, Eq, Show)
+  deriving (Functor, Eq)
+
+instance (Show (f a), Show (g a)) => Show ((f + g) a) where
+  show :: (Show (f a), Show (g a)) => (+) f g a -> String
+  show (L f) = show f
+  show (R g) = show g
 
 infix 5 <:
 class (Functor f, Functor g) => f <: g where
@@ -42,7 +51,7 @@ instance {-# OVERLAPPABLE #-} (Functor f, Functor g, f <: g', h ~ g + g') => f <
     L g -> Nothing
     R g' -> proj g'
 
-infix 6 +:
+infixr 6 +:
 data (f +: g) a b 
   = L' (f a b)
   | R' (g a b)
@@ -75,18 +84,18 @@ instance {-# OVERLAPPABLE #-}  (f <:: g', h ~ g +: g')
     R' g' -> proj' g'
 
 -- natural transformation from type to type
-infix ~>
-class (Functor g, Functor h) => g ~> h where
+infix <<:
+class (Functor g, Functor h) => g <<: h where
   cmap :: g k -> h k
 
 instance {-# OVERLAPPING #-}  (Functor f, Functor h,
-   f <: h, f' <: h) => (f + f') ~> h where
+   f <: h, f' <: h) => (f + f') <<: h where
   cmap = \case
     L f -> inj f
     R f -> inj f
 
-instance {-# OVERLAPPABLE #-} (Functor f, Functor g', g ~> h,
-  f <: h, (g + g')~> h) => (f + (g + g')) ~> h where
+instance {-# OVERLAPPABLE #-} (Functor f, Functor g', g <<: h,
+  f <: h, (g + g')<<: h) => (f + (g + g')) <<: h where
   cmap = \case
     L f -> inj f
     R f -> cmap f

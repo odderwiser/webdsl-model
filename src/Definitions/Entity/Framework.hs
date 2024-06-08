@@ -27,10 +27,10 @@ runProgram (Fragment defs exp) = case unwrap
       } []
 
 
-instance DenoteDef FDecl Eff Eff' V where
+instance DenoteDef FDecl (FreeEnv Eff V) Eff' where
   denoteDef = F.denoteDef
 
-instance DenoteDef EntityDef Eff Eff' V where
+instance DenoteDef EntityDef (FreeEnv Eff V) Eff' where
   denoteDef = E.denoteDef
 
 

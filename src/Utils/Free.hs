@@ -5,6 +5,11 @@ data Free f a
   = Pure a
   | Op (f (Free f a))
 
+instance (Show a, Show (f (Free f a))) => Show (Free f a) where
+  show :: Free f a -> String
+  show (Pure a ) = "(P " ++ show a ++ ")"
+  show (Op f ) = show f
+
 fold :: Functor f => (a -> b) -> (f b -> b) -> Free f a -> b
 fold gen _   (Pure x) = gen x
 fold gen alg (Op f)   = alg (fmap (fold gen alg) f)

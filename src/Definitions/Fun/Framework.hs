@@ -10,7 +10,7 @@ import Definitions.Program.Syntax
 type Envs = FDecl
 type Eff' = FunctionEnv Eff V + End
 
-instance DenoteDef FDecl Eff Eff' V where
+instance DenoteDef FDecl (FreeEnv Eff V) Eff' where
   denoteDef :: FDecl (FreeEnv Eff V) -> Free Eff' ()
   denoteDef = F.denoteDef
 

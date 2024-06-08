@@ -3,7 +3,7 @@
 module Actions.Modules.Entity.Denotation where
 import Actions.Effects
 import Syntax as S
-import Utils as U
+import Utils as U hiding (liftEnv)
 import Data.Maybe (mapMaybe)
 import Actions.Arith as A
 import Actions.Bool as B
@@ -42,7 +42,7 @@ denote (ECall obj fname vars) env = do
   obj'                <- obj env
   (EDef _ _ funs)       <- derefH (projEName obj') entityDefsH env
   FDecl _ varNames body <- F.derefDefs fname $ liftDefs funs
-  env'                  <- F.populateEnv env varNames vars
+  env'                  <- F.populateFunEnv env varNames vars
   env''                 <- refProperties (projParams obj') env'-- possibly different orfder? check
   env'''                <- liftEnv env'' $ liftDefs funs
   body env'''
@@ -58,7 +58,7 @@ refProperties envTuples env = do
     $ mapM assign envTuples
   return env'
 
-liftEnv global obj = handle mutateH $ lift global obj
+liftEnv global obj = handle mutateH $ Actions.Effects.lift global obj
 
 makeObjEnv :: Functor eff => Free eff (Env eff v)
 makeObjEnv = handle mutateH genEnv
@@ -86,6 +86,6 @@ denoteEDecl :: forall eff v.
   -> FreeEnv eff (Fix v)
 denoteEDecl decl@(EDecl entity props) env = do
   entityDef      <- derefH entity entityDefsH env
-  locs           <- F.storeVars env (map snd props)
+  locs           <- F.storeVars env id (map snd props)
   return $ injF 
     $ mapProperties decl locs

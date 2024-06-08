@@ -9,15 +9,15 @@ import Syntax (Type)
 --- ABORT ---
 
 data Abort v k = Abort v
-  deriving Functor
+  deriving (Functor, Show)
 
-abort :: Abort v <: f => v -> Free f a
+abort :: Abort v <: f => v ->  Free f v
 abort val = Op (inj (Abort val))
 
 --- COND ---
 
 data Cond k =  Cond Bool k k
-  deriving Functor
+  deriving (Functor, Show)
 
 cond :: (fix ~ Fix a, Cond <: f, LitBool <: a) 
   => fix -> Free f fix -> Free f fix 
@@ -32,6 +32,10 @@ data MLState m v k
   | Deref m (v -> k)
   | Assign (m, v) k
   deriving Functor
+
+instance Show (MLState m v k) where 
+  show :: MLState m v k -> String
+  show ant = "dummy show"
 
 deref :: MLState m v <: f => m -> Free f v
 deref key = Op $ inj $ Deref key Pure

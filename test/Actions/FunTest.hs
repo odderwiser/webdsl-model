@@ -21,7 +21,13 @@ testEq id res syntax =  TestCase $
 testEqProgram id res syntax =  TestCase $
   assertEqual id res $ runProgram $ foldProgram syntax
 
+
+printTest :: Fix Module -> IO ()
+printTest f = do print $ (foldD f (Env {}) :: Free Eff V)
+
 --------------------------------
+
+abortPrint = printTest abortSyntax
 
 testAbort :: Test
 testAbort = testEq "two returns"

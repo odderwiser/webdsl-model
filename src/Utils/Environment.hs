@@ -5,15 +5,16 @@ import Actions.Modules.Eval.Syntax
 import Syntax
 import Data.Maybe (fromJust)
 -- import Layout.Syntax (CName)
-import Definitions.Templates.Syntax (PageDef)
+import Definitions.Templates.Syntax (PageDef, TemplateDef)
 import Definitions.Fun.Syntax
 import Definitions.Entity.Syntax
 import Templates.Modules.Attributes.Syntax (AttName)
+import Control.Natural
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
-type PEnv eff eff' v = Env eff v -> TEnv eff eff' v 
-  -> (Free eff v -> Free eff' v) -> Free eff' ()
+type PEnv eff eff' v =  TEnv eff eff' v 
+  -> Free eff' () --   THIS IS A REAL NT
 
 
 -- data Entity eff e = Entity EName (Env eff e)  
@@ -27,9 +28,11 @@ data Env eff v = Env
     -- , pages      :: [(PgName, PageDef (FreeEnv eff v))]
     }
 
-data TEnv eff eff' v = TEnv
-  {  attributes :: [(AttName, String)]
-  , pages      :: [PEnv eff eff' v]
+data TEnv eff eff' v =  TEnv
+  { actionEnv   :: Env eff v
+  , attributes  :: [(AttName, String)]
+  , pages       :: [PEnv eff eff' v ]
+  , templates   :: [TemplateDef (PEnv eff eff' v)]
   }
 
 -- discussion: couuld it be modelled differently, for example with higher order effects?

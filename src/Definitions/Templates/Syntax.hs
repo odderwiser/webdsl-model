@@ -1,6 +1,7 @@
 module Definitions.Templates.Syntax where
 import Definitions.Entity.Syntax (PName)
 import Syntax (Type)
+import Data.Bifunctor (Bifunctor, bimap)
 
 type PgName = String
 type TName = String

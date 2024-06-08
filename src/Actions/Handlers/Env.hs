@@ -24,7 +24,7 @@ scopeDefs :: (Functor eff)
   a (Env eff v) eff (a, Env eff v)
 scopeDefs = defsH
 
-dropH :: (Functor eff) => Handler (DropEnv (Env eff v)) (Env eff v) eff (Env eff v)
+dropH :: (Functor eff) => Handler (DropEnv (Env eff' v)) (Env eff' v) eff (Env eff' v)
 dropH = Handler
   { ret = pure
   , hdlr = \(DropLocalVars env k) -> k $ dropAction env

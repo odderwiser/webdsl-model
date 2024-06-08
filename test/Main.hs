@@ -4,6 +4,7 @@ import System.Exit (exitFailure, exitSuccess)
 import Test.HUnit
 import ActionsTest (actionsTests)
 import TemplatesTest (templatesTests)
+import Actions.FunTest (abortPrint)
 
 main :: IO ()
 main = do

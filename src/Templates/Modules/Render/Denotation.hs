@@ -8,31 +8,31 @@ import Actions.Str hiding (denote)
 
 denote :: (Functor eff, Functor eff', Functor v',
     Stream HtmlOut <: eff', v~ Fix v', LitStr <: v',
-     E.Render v' <: eff')
+     E.Render v' <: eff', Lift eff eff' v)
   => S.Render (FreeEnv eff v) (PEnv eff eff' v)
   -> PEnv eff eff' v
-denote (XmlR xml) env env' lift = denoteXml xml env env' lift
+denote (XmlR xml) env = denoteXml xml env
 
-denote (Output e) env env' lift = do
-  v <-  lift $ e env
-  e <- render v
+denote (Output e) env = do
+  v <-  lift $ e (actionEnv env)
+  e <- render v 
   renderPlainText e True
 
-denote (Raw e) env env' lift = do
-  v <-  lift $ e env
+denote (Raw e) env  = do
+  v <-  lift $ e (actionEnv env)
   e <- render v
   renderPlainText e False
 
 
 denoteXml :: (Functor eff, Functor eff',
-    Stream HtmlOut <: eff', v~ Fix v', LitStr <: v')
+    Stream HtmlOut <: eff', v~ Fix v', LitStr <: v', Lift eff eff' v)
   => Xml (FreeEnv eff v) (PEnv eff eff' v)
   -> PEnv eff eff' v
-denoteXml (Xml xml Nothing) env env' lift = do
+denoteXml (Xml xml Nothing) env = do
     renderPlainText xml False
 
-denoteXml (Xml xml (Just (exp, xml'))) env env' lift = do
+denoteXml (Xml xml (Just (exp, xml'))) env= do
     renderPlainText xml False
-    exp <- lift $ exp env
+    exp <- lift $ exp (actionEnv env)
     renderAttributeValue $ projS exp
-    denoteXml xml' env env' lift
+    denoteXml xml' env 
