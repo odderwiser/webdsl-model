@@ -17,7 +17,7 @@ import Templates.Modules.Render.Denotation as X
 import Templates.Modules.Page.Denotation as P
 import Control.Natural
 
-type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + End
+type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
 type T = Layout +: S.Render +: Page
 --running syntax
 type Module' = BiFix T (Fix Module)   
@@ -31,6 +31,7 @@ run e = runEnv e (TEnv { actionEnv = Env {}})
 runEnv :: PEnv Eff Eff' V -> TEnv Eff Eff' V
   -> Out'
 runEnv e env = case unwrap
+    $ handle_ stateElH Nothing
     $ handle_ heap (makeEnv [])
     $ handle renderH
     $ handle_ stateH []

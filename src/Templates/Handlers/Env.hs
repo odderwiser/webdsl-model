@@ -7,6 +7,7 @@ import Definitions.Templates.Syntax (TName, TemplateDef (TDef))
 import Syntax (Type, Address)
 import Data.List (find)
 import Actions.Syntax
+import Data.Maybe (fromJust)
 
 type AttsEnv = MLState AttName String
 
@@ -26,3 +27,15 @@ templatesH = mkRHandler U.templates
   (\ k record env -> k (mapToKey record) $  env {U.templates = record : U.templates env})
 
 mapToKey (TDef name params body) = (name,map snd params)
+
+type ElemEnv eff eff' v = MLState Address (TEnv eff eff' v, PEnv eff eff' v)
+
+elementsH :: (Functor eff, Functor eff')
+  => Handler_ (ElemEnv eff eff'' v)
+  a (TEnv eff eff'' v) eff' (a, TEnv eff eff'' v)
+elementsH = mkRHandler U.elements
+  lookup
+  (\k value env -> 
+    let key = length $ U.elements env
+    in
+      k key $ env {U.elements = (key, value) : U.elements env})

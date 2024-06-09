@@ -25,15 +25,15 @@ testEqProgram id res syntax =  TestCase $
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    Right $ inj $ TDef "nestedVars" [("a", Int), ("b", S.String)] 
-        $ injBf $ TCall "inside" (SelectionList []) [(A.add (var "a") (int 1), Int)] Nothing,
-    Right $ inj $ TDef "inside" [("a", Int)] 
-        $ output $ var "a" 
+    tDefEnv "nestedVars" [("a", Int), ("b", S.String)] 
+      $ tCall "inside" [(A.add (var "a") (int 1), Int)],
+    tDefEnv "inside" [("a", Int)] 
+      $ output $ var "a" 
     ]
 
 syntax :: Program DefSyntax Module'
-syntax = Fragment defsSyn $ injBf $ Section False 
-  $ injBf $ TCall "nestedVars" (SelectionList []) [(int 5, Int), (As.str "a", S.String)] Nothing
+syntax = Fragment defsSyn $ section False 
+  $ tCall "nestedVars" [(int 5, Int), (As.str "a", S.String)]
 
 testSyntax = testEqProgram "test TCall"
   (   "<html><head></head><body>"

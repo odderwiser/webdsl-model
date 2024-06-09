@@ -14,7 +14,7 @@ import Definitions.Program.Syntax
 import Actions.Handlers.Entity (entityDefsH)
 import Actions.Handlers.Return (funReturn)
 import Actions.Framework as A
-import Definitions.Templates.Syntax (TemplateDef)
+import Definitions.Templates.Syntax (TemplateDef, tDef)
 import Templates.Framework as T
 import Templates.Handlers.Env (templatesH)
 import qualified Data.Bifunctor
@@ -55,3 +55,6 @@ instance DenoteDef EntityDef EnvTy Eff'' where
 
 instance DenoteDef TemplateDef EnvTy Eff'' where
   denoteDef decl = T.denoteDefT $ fmap (\(Right d) -> d) decl
+
+
+tDefEnv a b c = Right $ tDef a b c 

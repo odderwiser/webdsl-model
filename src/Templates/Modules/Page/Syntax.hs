@@ -3,6 +3,7 @@ import Syntax (Type)
 import Templates.Modules.Attributes.Syntax
 import Definitions.Templates.Syntax
 import Data.Bifunctor (Bifunctor (bimap, first))
+import Utils
 
 
 data Page e f
@@ -17,3 +18,10 @@ instance Bifunctor Page where
   bimap f g (TCall name atts list elems) =
     TCall name (fmap f atts) (map (first f) list) $ fmap g elems
   bimap f g Elements = Elements
+
+
+tCall :: (Page <:: f) => TName ->  [(e, Type)] -> BiFix f e
+tCall name args = injBf $ TCall name (SelectionList []) args Nothing 
+
+tCallElems :: (Page <:: f) => TName ->  [(e, Type)] -> BiFix f e -> BiFix f e
+tCallElems name args elems = injBf $ TCall name (SelectionList []) args $ Just elems

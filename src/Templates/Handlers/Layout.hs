@@ -22,3 +22,12 @@ stateH = Handler_ {
     (GetS k) -> k atts []
     (PutS v k) -> k $ v ++ atts
 }
+
+stateElH :: (Functor remEff) =>
+  Handler_ (State a) val (Maybe a) remEff val
+stateElH = Handler_ {
+  ret_ = \val rep -> pure val,
+  hdlr_= \eff box -> case (eff, box) of
+    (GetS k, Just v) -> k v box
+    (PutS v k, box) -> k (Just v) 
+}

@@ -15,7 +15,7 @@ type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
 type PEnv eff eff' v =  TEnv eff eff' v 
   -> Free eff' () --   THIS IS A REAL NT
-
+type TClosure eff eff' v = (TEnv eff eff' v, PEnv eff eff' v)
 
 -- data Entity eff e = Entity EName (Env eff e)  
 
@@ -33,6 +33,7 @@ data TEnv eff eff' v =  TEnv
   , attributes  :: [(AttName, String)]
   , pages       :: [PEnv eff eff' v ]
   , templates   :: [TemplateDef (PEnv eff eff' v)]
+  , elements    :: [(Address, TClosure eff eff' v)]
   }
 
 -- discussion: couuld it be modelled differently, for example with higher order effects?
