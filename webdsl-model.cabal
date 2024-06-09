@@ -74,6 +74,8 @@ library
         Templates.Modules.Attributes.Denotation,
         Templates.Modules.Layout.Syntax,
         Templates.Modules.Layout.Denotation,
+        Templates.Modules.Lift.Syntax,
+        Templates.Modules.Lift.Denotation,
         Templates.Modules.Page.Syntax,
         Templates.Modules.Page.Denotation,
         Templates.Modules.Render.Syntax,

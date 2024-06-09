@@ -17,7 +17,9 @@ denote :: forall v eff. (Null <: v, [] <: v, LitBool <: v, LitInt <: v,
   => Stmt (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 
-denote (S s1 s2) env = do
+denote = denoteStmt
+
+denoteStmt (S s1 s2) env = do
   s1' <- s1 env
   s2 env
 

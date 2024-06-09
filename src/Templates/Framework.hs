@@ -15,10 +15,13 @@ import Actions.Handlers.Heap (heap, makeEnv)
 import Templates.Modules.Layout.Denotation as L
 import Templates.Modules.Render.Denotation as X
 import Templates.Modules.Page.Denotation as P
+import Templates.Modules.Lift.Denotation as Lt
 import Control.Natural
+import Templates.Modules.Lift.Syntax (LiftT)
+import Actions.Syntax (Stmt)
 
 type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
-type T = Layout +: S.Render +: Page
+type T = Layout +: S.Render +: Page +: LiftT Stmt
 --running syntax
 type Module' = BiFix T (Fix Module)   
 type Out' = String
@@ -70,3 +73,6 @@ instance DenoteT S.Render Eff Eff' V where
 
 instance DenoteT Page Eff Eff' V where
   denoteT = P.denote
+
+instance DenoteT (LiftT Stmt) Eff Eff' V where
+  denoteT = Lt.denote

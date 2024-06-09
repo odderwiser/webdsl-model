@@ -33,12 +33,15 @@ runProgram (Fragment defs exp) = case unwrap
   $ handle_ entityDefsH (Env { entityDefs =[]} :: Env Eff V )
   $ handle_ templatesH (TEnv { templates = []} :: TEnv Eff Eff' V )
   $ denoteDefList defs of
-    (((_, tEnv), env'), env) ->
-        T.runEnv exp TEnv { actionEnv = Env
+  (((_, tEnv), env'), env) -> T.runEnv exp TEnv 
+    { actionEnv = Env
       { varEnv = []
       , entityDefs = entityDefs env'
       , defs = U.defs env
-      }, templates = templates tEnv}
+      }
+    , templates = templates tEnv
+    , elements = []
+    }
 
 foldTProgram :: (Denote h Eff V, DenoteT f Eff Eff' V, Bifunctor f)
     => Program ((Envs (Fix h)) \/ (Envs (BiFix f (Fix h)))) (BiFix f (Fix h))

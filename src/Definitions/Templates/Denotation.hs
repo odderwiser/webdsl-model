@@ -4,11 +4,11 @@ import Definitions.Templates.Syntax
 import Utils
 import Syntax
 
-type PageDefs eff v = MLState PgName (PageDef (Env eff v -> Free eff ()))
+type PageDefs eff eff' v = MLState PgName (PageDef (PEnv eff eff' v))
 type TDefs eff eff' v = MLState (TName, [Type]) (TemplateDef (PEnv eff eff' v))
 
-denoteDef :: (PageDefs eff v <: f)
-    =>  PageDef (Env eff v -> Free eff ()) -> Free f ()
+denoteDef :: (PageDefs eff eff' v <: f)
+    =>  PageDef (PEnv eff eff' v) -> Free f ()
 denoteDef pg@(PDef name vars e) = do
     (name :: PgName) <- ref pg
     return ()

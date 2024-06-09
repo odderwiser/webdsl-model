@@ -5,12 +5,13 @@ import Utils.Denote
 import Definitions.Templates.Framework
 import Definitions.Program.Syntax
 import Utils
-import Templates.Syntax
+import Templates.Syntax as Ts
 import Syntax as S
 import Definitions.Templates.Syntax
 import Actions.Arith as A
 import Actions.Syntax as A
 import Actions.Str as As
+import Templates.Modules.Lift.Syntax
 
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
@@ -31,16 +32,40 @@ defsSyn = [
       $ output $ var "a" 
     ]
 
-syntax :: Program DefSyntax Module'
-syntax = Fragment defsSyn $ section False 
+tCallSyntax :: Program DefSyntax Module'
+tCallSyntax = Fragment defsSyn $ section False 
   $ tCall "nestedVars" [(int 5, Int), (As.str "a", S.String)]
 
-testSyntax = testEqProgram "test TCall"
+testTCall = testEqProgram "test TCall"
   (   "<html><head></head><body>"
      ++ "<span class=\"section section1\">"
      ++ "6</span></body></html>")
-  syntax
+  tCallSyntax
 
-pageTests = T.TestList [
-  testSyntax
+elementsSyntax :: Program DefSyntax Module'
+elementsSyntax = Fragment 
+  [ tDefEnv "withElems" [] Ts.elements
+  , tDefEnv "callElems" [("a", Int)] $ tCallElems "withElems" [] $ output $ var "a" 
+  ] $ tCall "callElems" [((int 1), Int)]
+
+testElems = testEqProgram "test Elems"
+  (   "<html><head></head><body>"
+    ++ "1</body></html>")
+  elementsSyntax
+
+elementsSyntaxCons :: Program DefSyntax Module'
+elementsSyntaxCons = Fragment 
+  [ tDefEnv "withElems" [] Ts.elements
+  , tDefEnv "callElems" [("a", Int)] $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a")
+  ] $ tCall "callElems" [((int 1), Int)]
+
+testElemsCons = testEqProgram "test Elems"
+  (   "<html><head></head><body>"
+    ++ "11</body></html>")
+  elementsSyntaxCons
+
+pageTests = T.TestList 
+  [ testTCall
+  , testElems
+  , testElemsCons
   ]
