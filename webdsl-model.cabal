@@ -58,6 +58,8 @@ library
         Definitions.Fun.Syntax,
         Definitions.Fun.Denotation,
         Definitions.Fun.Framework,
+        Definitions.GlobalVars.Syntax,
+        Definitions.GlobalVars.Denotation,
         Definitions.Pages.Syntax,
         Definitions.Pages.Denotation,
         Definitions.Pages.Framework,
