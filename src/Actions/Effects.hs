@@ -93,8 +93,8 @@ defaultType ty = Op $ inj $ DefaultValue ty Pure
 populateMissingDefault objEnv defaultObjEnv = Op $ inj
   $ PopulateObjEnv objEnv defaultObjEnv Pure
 
-data Random v k = Random (v -> k)
+data Random e v k = Random e (v -> k)
   deriving Functor
 
-random :: (Random v <: f) => Free f v
-random = Op $ inj $ Random Pure
+random :: (Show e, Random String v <: f) => e -> Free f v
+random seed = Op $ inj $ Random (show seed) Pure

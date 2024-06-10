@@ -8,6 +8,7 @@ data Handler f a f' b
   , hdlr :: f (Free f' b) -> Free f' b
   }
 
+
 handle :: (Functor f, Functor f')
   => Handler f a f' b -> Free (f + f') a -> Free f' b
 handle h = fold

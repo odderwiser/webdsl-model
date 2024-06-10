@@ -23,8 +23,9 @@ import Actions.Modules.Stmt.Denotation as S
 
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
+import Actions.Handlers.Entity (uuidH)
 
-type Eff     =  Cond + Abort V + MLState Address V + End
+type Eff     =  Cond + Abort V + Random String String + MLState Address V + End
 type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + LitAddress
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
@@ -38,6 +39,7 @@ run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)]
   -> Out
 run e env store = unwrap
     $ handle_ heap' (makeEnv store)
+    $ handle uuidH
     $ handle funReturn
     $ handle condition
     $ e env

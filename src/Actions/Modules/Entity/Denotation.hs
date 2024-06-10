@@ -84,19 +84,19 @@ denoteEDecl :: forall eff v.
   (Functor eff,
   MLState Address (Fix v) <: eff,
   EntityDecl <: v, LitAddress <: v,
-  Random String <: eff, LitStr <: v, Null <: v)
+  Random String String <: eff, LitStr <: v, Null <: v)
   => EntityDecl (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 denoteEDecl decl@(EDecl entity props) env = do
-  (EDef name propsDefs iProps funs) <- derefH entity entityDefsH env
+  def@(EDef name propsDefs iProps funs) <- derefH entity entityDefsH env
   locs                              <- F.storeVars env id (map snd props)
-  implProps                         <- mapM (denoteImplicitProps (injF Null :: Fix v)) iProps
+  implProps                         <- mapM (denoteImplicitProps (injF Null :: Fix v) (name, locs)) iProps -- lousy id but will do for now??
   return 
     $ injF $ mapProperties decl locs implProps
 
-denoteImplicitProps :: forall f v. (MLState Address (Fix v) <: f,
-  Random String <: f, LitStr <: v) => Fix v -> ImplicitProp -> Free f (PName, Address)
-denoteImplicitProps _ Id = do
-  uuid :: String <- random
+denoteImplicitProps :: forall f e v. (Show e, MLState Address (Fix v) <: f,
+  Random String String <: f, LitStr <: v) => Fix v -> e -> ImplicitProp -> Free f (PName, Address)
+denoteImplicitProps _ def Id = do
+  uuid :: String <- random def
   loc            <- ref (Str.lit uuid :: Fix v)
   return ("id", loc)

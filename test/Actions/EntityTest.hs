@@ -33,7 +33,7 @@ testGetProperty = testEqProgram "simple function call"
 
 propSyntax :: Program (Envs (Fix Module)) (Fix Module)
 propSyntax = Fragment
-  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] []]
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []]
   $ varInit "dummy" 
     (eDecl "dummy1" [("y", int 1)]) 
     (pAccess (var "dummy") "y")
@@ -44,7 +44,7 @@ testMethodCall = testEqProgram "simple function call"
 
 objFunSyntax :: Program (Envs (Fix Module)) (Fix Module)
 objFunSyntax = Fragment
-  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] 
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id]
     [inj $ FDecl "dummy2" [ "z" ] 
       $ return' $ add (var "z") (pVar "y")]]
   $ varInit "dummy" 
@@ -60,10 +60,10 @@ testDefsStoring = TestCase $
     $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free Eff' [()]) (map (fmap foldD) dummy1Definition) of
       (Pure (_, env)) ->  
         case U.entityDefs env of 
-        [EDef name params funs] -> (name, params))
+        [EDef name params _ _] -> (name, params))
 
 dummy1Definition :: [Envs (Fix Module)]
-dummy1Definition = [inj $ EDef "dummy1" [("x", Int), ("y", Int)] []]
+dummy1Definition = [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []]
 
 entityTests :: Test
 entityTests = TestList

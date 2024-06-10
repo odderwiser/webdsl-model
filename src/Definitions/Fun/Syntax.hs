@@ -5,4 +5,4 @@ type ArgName = String
 
 data FDecl e 
     = FDecl FunName [ArgName] e
-    deriving (Functor, Eq)
+    deriving (Functor, Eq, Show)

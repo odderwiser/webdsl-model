@@ -14,6 +14,11 @@ import Actions.Handlers.Env (dropAction, mkAHandler, mkRHandler)
 import Data.List (find)
 import Definitions.Entity.Denotation
 import Definitions.Entity.Syntax
+import Data.UUID.V1 (nextUUID)
+import Data.UUID (toString)
+import Data.UUID.V4 (nextRandom)
+import Data.UUID.V3 (generateNamed, namespaceOID)
+import Codec.Binary.UTF8.String (encode)
 
 -- import Fun.Syntax
 -- import Utils.Environment (Function, Env)
@@ -80,3 +85,11 @@ propertyVarEnvH ::(Functor eff)
     (Env eff v) eff (val, Env eff v)
 propertyVarEnvH = mkAHandler U.objVarEnv lookup 
   (\record env -> env { U.objVarEnv = record : U.objVarEnv env})
+
+uuidH :: (Functor eff) 
+  => Handler (Random String String) val eff val 
+uuidH = Handler
+  { ret  = pure
+  , hdlr = \(Random obj k) -> 
+      k $ toString $ generateNamed namespaceOID $ encode obj
+  }

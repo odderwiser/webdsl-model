@@ -19,6 +19,7 @@ import Templates.Modules.Lift.Denotation as Lt
 import Control.Natural
 import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt)
+import Actions.Handlers.Entity (uuidH)
 
 type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
 type T = Layout +: S.Render +: Page +: LiftT Stmt
@@ -54,6 +55,7 @@ instance Lift Eff Eff' V where
 
 handleExp :: () => Free Eff V -> Free Eff' V
 handleExp e = bubbleDown 
+  $ handle uuidH
   $ handle funReturn
   $ handle condition
   e
