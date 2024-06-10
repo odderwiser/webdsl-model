@@ -1,17 +1,18 @@
 module Templates.PageTest where
+
 import Templates.Framework as Tp
 import Test.HUnit as T
-import Utils.Denote
-import Definitions.Templates.Framework
-import Definitions.Program.Syntax
 import Utils
-import Templates.Syntax as Ts
-import Syntax as S
-import Definitions.Templates.Syntax
+import Definitions.Program.Syntax
+import Definitions.Pages.Framework
+import Syntax
+import Definitions.Pages.Syntax (PageCall)
+import Actions.Framework
+import Templates.Syntax
 import Actions.Arith as A
-import Actions.Syntax as A
-import Actions.Str as As
-import Templates.Modules.Lift.Syntax
+import Actions.Syntax
+import Definitions.Templates.Framework (tDefEnv)
+import Definitions.Pages.Syntax
 
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
@@ -19,53 +20,34 @@ testEq id res syntax =  T.TestCase $
   T.assertEqual id res $ Tp.run $ foldDT syntax
 
 testEqProgram :: String -> Out'
-    -> Program DefSyntax Module' -> T.Test
+    -> Program DefSyntax (PageCall (Fix Module)) -> T.Test
 testEqProgram id res syntax =  TestCase $
-  assertEqual id res $ runProgram $ foldTProgram syntax
-
+  assertEqual id res $ runProgram $ foldProgram syntax
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    tDefEnv "nestedVars" [("a", Int), ("b", S.String)] 
-      $ tCall "inside" [(A.add (var "a") (int 1), Int)],
+    pDefEnv "root" [] 
+      $ tCall "inside" [(A.add (int 2) (int 1), Int)],
     tDefEnv "inside" [("a", Int)] 
       $ output $ var "a" 
     ]
 
-tCallSyntax :: Program DefSyntax Module'
-tCallSyntax = Fragment defsSyn $ section False 
-  $ tCall "nestedVars" [(int 5, Int), (As.str "a", S.String)]
+pCallSyntax :: Program'
+pCallSyntax = Fragment defsSyn $ PCall "root" []
 
-testTCall = testEqProgram "test TCall"
-  (   "<html><head></head><body>"
-     ++ "<span class=\"section section1\">"
-     ++ "6</span></body></html>")
-  tCallSyntax
+testPCall = testEqProgram "page Call"
+    (   "<html><head></head><body>"
+     ++ "3</body></html>")
+     pCallSyntax
 
-elementsSyntax :: Program DefSyntax Module'
-elementsSyntax = Fragment 
-  [ tDefEnv "withElems" [] Ts.elements
-  , tDefEnv "callElems" [("a", Int)] $ tCallElems "withElems" [] $ output $ var "a" 
-  ] $ tCall "callElems" [((int 1), Int)]
+properProgramSyntax = Program defsSyn
 
-testElems = testEqProgram "test Elems"
-  (   "<html><head></head><body>"
-    ++ "1</body></html>")
-  elementsSyntax
-
-elementsSyntaxCons :: Program DefSyntax Module'
-elementsSyntaxCons = Fragment 
-  [ tDefEnv "withElems" [] Ts.elements
-  , tDefEnv "callElems" [("a", Int)] $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a")
-  ] $ tCall "callElems" [((int 1), Int)]
-
-testElemsCons = testEqProgram "test Elems"
-  (   "<html><head></head><body>"
-    ++ "11</body></html>")
-  elementsSyntaxCons
+testProperProgram = testEqProgram "root page" 
+    (   "<html><head></head><body>"
+     ++ "3</body></html>")
+     properProgramSyntax
 
 pageTests = T.TestList 
-  [ testTCall
-  , testElems
-  , testElemsCons
+  [ testPCall
+  , testProperProgram
   ]

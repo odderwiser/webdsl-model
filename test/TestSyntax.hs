@@ -10,14 +10,11 @@ import Syntax (Type(..))
 -- BOOLEAN 
 
 ifSimple :: Fix Boolean
-ifSimple = In 
-  $ If (injB False) (injB False) (injB True)
+ifSimple = if' false false true
 
 ifComplicated :: Fix Boolean
-ifComplicated = injF $ If 
-  (injF $ OpB And (injB False) (injB True))
-  (injB False) 
-  (injB True)
+ifComplicated = if'
+  (B.and false true) false true
 
 -- ARITH + BOOLEAN
 

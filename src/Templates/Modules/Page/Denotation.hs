@@ -7,9 +7,10 @@ import Utils
 import Templates.Effects
 import Text.HTML.TagSoup (Tag(TagClose, TagOpen))
 import Actions.Handlers.Env (derefH, refH)
-import Templates.Handlers.Env (templatesH, elementsH)
+import Templates.Handlers.Env (templatesH, elementsH, pagesH)
 import Definitions.Templates.Syntax (TemplateDef(TDef))
 import Actions.Modules.Fun.Denotation (dropEnv, refVars, populateEnv)
+import Definitions.Pages.Syntax
 
 denote ::forall eff eff' v. (Stream HtmlOut <: eff'
   , MLState Address v <: eff, Lift eff eff' v, Functor eff,
@@ -42,4 +43,15 @@ populateTCall name args env = do
     <- derefH (name, map snd args) templatesH env 
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
   return (body, env')
+
+denoteP :: (Stream HtmlOut <: eff'
+  , MLState Address v <: eff, Lift eff eff' v, Functor eff,
+  MLState Address v <: eff', State Address <: eff') =>
+    PageCall (FreeEnv eff v)
+  -> PEnv eff eff' v
+denoteP (PCall name args) env = do
+  (PDef name params body) :: PageDef (PEnv eff eff' v) 
+    <- derefH name pagesH env 
+  env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
+  body env {actionEnv = env'}
 

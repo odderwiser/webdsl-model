@@ -33,17 +33,19 @@ run e = runEnv e (TEnv { actionEnv = Env {}})
 
 runEnv :: PEnv Eff Eff' V -> TEnv Eff Eff' V
   -> Out'
-runEnv e env = case unwrap
+runEnv e env = runApplied $ e env
+
+runApplied :: Free Eff' () -> Out'
+runApplied e = case unwrap
     $ handle_ stateElH Nothing
     $ handle_ heap (makeEnv [])
     $ handle renderH
     $ handle_ stateH []
     $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
     $ handle_ attributeH ("section", 1)
-    $ e env
+    $ e 
   of
     ((_, str), heap)    -> str
-
 
 instance Lift Eff Eff' V where
   lift  = handleExp

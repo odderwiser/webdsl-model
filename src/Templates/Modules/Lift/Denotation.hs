@@ -7,4 +7,4 @@ import Actions.Modules.Stmt.Denotation (denoteStmt)
 denote :: forall eff eff' v. (Functor eff, Functor eff')
   => LiftT (Stmt) (FreeEnv eff v) (PEnv eff eff' v)
   -> PEnv eff eff' v
-denote (LiftT stmt@(S s1 s2)) = denoteStmt stmt 
+denote (LiftT stmt@(S s1 s2)) = denoteStmt stmt
