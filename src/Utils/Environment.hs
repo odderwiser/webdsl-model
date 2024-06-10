@@ -5,11 +5,12 @@ import Actions.Modules.Eval.Syntax
 import Syntax
 import Data.Maybe (fromJust)
 -- import Layout.Syntax (CName)
-import Definitions.Templates.Syntax (PageDef, TemplateDef)
+import Definitions.Templates.Syntax (TemplateDef)
 import Definitions.Fun.Syntax
 import Definitions.Entity.Syntax
 import Templates.Modules.Attributes.Syntax (AttName)
 import Control.Natural
+import Definitions.Pages.Syntax (PageDef)
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
@@ -31,7 +32,7 @@ data Env eff v = Env
 data TEnv eff eff' v =  TEnv
   { actionEnv   :: Env eff v
   , attributes  :: [(AttName, String)]
-  , pages       :: [PEnv eff eff' v ]
+  , pages       :: [PageDef (PEnv eff eff' v)]
   , templates   :: [TemplateDef (PEnv eff eff' v)]
   , elements    :: [(Address, TClosure eff eff' v)]
   }

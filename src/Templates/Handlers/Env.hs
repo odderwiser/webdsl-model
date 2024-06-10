@@ -8,6 +8,7 @@ import Syntax (Type, Address)
 import Data.List (find)
 import Actions.Syntax
 import Data.Maybe (fromJust)
+import Definitions.Pages.Syntax (PgName, PageDef (..))
 
 type AttsEnv = MLState AttName String
 
@@ -24,9 +25,22 @@ templatesH :: (Functor eff, Functor eff')
   a (TEnv eff eff'' v) eff' (a, TEnv eff eff'' v)
 templatesH = mkRHandler U.templates
   (\ key env -> find (\val -> mapToKey val == key ) $ env)
-  (\ k record env -> k (mapToKey record) $  env {U.templates = record : U.templates env})
+  (\ k record env -> k (mapToKey record) 
+    $  env {U.templates = record : U.templates env})
 
-mapToKey (TDef name params body) = (name,map snd params)
+mapToKey (TDef name args _) = (name, map snd args)
+
+type PgEnv eff eff' v = MLState PgName (PageDef (PEnv eff eff' v))
+
+pagesH :: (Functor eff, Functor eff')
+  => Handler_ (PgEnv eff eff'' v)
+  a (TEnv eff eff'' v) eff' (a, TEnv eff eff'' v)
+pagesH = mkRHandler U.pages
+  (\ key env -> find (\val -> mapToPgName val == key) $ env)
+  (\ k record env -> k (mapToPgName record) 
+    $  env {U.pages = record : U.pages env})
+
+mapToPgName (PDef name _ _ ) = name
 
 type ElemEnv eff eff' v = MLState Address (TEnv eff eff' v, PEnv eff eff' v)
 

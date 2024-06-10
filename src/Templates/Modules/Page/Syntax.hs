@@ -4,6 +4,7 @@ import Templates.Modules.Attributes.Syntax
 import Definitions.Templates.Syntax
 import Data.Bifunctor (Bifunctor (bimap, first))
 import Utils
+import Definitions.Pages.Syntax (PgName)
 
 
 data Page e f
@@ -27,4 +28,4 @@ tCallElems :: (Page <:: f) => TName ->  [(e, Type)] -> BiFix f e -> BiFix f e
 tCallElems name args elems = injBf $ TCall name (SelectionList []) args $ Just elems
 
 elements :: (Page <:: f) => BiFix f e
-elements = injBf $ Elements
+elements = injBf Elements

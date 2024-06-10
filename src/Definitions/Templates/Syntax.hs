@@ -4,12 +4,7 @@ import Syntax (Type)
 import Utils.Composition
 import Utils.Fix (BiFix)
 
-type PgName = String
 type TName = String
-
-data PageDef e 
-    = PDef PgName [(PName, Type)] e
-    deriving Functor
 
 data TemplateDef e = TDef TName [(PName, Type)] e
     deriving Functor

@@ -22,3 +22,5 @@ page root {
 	withElems
 }
 ```
+
+Pomysły : make handlers class calls to avoid fixing them in denotation, like with lift

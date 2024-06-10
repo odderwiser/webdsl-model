@@ -23,20 +23,23 @@ denote (PNavigate name vars text) pEnv = do
   renderTag $ TagClose "a"
 
 denote (TCall name atts args Nothing) env = do
-  (TDef tName params body) :: TemplateDef (PEnv eff eff' v) 
-    <- derefH (name, map snd args) templatesH env 
-  env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
-  body $ env {actionEnv = env'}
+  (body, env') <- populateTCall name args env 
+  body env { actionEnv = env'}
 
 denote (TCall name atts args (Just elems)) env = do
-  (loc, env') <- refH (env,elems) elementsH env
-  (TDef tName params body) :: TemplateDef (PEnv eff eff' v) 
-    <- derefH (name, map snd args) templatesH env 
-  env''         <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
+  (loc, env')   <- refH (env, elems) elementsH env
+  (body, env'') <- populateTCall name args env 
   put loc 
-  body env' {actionEnv = env''}
+  body env' { actionEnv = env''}
 
 denote Elements env = do
   loc <- get 
   (env', elems) <- derefH loc elementsH env
   elems env'
+
+populateTCall name args env = do
+  (TDef tName params body) :: TemplateDef (PEnv eff eff' v) 
+    <- derefH (name, map snd args) templatesH env 
+  env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
+  return (body, env')
+
