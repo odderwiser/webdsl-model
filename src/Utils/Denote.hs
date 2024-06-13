@@ -4,7 +4,7 @@ import Utils.Composition
 import Utils.Fix
 import Utils.Environment (FreeEnv, PEnv, Env)
 import Data.Bifunctor (Bifunctor (bimap))
-import Control.Natural (type (~>))
+
 
 class Functor sym => Denote sym eff v where
     denote:: sym (FreeEnv eff v) -> FreeEnv eff v

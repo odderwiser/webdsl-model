@@ -9,8 +9,9 @@ import Definitions.Templates.Syntax (TemplateDef)
 import Definitions.Fun.Syntax
 import Definitions.Entity.Syntax
 import Templates.Modules.Attributes.Syntax (AttName)
-import Control.Natural
 import Definitions.Pages.Syntax (PageDef)
+import Actions.Modules.Entity.Syntax (EntityDecl)
+import Utils.Fix
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
@@ -25,6 +26,7 @@ data Env eff v = Env
     , defs       :: [Function eff v] -- this is for functions
     , entityDefs :: [EntityDef (FreeEnv eff v)] -- this is for all the entity definitions
     , objVarEnv  :: [(PName, Address)]
+    -- , entities   :: [((Address, Maybe Uuid), Maybe (EntityDecl Address))]
     -- , attributes :: [(AttName, String)]
     -- , pages      :: [(PgName, PageDef (FreeEnv eff v))]
     }

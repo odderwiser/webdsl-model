@@ -60,6 +60,7 @@ library
         Definitions.Fun.Framework,
         Definitions.GlobalVars.Syntax,
         Definitions.GlobalVars.Denotation,
+        Definitions.GlobalVars.Effects,
         Definitions.Pages.Syntax,
         Definitions.Pages.Denotation,
         Definitions.Pages.Framework,
@@ -104,10 +105,8 @@ library
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:      base >=4.17.2.1 && < 5,
+    build-depends:      base >=4.18.2.1,
                         containers,
-                        constraints,
-                        natural-transformation,
                         tagsoup,
                         uuid,
                         utf8-string
@@ -151,7 +150,7 @@ test-suite webdsl-tests
                         Templates.XmlTest,
                         ActionsTest,
                         TemplatesTest
-    build-depends:      base ^>=4.17.2.0, 
+    build-depends:      base ^>=4.18.2.1, 
                         HUnit ^>=1.6,
                         webdsl-model
     hs-source-dirs:     test

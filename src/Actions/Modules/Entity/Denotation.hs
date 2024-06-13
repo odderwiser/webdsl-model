@@ -4,7 +4,7 @@ module Actions.Modules.Entity.Denotation where
 import Actions.Effects
 import Syntax as S
 import Utils as U hiding (liftEnv)
-import Data.Maybe (mapMaybe)
+import Data.Maybe (mapMaybe, fromJust)
 import Actions.Arith as A
 import Actions.Bool as B
 import Actions.Handlers.Entity
@@ -14,37 +14,45 @@ import Definitions.Fun.Syntax (FDecl(FDecl))
 import Definitions.Entity.Syntax
 import Actions.Modules.Entity.Syntax
 import Actions.Modules.Str.Syntax as Str
+import Definitions.GlobalVars.Syntax (Uuid)
 
-getProperty name = derefH name objEnvH
+getProperty name (EDecl _ params) = return
+      $ fromJust $ lookup name params
+
+getObj :: (EHeap v <: f, LitV Uuid <: v)
+  => FreeEnv f (Fix v) -> Env f (Fix v) -> Free f (EntityDecl (Fix v))
+getObj object env = do
+  id      <- object env
+  deref 
+    (fromJust $ unbox id :: Uuid)
 
 -- derefObj obj env = derefH (getAddress obj) heap'' (entities env)
 liftDefs defs = Env {U.defs = defs}
 
 denote :: forall e v eff.
-  (e ~ FreeEnv eff (Fix v),
-    MLState Address (Fix v) <: eff,
-    Null <: v, EntityDecl <: v, LitAddress <: v)
-  => Entity e -> e
+  (e ~ FreeEnv eff (Fix v)
+  , MLState Address (Fix v) <: eff, EHeap v <: eff
+  , Null <: v, LitV Uuid <: v
+  ) => Entity e -> e
 denote (PropAccess object propName) env = do
-  objEnv    <- object env
-  loc       <- getProperty propName $ projParams objEnv
-  deref loc
+  obj       <- getObj object env
+  getProperty propName obj
 
 -- except that is not what really happens
 -- there is some flushing semantics that need to happen fist
 denote (PropAssign object propName e)  env = do
-  objEnv           <- object env
-  loc              <- getProperty propName $ projParams objEnv
+  obj :: (EntityDecl (Fix v)) <- getObj object env
+  loc              <- getProperty propName  obj
   e'               <- e env
-  assign (loc, e')
   return S.null
 
 denote (ECall obj fname vars) env = do
-  obj'                <- obj env
-  (EDef _ _ _ funs)       <- derefH (projEName obj') entityDefsH env
+  (EDecl name params)   <- getObj obj env
+  (EDef _ _ _ funs)     <- derefH name entityDefsH env
   FDecl _ varNames body <- F.derefDefs fname $ liftDefs funs
   env'                  <- F.populateFunEnv env varNames vars
-  env''                 <- refProperties (projParams obj') env'-- possibly different orfder? check
+  locs :: [Address]     <- mapM (ref . snd) params
+  env''                 <- refProperties (map fst params) locs env'-- possibly different orfder? check
   env'''                <- liftEnv env'' $ liftDefs funs
   body env'''
 
@@ -54,9 +62,9 @@ denote (PVar pname) env = do
 
 derefLocalProperty pname = derefH pname propertyVarEnvH
 
-refProperties envTuples env = do
+refProperties names locs env = do
   (_, env') <- handle_ propertyVarEnvH env
-    $ mapM assign envTuples
+    $ mapM assign (zip names locs)
   return env'
 
 liftEnv global obj = handle mutateH $ Actions.Effects.lift global obj
@@ -73,30 +81,30 @@ extractDefaultValues = mapM ((\param -> do
 populateObjEnv objEnv defaultEnv = handle mutateH
   $ populateMissingDefault objEnv defaultEnv
 
-mapProperties (EDecl entity props) locs implProps =
+mapProperties (EDecl entity props) vals implProps =
   EDecl entity
-  $ map      (\(name, loc) -> (name, injF $ Box loc)) implProps 
-  ++ zipWith (curry (\((name, ty), loc) -> (name, injF $ Box loc)))
-    props locs
+  $ implProps
+  ++ zipWith (curry (\((name, ty), v) -> (name, v)))
+    props vals
 
 
 denoteEDecl :: forall eff v.
-  (Functor eff,
-  MLState Address (Fix v) <: eff,
-  EntityDecl <: v, LitAddress <: v,
-  Random String String <: eff, LitStr <: v, Null <: v)
-  => EntityDecl (FreeEnv eff (Fix v))
-  -> FreeEnv eff (Fix v)
+  ( MLState Address (Fix v) <: eff, EHeap v <: eff, Random String String <: eff
+  , LitV Address <: v, LitV Uuid <: v, LitStr <: v, Null <: v
+  , Show (v (Fix v))
+  ) => EntityDecl (FreeEnv eff (Fix v))
+    -> FreeEnv eff (Fix v)
 denoteEDecl decl@(EDecl entity props) env = do
-  def@(EDef name propsDefs iProps funs) <- derefH entity entityDefsH env
-  locs                              <- F.storeVars env id (map snd props)
-  implProps                         <- mapM (denoteImplicitProps (injF Null :: Fix v) (name, locs)) iProps -- lousy id but will do for now??
-  return 
-    $ injF $ mapProperties decl locs implProps
+  def@(EDef 
+    name propsDefs iProps funs) <- derefH entity entityDefsH env
+  values                        <- mapM ((\e -> e env) . snd) props
+  implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
+  id :: Uuid                    <- ref $ mapProperties decl values implProps
+  return $ box id
 
-denoteImplicitProps :: forall f e v. (Show e, MLState Address (Fix v) <: f,
-  Random String String <: f, LitStr <: v) => Fix v -> e -> ImplicitProp -> Free f (PName, Address)
-denoteImplicitProps _ def Id = do
-  uuid :: String <- random def
-  loc            <- ref (Str.lit uuid :: Fix v)
-  return ("id", loc)
+denoteImplicitProps :: forall f e v. 
+  (Show e,Random String String <: f, LitV Uuid <: v
+  ) => e -> ImplicitProp -> Free f (PName, Fix v)
+denoteImplicitProps def Id = do
+  uuid :: Uuid <- random def
+  return ("id", box uuid)

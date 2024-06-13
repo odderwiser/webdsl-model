@@ -55,6 +55,7 @@ infixr 6 +:
 data (f +: g) a b 
   = L' (f a b)
   | R' (g a b)
+  deriving Functor
 
 instance (Bifunctor f, Bifunctor g) => Bifunctor (f +: g) where
   bimap :: (a -> b) -> (c -> d) -> (+:) f g a c -> (+:) f g b d

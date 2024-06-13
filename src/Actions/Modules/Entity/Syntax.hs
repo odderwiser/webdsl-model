@@ -1,9 +1,10 @@
 module Actions.Modules.Entity.Syntax where
 import Definitions.Entity.Syntax
 import Definitions.Fun.Syntax
-import Utils
 import Syntax (Address)
 import Data.Maybe (fromJust)
+import Utils.Composition
+import Utils.Fix
 
 data EntityDecl e = EDecl EName [(PName, e)] --- e is type if unevaled and address if evaled
     deriving (Functor, Eq, Show)
@@ -11,8 +12,17 @@ data EntityDecl e = EDecl EName [(PName, e)] --- e is type if unevaled and addre
 eDecl :: (EntityDecl <: f) => EName ->  [(PName, Fix f)] -> Fix f
 eDecl eName params = injF $ EDecl eName params
 
-data LitAddress e = Box Address
+data LitV v e = Box v
     deriving (Functor, Eq, Show)
+
+unbox a = case projF a of
+    (Just (Box a')) -> Just a'
+    Nothing -> Nothing   
+
+box :: (LitV v <: f) => v -> Fix f
+box = injF . Box
+
+
 
 data Entity e 
     = PropAccess e PName
@@ -30,11 +40,11 @@ eCall entity fName args = injF $ ECall entity fName args
 pVar :: (Entity <: f) => PName -> Fix f
 pVar = injF . PVar
 
-projParams :: (LitAddress <: g, EntityDecl <: g) => Fix g -> [(PName, Address)]
-projParams entity = case projF entity of
-    Just (EDecl _ addresses) -> map 
-        (\(a, b) -> (a, case fromJust $ projF b of Box b' -> b'))
-        addresses
+projParams :: (LitV Address <: g) => Maybe (EntityDecl (Fix g)) -> [(PName, Fix g)]
+projParams entity = case entity of
+    Just (EDecl _ addresses) -> addresses
 
-projEName entity = case projF entity of
-    Just (EDecl name _) -> name
+projEName (EDecl name _) = name
+
+projEntity :: (EntityDecl <: f) => Fix f -> EntityDecl (Fix f)
+projEntity = fromJust . projF

@@ -16,10 +16,9 @@ import Templates.Modules.Layout.Denotation as L
 import Templates.Modules.Render.Denotation as X
 import Templates.Modules.Page.Denotation as P
 import Templates.Modules.Lift.Denotation as Lt
-import Control.Natural
 import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt)
-import Actions.Handlers.Entity (uuidH)
+import Actions.Handlers.Entity (uuidH, eHeapH)
 
 type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
 type T = Layout +: S.Render +: Page +: LiftT Stmt
@@ -54,7 +53,8 @@ instance Lift Eff Eff' V where
 
 
 handleExp :: () => Free Eff V -> Free Eff' V
-handleExp e = bubbleDown 
+handleExp e = bubbleDown
+  $ handle_ eHeapH [] -- probably wrong?
   $ handle uuidH
   $ handle funReturn
   $ handle condition

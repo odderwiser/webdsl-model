@@ -45,3 +45,5 @@ so its env -> store -> env kind of deal, yet again.
 and when all the objects are evaluated, I store them in the db. BUT with the caveat that instead of boxes, entities are now referred to as uuids. This translation happens when accessing the database. 
 so the key is actually : location, Maybe (uuid), and value is Maybe (EDef).
 So just location is enough to identify it, but if the object exists it is also indexed by uuid and you can find that. This is doable.
+
+- ask if reading should only happen once per rendering??

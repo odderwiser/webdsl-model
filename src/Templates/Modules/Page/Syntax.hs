@@ -8,10 +8,10 @@ import Definitions.Pages.Syntax (PgName)
 
 
 data Page e f
-    = PNavigate PgName [e] String
-    | TCall TName (Attributes e) [(e, Type)] (Maybe f) -- template name, attributes, args, elements???
-    | Elements -- retrieve and evaluate elements
-
+  = PNavigate PgName [e] String
+  | TCall TName (Attributes e) [(e, Type)] (Maybe f) -- template name, attributes, args, elements???
+  | Elements -- retrieve and evaluate elements
+  deriving Functor
 
 instance Bifunctor Page where
   bimap :: (a -> b) -> (c -> d) -> Page a c -> Page b d

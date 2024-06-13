@@ -4,7 +4,10 @@ import Utils.Composition
 import Utils.Free
 import Utils.Fix
 import Actions.Modules.Bool.Syntax (LitBool, projBool)
-import Syntax (Type)
+import Syntax (Type, Address)
+import Utils.Environment
+import Actions.Modules.Entity.Syntax
+import Definitions.GlobalVars.Syntax (Uuid)
 
 --- ABORT ---
 
@@ -24,6 +27,12 @@ cond :: (fix ~ Fix a, Cond <: f, LitBool <: a)
   -> Free f fix
 cond bool k1 k2 = Op . inj
     $ Cond (projBool bool) k1 k2
+
+cond' :: (Cond <: f) 
+  => Bool -> Free f fix -> Free f fix 
+  -> Free f fix
+cond' bool k1 k2 = Op . inj
+    $ Cond bool k1 k2
 
 --- MLState ---
 
@@ -98,3 +107,6 @@ data Random e v k = Random e (v -> k)
 
 random :: (Show e, Random String v <: f) => e -> Free f v
 random seed = Op $ inj $ Random (show seed) Pure
+
+type DbKey = Uuid
+type EHeap v = MLState DbKey (EntityDecl (Fix v))

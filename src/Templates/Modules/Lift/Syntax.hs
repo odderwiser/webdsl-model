@@ -5,6 +5,7 @@ import Utils
 import Data.Bifunctor 
 
 data LiftT s e f = LiftT (s f) 
+  deriving Functor
 
 instance (Functor s) => Bifunctor (LiftT s) where
   bimap :: (a -> b) -> (c -> d) -> LiftT s a c -> LiftT s b d

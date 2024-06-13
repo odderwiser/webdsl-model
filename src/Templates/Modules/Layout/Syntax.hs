@@ -10,12 +10,13 @@ type ClassName = String
 type IsAttAssigned = Bool
 
 data Layout f e
-    = Header IsAttAssigned e
-    | Title String
-    -- | Description e  -- doesnt work anymore?
-    | Section IsAttAssigned e 
-    | String String
-    | Block IsAttAssigned (Maybe ClassName) e
+  = Header IsAttAssigned e
+  | Title String
+  -- | Description e  -- doesnt work anymore?
+  | Section IsAttAssigned e 
+  | String String
+  | Block IsAttAssigned (Maybe ClassName) e
+  deriving Functor
 
 
 instance Bifunctor Layout where  

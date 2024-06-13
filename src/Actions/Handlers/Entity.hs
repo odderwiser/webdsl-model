@@ -19,6 +19,9 @@ import Data.UUID (toString)
 import Data.UUID.V4 (nextRandom)
 import Data.UUID.V3 (generateNamed, namespaceOID)
 import Codec.Binary.UTF8.String (encode)
+import Actions.Modules.Str.Syntax (projS, LitStr)
+import Data.Maybe (fromJust)
+import Definitions.GlobalVars.Syntax (getUuid, Uuid)
 
 -- import Fun.Syntax
 -- import Utils.Environment (Function, Env)
@@ -93,3 +96,51 @@ uuidH = Handler
   , hdlr = \(Random obj k) -> 
       k $ toString $ generateNamed namespaceOID $ encode obj
   }
+
+-- in the preprocessing, all the objects are written to the databse. 
+-- then
+
+--this only updates the entity state
+-- pureEntitiesH :: (Functor eff, LitStr <: v) 
+--   => Handler_   (Database v) 
+--     val [(Address, (Maybe (EntityDecl (Fix v))))] eff val
+-- pureEntitiesH = Handler_ 
+--   { ret_ = \a b -> pure a -- this should contain "write to db" action
+--   , hdlr_ = \eff entities -> case eff of
+--       (Ref v@(Just (EDecl name props)) k) ->
+--         let address = length entities
+--         in k (Just address, Just $ mapId props) ((address, v) : entities)
+--       (Ref Nothing k) ->
+--         let address = length entities
+--         in k (Just address, Nothing) ((address, Nothing) : entities)
+--       (Assign ((Just address, Nothing), Just entity) k) ->
+--         let entities' = updateList (address, entity) entities   
+--         in k  entities'
+--       (Deref (Just address, Nothing) k) -> 
+--        k (fromJust $ lookup address entities) entities 
+--       (Deref (Nothing, Just id) k) -> 
+--        k (snd $ fromJust 
+--         $ find (\(int, Just (EDecl name props)) -> mapId props == id ) entities) entities 
+--   }
+
+eHeapH :: (Functor eff, LitV Uuid <: v) 
+  => Handler_ (EHeap v) val [(Uuid, EntityDecl (Fix v))] eff val
+eHeapH = Handler_
+  { ret_  = \x env -> pure x
+  , hdlr_ = \x env -> case x of
+      (Deref key k)     -> k (fromJust $ lookup key env) env
+      (Ref value k)     -> let id = fromJust $ getUuid value
+        in k id ((id, value) : env)
+      (Assign record k) -> k (record : env)
+  }
+-- updateList :: (Eq a, Eq b1) => 
+--   (((a, b1), b2), EntityDecl e) 
+--   -> [((a, b1), Maybe (EntityDecl e))] -> [(a, Maybe (EntityDecl e))]
+updateList _ [] = []
+updateList val@(address, entity@(EDecl name props)) ((address', _) : tail) 
+  | address == address = (address, Just entity) : tail
+  | otherwise = updateList val tail
+
+mapId (("id", val) : tail) = projS val
+mapId ((id, _) : tail) = mapId tail
+mapId [] = [] 

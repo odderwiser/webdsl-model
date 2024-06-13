@@ -4,6 +4,7 @@ import Utils.Composition
 import Utils
 
 data Xml e f = Xml String (Maybe (e, Xml e f))
+  deriving Functor
 
 xmlT :: String -> Xml e f
 xmlT f = Xml f Nothing 
@@ -21,6 +22,7 @@ data Render f e
   = XmlR (Xml f e)
   | Output f
   | Raw f
+  deriving Functor
     
 instance Bifunctor Render where
   bimap :: (a -> b) -> (c -> d) -> Render a c -> Render b d
