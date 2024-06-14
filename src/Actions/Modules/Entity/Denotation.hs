@@ -15,16 +15,18 @@ import Definitions.Entity.Syntax
 import Actions.Modules.Entity.Syntax
 import Actions.Modules.Str.Syntax as Str
 import Definitions.GlobalVars.Syntax (Uuid)
+import Actions.Values
 
 getProperty name (EDecl _ params) = return
-      $ fromJust $ lookup name params
+    $ fromJust 
+    $ lookup name params
 
-getObj :: (EHeap v <: f, LitV Uuid <: v)
+getObj :: (EHeap v <: f, Lit Uuid <: v)
   => FreeEnv f (Fix v) -> Env f (Fix v) -> Free f (EntityDecl (Fix v))
 getObj object env = do
   id      <- object env
   deref 
-    (fromJust $ unbox id :: Uuid)
+    (unbox id :: Uuid)
 
 -- derefObj obj env = derefH (getAddress obj) heap'' (entities env)
 liftDefs defs = Env {U.defs = defs}
@@ -32,11 +34,13 @@ liftDefs defs = Env {U.defs = defs}
 denote :: forall e v eff.
   (e ~ FreeEnv eff (Fix v)
   , MLState Address (Fix v) <: eff, EHeap v <: eff
-  , Null <: v, LitV Uuid <: v
+  , Null <: v, Lit Uuid <: v
   ) => Entity e -> e
 denote (PropAccess object propName) env = do
   obj       <- getObj object env
-  getProperty propName obj
+  getProperty 
+    propName 
+    obj
 
 -- except that is not what really happens
 -- there is some flushing semantics that need to happen fist
@@ -84,13 +88,14 @@ populateObjEnv objEnv defaultEnv = handle mutateH
 mapProperties (EDecl entity props) vals implProps =
   EDecl entity
   $ implProps
-  ++ zipWith (curry (\((name, ty), v) -> (name, v)))
+  ++ zipWith 
+    (curry (\((name, ty), v) -> (name, v)))
     props vals
 
 
 denoteEDecl :: forall eff v.
   ( MLState Address (Fix v) <: eff, EHeap v <: eff, Random String String <: eff
-  , LitV Address <: v, LitV Uuid <: v, LitStr <: v, Null <: v
+  , Lit Address <: v, Lit Uuid <: v, LitStr <: v, Null <: v
   , Show (v (Fix v))
   ) => EntityDecl (FreeEnv eff (Fix v))
     -> FreeEnv eff (Fix v)
@@ -103,7 +108,7 @@ denoteEDecl decl@(EDecl entity props) env = do
   return $ box id
 
 denoteImplicitProps :: forall f e v. 
-  (Show e,Random String String <: f, LitV Uuid <: v
+  (Show e,Random String String <: f, Lit Uuid <: v
   ) => e -> ImplicitProp -> Free f (PName, Fix v)
 denoteImplicitProps def Id = do
   uuid :: Uuid <- random def

@@ -4,6 +4,7 @@ import Utils
 import Actions.Modules.Arith.Syntax as A
 import Actions.Modules.Arith.Denotation as A
 import Test.HUnit 
+import Actions.Values
 
 type Eff    = End
 type V      = Fix LitInt
@@ -13,7 +14,7 @@ type Output = Int
 
 run :: FreeEnv Eff V -> Int
 run e = case unwrap $ e $ Env {} of
-  (In (Lit int)) -> int
+  (In (Box int)) -> int
 
 instance Denote Arith Eff V where
   denote :: Arith (FreeEnv  Eff V)

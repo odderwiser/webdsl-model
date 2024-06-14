@@ -9,7 +9,7 @@ data Program e f
     | Fragment [e] f -- no entrypoint: just a
     deriving Functor
 
-data ProgramV e f = WithVars DatabaseEntry [GlobalVar f] (Program e f)
+data ProgramV e f = WithVars [GlobalVar f] (Program e f)
     deriving Functor
 
 type Name = String

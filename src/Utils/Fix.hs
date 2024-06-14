@@ -3,8 +3,10 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Utils.Fix where
 import Utils.Composition
+import GHC.Generics (Generic)
 
 data Fix f = In (f (Fix f))
+    deriving Generic
 
 data BiFix e f = BIn (e f (BiFix e f))
 

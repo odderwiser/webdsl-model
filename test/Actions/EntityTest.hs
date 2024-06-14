@@ -15,6 +15,7 @@ import Definitions.Fun.Syntax
 import Actions.Handlers.Entity (entityDefsH)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Modules.Entity.Denotation (mapProperties)
+import Actions.Values
 
 testEq :: Denote m Eff V
   => String -> Out -> Fix m -> Test
@@ -35,18 +36,18 @@ eDeclSyntax = Fragment
 
 testEDecl = testEqProgram 
   "testing declaration"
-  (injF $ Box "12e8d002-5511-3b76-9813-b6c2bf959bfe") eDeclSyntax 
+  (box "8427aa4f-128f-3c25-a479-9784d401123c") eDeclSyntax 
   
 actualUnitTestSyntax = mapProperties 
   (EDecl "dummy1" [("y", int 1)] :: EntityDecl (Fix Module)) 
-  [lit 1 :: Out] [("id", box "some")]  
+  [boxI 1 :: Out] [("id", box "some")]  
 
 testMapProperties = TestCase $ assertEqual "testMapProperties"
-  (EDecl "dummy1" [("id", box "some"), ("y", lit 1)]) actualUnitTestSyntax
+  (EDecl "dummy1" [("id", box "some"), ("y", boxI 1)]) actualUnitTestSyntax
 
 testGetProperty :: Test
 testGetProperty = testEqProgram "simple function call"
-  (A.lit 1)
+  (boxI 1)
   propSyntax
 
 propSyntax :: Program (Envs (Fix Module)) (Fix Module)
@@ -57,7 +58,7 @@ propSyntax = Fragment
     (pAccess (var "dummy") "y")
 
 testMethodCall = testEqProgram "simple function call"
-  (A.lit 6)
+  (boxI 6)
   objFunSyntax
 
 objFunSyntax :: Program (Envs (Fix Module)) (Fix Module)

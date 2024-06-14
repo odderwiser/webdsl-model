@@ -11,6 +11,7 @@ import Data.Maybe (mapMaybe, catMaybes)
 import Actions.Modules.Arith.Syntax as A
 import Data.List (sort, sortOn)
 import Actions.Modules.Col.Syntax (projC)
+import Actions.Values
 
 denote :: forall v eff. (Null <: v, [] <: v, LitBool <: v, LitInt <: v,
   Cond <: eff, MLState Address (Fix v) <: eff)
@@ -23,10 +24,11 @@ denoteStmt (S s1 s2) env = do
   s1' <- s1 env
   s2 env
 
-denoteLoop :: forall v eff. (Null <: v, [] <: v, LitBool <: v, LitInt <: v,
-  Cond <: eff, MLState Address (Fix v) <: eff)
-  => Loop (FreeEnv eff (Fix v))
-  -> FreeEnv eff (Fix v)
+denoteLoop :: forall v eff. 
+  ( Null <: v, [] <: v, LitBool <: v, LitInt <: v
+  , Cond <: eff, MLState Address (Fix v) <: eff
+  ) => Loop (FreeEnv eff (Fix v))
+    -> FreeEnv eff (Fix v)
 
 denoteLoop (ForCol name col stmts filters) env = do
   col' <- col env
@@ -49,11 +51,11 @@ executeLoop col' name env stmts = do
     stmts env') col'
   return $ injF Null
 
-halfOpenRange :: (LitInt <: g) => Fix g -> Fix g -> [Fix g]
-halfOpenRange a b = map (injF . A.Lit) [a', (a' + step)..(b' - step) ]
+halfOpenRange :: forall g. (LitInt <: g) => Fix g -> Fix g -> [Fix g]
+halfOpenRange a b = map (box :: Int -> Fix g) [a', (a' + step)..(b' - step) ]
   where step = signum (b' - a')
-        a'   = projArith a
-        b'   = projArith b
+        a'   = unbox a
+        b'   = unbox b
         
 whileLoop e stmts env = do
   e'      <- e env
@@ -74,19 +76,21 @@ denoteFilters name col ( f : filters ) env =  do
     denoteFilters name col'' filters env
 
 
-denoteFilter :: (Null <: v, [] <: v, LitBool <: v, LitInt <: v, MLState Address (Fix v) <: eff)
-  => VName -> [Fix v] -> Filter (FreeEnv eff (Fix v))
-  -> FreeEnv eff (Fix v)
+denoteFilter :: forall eff v. 
+  ( Null <: v, [] <: v, LitBool <: v, LitInt <: v
+  , MLState Address (Fix v) <: eff
+  ) => VName -> [Fix v] -> Filter (FreeEnv eff (Fix v))
+     -> FreeEnv eff (Fix v)
 denoteFilter name col (Where e) env = applyFunction filter
-  projBool
+  unbox
   name col e env
 
 denoteFilter name col (OrdBy e True) env = applyFunction sortOn
-  projArith
+  (unbox :: Fix v -> Int)
   name col e env
 
 denoteFilter name col (OrdBy e False) env = applyFunction sortOn
-  (negate . projArith)
+  (negate . (unbox :: Fix v -> Int))
   name col e env
 
 denoteFilter name col (Limit e) env = applyDecrease take
@@ -98,7 +102,7 @@ denoteFilter name col (Offset e) env = applyDecrease Prelude.drop
 applyDecrease f col e env = do
   e'            <- e env
   return $ injF 
-    $ f (projArith e') col
+    $ f (unbox e') col
 
 applyFunction :: forall a b v f. (MLState Address (Fix v) <: f, [] <: v, Null <: v)
   => (((a, b) -> a) -> [(a, Fix v)] -> [(a, Fix v)])

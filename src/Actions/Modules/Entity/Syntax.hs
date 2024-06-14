@@ -5,22 +5,18 @@ import Syntax (Address)
 import Data.Maybe (fromJust)
 import Utils.Composition
 import Utils.Fix
+import GHC.Generics (Generic)
+import Actions.Values
 
 data EntityDecl e = EDecl EName [(PName, e)] --- e is type if unevaled and address if evaled
-    deriving (Functor, Eq, Show)
+    deriving (Functor, Eq, Show, Generic)
 
 eDecl :: (EntityDecl <: f) => EName ->  [(PName, Fix f)] -> Fix f
 eDecl eName params = injF $ EDecl eName params
 
-data LitV v e = Box v
-    deriving (Functor, Eq, Show)
+-- data LitV v e = Box v
+--     deriving (Functor, Eq, Show)
 
-unbox a = case projF a of
-    (Just (Box a')) -> Just a'
-    Nothing -> Nothing   
-
-box :: (LitV v <: f) => v -> Fix f
-box = injF . Box
 
 
 
@@ -40,7 +36,7 @@ eCall entity fName args = injF $ ECall entity fName args
 pVar :: (Entity <: f) => PName -> Fix f
 pVar = injF . PVar
 
-projParams :: (LitV Address <: g) => Maybe (EntityDecl (Fix g)) -> [(PName, Fix g)]
+projParams :: (Lit Address <: g) => Maybe (EntityDecl (Fix g)) -> [(PName, Fix g)]
 projParams entity = case entity of
     Just (EDecl _ addresses) -> addresses
 

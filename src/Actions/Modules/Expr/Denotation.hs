@@ -5,11 +5,12 @@ import Actions.Arith
 import Utils
 import Syntax (Type (..))
 import Foreign (fromBool)
+import Actions.Values
 
 op :: (Functor f, LitBool <: v)
   => (a -> a -> Bool) -> a -> a -> Free f (Fix v)
 op operand e1 e2 = return
-  $ injF $ B.Lit
+  $ box
   $ operand e1 e2
 
 opCmp :: (fix ~ Fix v, Functor f, Num a, LitInt <: v, LitBool <: v)
@@ -17,8 +18,8 @@ opCmp :: (fix ~ Fix v, Functor f, Num a, LitInt <: v, LitBool <: v)
   -> Free f fix
 opCmp operand exp1 exp2 = op operand (toNum exp1) (toNum exp2)  
 
-toNum :: (Num a, LitInt <: g) => Fix g -> a
-toNum = fromIntegral . projArith
+toNum :: forall a g. (Num a, LitInt <: g) => Fix g -> a
+toNum = fromIntegral . (unbox :: Fix g -> Int)
     
     
 

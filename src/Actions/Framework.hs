@@ -25,9 +25,10 @@ import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
 import Actions.Handlers.Entity (uuidH, eHeapH)
 import Definitions.GlobalVars.Syntax (Uuid)
+import Actions.Values
 
 type Eff     =  Cond + Abort V + Random String String + EHeap V' + MLState Address V + End
-type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + LitV Address + LitV Uuid
+type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
 type Module  = EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV

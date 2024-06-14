@@ -4,6 +4,7 @@ import Templates.Modules.Render.Syntax as S
 import Templates.Effects as E
 import Utils hiding (denote)
 import Actions.Str hiding (denote)
+import Actions.Values
 -- import qualified Actions.Modules.Str.Syntax as Str
 
 denote :: (Functor eff, Functor eff', Functor v',
@@ -34,5 +35,5 @@ denoteXml (Xml xml Nothing) env = do
 denoteXml (Xml xml (Just (exp, xml'))) env= do
     renderPlainText xml False
     exp <- lift $ exp (actionEnv env)
-    renderAttributeValue $ projS exp
+    renderAttributeValue $ (unbox exp :: String)
     denoteXml xml' env 

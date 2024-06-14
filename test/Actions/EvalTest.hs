@@ -22,10 +22,10 @@ testEqEnv id res syntax env heap = TestCase
 testVar :: Test
 testVar = testEqEnv
  "var with env"
-  (A.lit 5)
+  (boxI 5)
   varSyntax
   (Env { varEnv = [("x", 0)]})
-  [(0, injF $ A.Lit 3)] 
+  [(0, boxI 3)] 
 
 varSyntax :: Fix Module
 varSyntax = A.add (var "x") (int 2)
@@ -42,7 +42,7 @@ vDeclSyntax = varDecl "x" $ varAssign "x" true
 testVValDecl :: Test
 testVValDecl = testEq
  "vValDecl"
-  (A.lit 8)
+  (boxI 8)
   vValDeclSyntax
 
 vValDeclSyntax :: Fix Module
@@ -61,7 +61,7 @@ vAssignSyntax = varInit "x" (int 4)
 
 testTwoVarsA :: Test
 testTwoVarsA = testEq "two variables"
-  (A.lit 4)
+  (boxI 4)
   twoVarsASyntax
 
 twoVarsASyntax :: Fix Module
@@ -71,7 +71,7 @@ twoVarsASyntax = varInit "x" (int 4)
 testTwoVarsB :: Test
 testTwoVarsB = testEq
  "two variables"
-  (A.lit 3)
+  (boxI 3)
   twoVarsBSyntax
 
 twoVarsBSyntax :: Fix Module

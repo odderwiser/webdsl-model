@@ -3,6 +3,7 @@ import Utils
 import Actions.Str as S
 import Test.HUnit (Test (..), assertEqual)
 import Actions.Effects (Abort(Abort))
+import Actions.Values
 
 type Eff    = End
 type V      = Fix LitStr
@@ -11,7 +12,7 @@ type Output = String
 
 run :: FreeEnv Eff V -> Output
 run e = case unwrap $ e $ Env {} of
-  (In (Lit str)) -> str
+  (In (Box str)) -> str
 
 instance Denote Str Eff V where
   denote :: Str (FreeEnv  Eff V)

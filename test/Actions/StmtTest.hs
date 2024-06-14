@@ -16,7 +16,7 @@ testEq id res syntax =  TestCase $
 
 testStmt :: Test
 testStmt = testEq "Stmt"
-  (injF $ A.Lit 8)
+  (boxI 8)
   stmtSyntax
 
 stmtSyntax :: Fix Module

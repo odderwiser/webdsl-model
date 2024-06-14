@@ -1,9 +1,10 @@
 module Definitions.GlobalVars.Syntax where
 import Actions.Modules.Eval.Syntax (Eval(Var), VName)
-import Actions.Modules.Entity.Syntax (EntityDecl (EDecl), unbox, LitV)
+import Actions.Modules.Entity.Syntax (EntityDecl (EDecl))
 import Utils.Fix
 import Data.Maybe (fromJust)
 import Utils.Composition
+import Actions.Values
 
 type DatabaseLoc = String --this contains file address to be checked
 -- if file exists, do not load the variables, instead populate
@@ -14,7 +15,7 @@ type DatabaseLoc = String --this contains file address to be checked
 
 type Uuid = String
 
-getUuid :: (LitV Uuid <: v) => EntityDecl (Fix v) -> Maybe Uuid
+getUuid :: (Lit Uuid <: v) => EntityDecl (Fix v) -> Uuid
 getUuid (EDecl name params) = unbox $ fromJust $ lookup "id" params
 
 -- data LitId e = BoxId Uuid
@@ -27,5 +28,6 @@ data GlobalVar e = VDef VName (EntityDecl e)
 
 type DatabaseEntry = String
 
-data VarList e = VList DatabaseEntry [GlobalVar e] e
+data VarList e = VList [GlobalVar e] e
+    deriving Functor
 getNames = map (\(VDef name e) -> name)

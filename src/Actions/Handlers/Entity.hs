@@ -19,23 +19,18 @@ import Data.UUID (toString)
 import Data.UUID.V4 (nextRandom)
 import Data.UUID.V3 (generateNamed, namespaceOID)
 import Codec.Binary.UTF8.String (encode)
-import Actions.Modules.Str.Syntax (projS, LitStr)
+import Actions.Modules.Str.Syntax 
 import Data.Maybe (fromJust)
 import Definitions.GlobalVars.Syntax (getUuid, Uuid)
+import Definitions.GlobalVars.Effects
+import Actions.Modules.Eval.Syntax (VName)
+import Data.Aeson.KeyMap (KeyMap, insert)
+import Data.Aeson.Key (fromString)
+import qualified Data.Aeson as D
+import GHC.Generics (Generic)
+import Data.Aeson (ToJSON)
+import Actions.Values
 
--- import Fun.Syntax
--- import Utils.Environment (Function, Env)
--- import Utils.Free
--- import Utils.Composition
--- import Data.Maybe (mapMaybe)
--- import Entity.Effects (Write(..), write, MutateEnv (..), DefaultValue (DefaultValue))
--- import Data.Foldable (find)
--- import Fun.Effects
--- import Fun.Handlers (dropAction)
--- import qualified Actions.Modules.Arith.Syntax as A
--- import Utils.Fix
--- import qualified Actions.Modules.Bool.Syntax as B
--- import Syntax as S
 
 entityDefsH :: (Functor eff, Functor eff')
   => Handler_ (EntityDefsEnv eff v)
@@ -46,101 +41,94 @@ entityDefsH = mkRHandler U.entityDefs
     $ env { U.entityDefs = val : U.entityDefs env  }
   )
 
-scopedEntityDefsH :: Functor eff 
+scopedEntityDefsH :: Functor eff
   => Handler_ (EntityDefsEnv eff v)
   a (Env eff v) eff (a, Env eff v)
 scopedEntityDefsH = entityDefsH
 
 defaultTypeH :: (Functor eff, A.LitInt <: v, B.LitBool <: v,
-  [] <: v, Null <: v) 
-  => Handler (DefaultValue (Fix v)) 
+  [] <: v, Null <: v)
+  => Handler (DefaultValue (Fix v))
   (Fix v) eff (Fix v)
 defaultTypeH = Handler
   { ret = pure
   , hdlr = \(DefaultValue ty k) -> case ty of
-      Int -> k $ injF $ A.Lit 0
-      Bool -> k $ injF $ B.Lit False
-      List -> k $ injF $ []
-      S.Entity -> k $ injF $ Null
+      Int      -> k $ box (0 :: Int)
+      Bool     -> k $ box False
+      List     -> k $ injF []
+      S.Entity -> k $ injF Null
   }
 
-mutateH :: (Functor eff) 
-  => Handler (MutateEnv (Env eff v)) 
+mutateH :: (Functor eff)
+  => Handler (MutateEnv (Env eff v))
   (Env eff v) eff (Env eff v)
 mutateH = Handler
   { ret = pure
   , hdlr = \effect -> case effect of
       Drop (DropLocalVars env k) -> k $ dropAction env
-      LiftObjectEnv global obj k -> k $ global 
+      LiftObjectEnv global obj k -> k $ global
         {U.defs = U.defs obj ++ U.defs global }
       -- GenerateEmptyEnv k -> k 
       --   $ Env { varEnv = [], defs = []}
       -- GenerateDefaultEnv (EDef name props funs) k -> 
   }
 
-objEnvH :: (Functor eff) 
-  => Handler_   (MLState PName Address) val 
+objEnvH :: (Functor eff)
+  => Handler_   (MLState PName Address) val
   [(PName, Address)] eff (val, [(PName, Address)])
 objEnvH = mkAHandler id lookup (:)
 
-propertyVarEnvH ::(Functor eff) 
-  => Handler_   (MLState PName Address) val 
+propertyVarEnvH ::(Functor eff)
+  => Handler_   (MLState PName Address) val
     (Env eff v) eff (val, Env eff v)
-propertyVarEnvH = mkAHandler U.objVarEnv lookup 
+propertyVarEnvH = mkAHandler U.objVarEnv lookup
   (\record env -> env { U.objVarEnv = record : U.objVarEnv env})
 
-uuidH :: (Functor eff) 
-  => Handler (Random String String) val eff val 
+uuidH :: (Functor eff)
+  => Handler (Random String String) val eff val
 uuidH = Handler
   { ret  = pure
-  , hdlr = \(Random obj k) -> 
+  , hdlr = \(Random obj k) ->
       k $ toString $ generateNamed namespaceOID $ encode obj
   }
 
--- in the preprocessing, all the objects are written to the databse. 
--- then
-
---this only updates the entity state
--- pureEntitiesH :: (Functor eff, LitStr <: v) 
---   => Handler_   (Database v) 
---     val [(Address, (Maybe (EntityDecl (Fix v))))] eff val
--- pureEntitiesH = Handler_ 
---   { ret_ = \a b -> pure a -- this should contain "write to db" action
---   , hdlr_ = \eff entities -> case eff of
---       (Ref v@(Just (EDecl name props)) k) ->
---         let address = length entities
---         in k (Just address, Just $ mapId props) ((address, v) : entities)
---       (Ref Nothing k) ->
---         let address = length entities
---         in k (Just address, Nothing) ((address, Nothing) : entities)
---       (Assign ((Just address, Nothing), Just entity) k) ->
---         let entities' = updateList (address, entity) entities   
---         in k  entities'
---       (Deref (Just address, Nothing) k) -> 
---        k (fromJust $ lookup address entities) entities 
---       (Deref (Nothing, Just id) k) -> 
---        k (snd $ fromJust 
---         $ find (\(int, Just (EDecl name props)) -> mapId props == id ) entities) entities 
---   }
-
-eHeapH :: (Functor eff, LitV Uuid <: v) 
+eHeapH :: (Functor eff, Lit Uuid <: v)
   => Handler_ (EHeap v) val [(Uuid, EntityDecl (Fix v))] eff val
 eHeapH = Handler_
   { ret_  = \x env -> pure x
   , hdlr_ = \x env -> case x of
-      (Deref key k)     -> k (fromJust $ lookup key env) env
-      (Ref value k)     -> let id = fromJust $ getUuid value
+      (Deref key k)     -> k (fromJust $ Prelude.lookup key env) env
+      (Ref value k)     -> let id = getUuid value
         in k id ((id, value) : env)
       (Assign record k) -> k (record : env)
   }
--- updateList :: (Eq a, Eq b1) => 
---   (((a, b1), b2), EntityDecl e) 
---   -> [((a, b1), Maybe (EntityDecl e))] -> [(a, Maybe (EntityDecl e))]
-updateList _ [] = []
-updateList val@(address, entity@(EDecl name props)) ((address', _) : tail) 
-  | address == address = (address, Just entity) : tail
-  | otherwise = updateList val tail
 
-mapId (("id", val) : tail) = projS val
-mapId ((id, _) : tail) = mapId tail
-mapId [] = [] 
+mockDbReadH :: (Functor remEff)
+  => Handler (DbRead (EntityDecl v)) val remEff val
+mockDbReadH = Handler
+  { ret  = pure
+  , hdlr = \(Connect k ) -> k False 
+    -- technically, the other effects shouldn't occur
+  }
+
+
+data Elems v = Elems (KeyMap Uuid) (KeyMap (EntityDecl (Fix v)))
+  deriving Generic
+
+instance (ToJSON (v (Fix v))) => ToJSON (Elems v)
+instance (ToJSON v) => ToJSON (EntityDecl v)
+instance (ToJSON (v (Fix v))) => ToJSON (Fix v)
+
+-- dbWriteH :: forall remEff val v. 
+--   (Functor remEff, Lit Uuid <: v, (ToJSON (v (Fix v))))
+--   => String -> Handler_ (DbWrite (EntityDecl (Fix v))) val (Elems v) remEff (IO val)
+-- dbWriteH dbEntry = Handler_ 
+--   { ret_ = \ val elems ->
+--        let decoded = D.encode elems
+--        in _
+--   , hdlr_ = \eff (Elems vars decls) -> case eff of 
+--     (SetVar (name, id) k) -> k 
+--       $ Elems (insert (fromString name) id vars) decls
+--     (SetEntity e k) -> k 
+--       $ Elems vars (insert (fromString $ getUuid e) e decls)
+--   }

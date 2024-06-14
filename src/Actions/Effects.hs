@@ -3,11 +3,12 @@ module Actions.Effects where
 import Utils.Composition
 import Utils.Free
 import Utils.Fix
-import Actions.Modules.Bool.Syntax (LitBool, projBool)
+import Actions.Modules.Bool.Syntax (LitBool)
 import Syntax (Type, Address)
 import Utils.Environment
 import Actions.Modules.Entity.Syntax
 import Definitions.GlobalVars.Syntax (Uuid)
+import Actions.Values (unbox)
 
 --- ABORT ---
 
@@ -26,7 +27,7 @@ cond :: (fix ~ Fix a, Cond <: f, LitBool <: a)
   => fix -> Free f fix -> Free f fix 
   -> Free f fix
 cond bool k1 k2 = Op . inj
-    $ Cond (projBool bool) k1 k2
+    $ Cond (unbox bool) k1 k2
 
 cond' :: (Cond <: f) 
   => Bool -> Free f fix -> Free f fix 

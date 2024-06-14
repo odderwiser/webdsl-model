@@ -39,5 +39,6 @@ instance (Eq a, Eq (f (Free f a))) => Eq (Free f a) where
   (==) :: Eq a => Free f a -> Free f a -> Bool
   (==) (Pure a) (Pure b) = a == b 
   (==) (Op a) (Op b) = a == b
-  (==) _ _ = False
+  (==) _ _ = False 
+
 

@@ -7,31 +7,7 @@ import Test.HUnit
 import TestSyntax 
 import Syntax (Type(..))
 import Actions.Framework
-
--- type Eff    = Cond + End
--- type V      = Fix (LitBool + LitInt)
--- type Module = Arith + Boolean + Expr
--- type Out    = Bool \/ Int
-
--- run :: FreeEnv Eff V
---   -> Either Bool Int
--- run e = case unwrap
---     $ handle condition
---     $ e $ Env {}
---   of 
---     (In (L (B.Lit val)))  -> Left val
---     (In (R (A.Lit val)))  -> Right val
-
--- instance Denote Arith Eff V where
---   denote :: Arith (FreeEnv Eff V) -> FreeEnv Eff V
---   denote = A.denote
-
--- instance Denote Boolean Eff V where
---   denote :: Boolean (FreeEnv Eff V) -> FreeEnv Eff V
---   denote = B.denote
-
--- instance Denote Expr Eff V where
---   denote = E.denote
+import Actions.Values
 
 testEq :: Denote m Eff V 
   => String -> Out -> Fix m -> Test
@@ -43,38 +19,38 @@ testEq id res syntax =  TestCase $
 testIf :: Test
 testIf = testEq 
   "ifSimple" 
-  (B.lit True)
+  (box True)
   ifSimple
     
 
 testIfComplicated :: Test
 testIfComplicated = testEq
   "ifComplicated"
-  (B.lit True)
+  (box True)
   ifComplicated
 
 testIfAB :: Test
 testIfAB = testEq "ifAB"
-  (A.lit 2)
+  (box (2 :: Int))
   ifSyntax
 
 testIfComp :: Test
 testIfComp = testEq
  "ifComparison"
-  (A.lit 1)
+  (box (1 :: Int))
   ifComparison
 
 ----------- new feature tests ------------
 
 testEqu :: Test
 testEqu = testEq "eq"
-  (B.lit True)
+  (box True)
   eqSyntax
 
 testCmp :: Test
 testCmp = testEq
  "comparison"
-  (B.lit True)
+  (box True)
   cmpSyntax
 
 exprTests :: Test

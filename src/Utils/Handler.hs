@@ -1,6 +1,9 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use lambda-case" #-}
 module Utils.Handler where
 import Utils.Free ( fold, Free(..) )
 import Utils.Composition
+import Control.Monad.IO.Class (MonadIO(liftIO))
 
 data Handler f a f' b
   = Handler {
@@ -57,3 +60,38 @@ handle_ handler param value = fold
   -- defsH :: (Functor eff, Functor eff')
   -- => Handler_ (FunctionEnv eff v)
   -- a (Env eff v) eff' (a, Env eff v
+
+
+data IOHandler f val g res -- can be generalised to any monad?? 
+  = IOHandler 
+  { ioRet  :: val -> IO (Free g res)
+  , ioHdlr :: f (IO (Free g res)) -> IO (Free g res)
+  }
+
+-- ioHandle :: ( Functor f, Functor g) 
+--   => IOHandler f val g res -> Free (f + g) val -> IO (Free g res)
+-- ioHandle handler  = fold
+--   (ioRet handler)
+--   (\ x -> case x of
+--     L y -> ioHdlr handler y
+--     R y -> pure $ Op y )
+
+data IOHandler_ f val param g res
+  = IOHandler_ 
+  { ioRet_  :: val -> (param -> IO (Free g res))
+  , ioHdlr_ :: f (param -> IO (Free g res)) -> IO (param -> Free g res)
+  }
+
+-- ioHandle_ :: (Functor handledEff, Functor remEff)
+--   => IOHandler_ handledEff val param remEff output
+--   -> param -> Free (handledEff + remEff) val
+--   -> IO (Free remEff output)
+
+-- ioHandle_ handler param value = fold
+--   (ioRet_ handler)
+--   (\case
+--      L handledEff -> do
+--       f <-  ioHdlr_ handler handledEff
+--       return $ f param
+--      R remainder -> _ -- pure $ \param -> Op (fmap (\apply -> apply param) remainder)
+--   ) value

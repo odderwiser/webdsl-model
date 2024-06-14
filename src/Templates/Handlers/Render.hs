@@ -6,6 +6,7 @@ import Actions.Str as S
 import Actions.Arith as A
 import Actions.Bool as B
 import Actions.Syntax (projC)
+import Actions.Values
 
 
 data PageR = PageR {
@@ -57,11 +58,11 @@ renderH = Handler {
 coerceTypes :: ([] <: v', LitInt <: v', LitStr <: v', LitBool <: v')
   => Fix v' -> Fix ([] + LitInt + LitStr + LitBool)
 coerceTypes e = case projF e of
-  Just (A.Lit int) -> injF (A.Lit int)
+  Just (Box (int :: Int)) -> box int
   Nothing -> case projF e of
-    Just (B.Lit bool) -> injF (B.Lit bool)
+    Just (Box (bool :: Bool)) -> box bool
     Nothing -> case projF e of
-      Just (S.Lit str) -> injF (S.Lit str)
+      Just (Box (str :: String)) -> box str
       Nothing -> case projC e of
         list -> injF $ map coerceTypes list
 
@@ -79,15 +80,15 @@ instance (Show' (a e), Show' (b e)) => Show' ((a + b) e) where
 
 instance Show' (LitStr e) where
   show' :: LitStr e -> String
-  show' (S.Lit str) = str
+  show' (Box str) = str
 
 instance Show' (LitInt e) where
   show' :: LitInt e -> String
-  show' (A.Lit int) = show int
+  show' (Box int) = show int
 
 instance Show' (LitBool e) where
   show' :: LitBool e -> String
-  show' (B.Lit bool) = "<input type=\"checkbox\" checked="
+  show' (Box bool) = "<input type=\"checkbox\" checked="
     ++ show bool
     ++ " disabled=\"true\">"
 

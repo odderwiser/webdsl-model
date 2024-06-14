@@ -2,20 +2,16 @@ module Actions.Modules.Bool.Syntax where
 import Utils.Composition ( type (<:) )
 import Utils.Fix ( injF, Fix, projF )
 import Data.Maybe (fromJust)
+import Actions.Values
 
 --- VALUES
 
-data LitBool e = Lit Bool
-  deriving (Functor, Eq)
-
-instance Show (LitBool a) where
-  show :: LitBool a -> String
-  show (Lit v) = show v 
+type LitBool = Lit Bool 
 
 --smart constructors
 
-lit :: (LitBool <: v) => Bool -> Fix v
-lit = injF . Lit 
+-- lit :: (LitBool <: v) => Bool -> Fix v
+-- lit = injF . Lit 
 
 --- SYNTAX
 
@@ -53,5 +49,5 @@ false :: (Boolean <: f) => Fix f
 false = injF $ LitB False
 
 -- projBool :: forall f. (LitBool <: f) => Fix f -> Bool
-projBool elem = case fromJust (projF elem) of
-  (Lit bool) -> bool
+-- projBool elem = case fromJust (projF elem) of
+--   (Lit bool) -> bool

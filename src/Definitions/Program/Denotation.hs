@@ -13,8 +13,8 @@ foldProgram (Fragment defs program) = Fragment (map (fmap foldD) defs) (foldD pr
 
 foldProgramV :: forall f g eff v. (Denote f eff v, Functor g, VarList <: f)
     => ProgramV (g (Fix f)) (Fix f) -> Program (g (FreeEnv eff v)) (FreeEnv eff v)
-foldProgramV (WithVars dbEntry vars (Fragment defs program)) = foldProgram 
-  (Fragment defs (injF $ VList dbEntry vars program)) 
+foldProgramV (WithVars vars (Fragment defs program)) = foldProgram 
+  (Fragment defs (injF $ VList vars program)) 
 
 
 denoteDefs ::

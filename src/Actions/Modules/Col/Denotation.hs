@@ -11,6 +11,7 @@ import Syntax as S
 
 import Data.Maybe (mapMaybe)
 import Actions.Effects (MLState, assign, ref)
+import Actions.Values
 
 denote :: forall f eff. (Eq (f (Fix f)), LitBool <: f, [] <: f, LitInt <: f, Null <: f,
   MLState Address (Fix f) <: eff)
@@ -56,11 +57,11 @@ elemContains :: ([] <: g, Functor f, LitBool <: g, Eq (g (Fix g)))
     => Fix g -> Fix g -> Free f (Fix g)
 elemContains e1 e2 = case projF e2 of
   (Just (e2' :: [Fix g])) -> return
-    $ injF $ B.Lit
+    $ box
     $ elem e1 e2'
 
 foldList :: (Functor eff, [] <: g, LitBool <: g, LitBool <: g)
   => (Bool -> Bool -> Bool) -> Bool -> [Fix g] -> Free eff (Fix g)
 foldList op start e = return
-    $ injF $ B.Lit
-    $ foldr (op . projBool) start e
+    $ box
+    $ foldr (op . unbox) start e

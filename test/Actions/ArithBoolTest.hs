@@ -6,6 +6,7 @@ import Actions.Handlers.Cond
 import TestSyntax (ifSyntax, ifComparison)
 import Actions.Bool  as B
 import Actions.Arith as A
+import Actions.Values
 
 type Eff = Cond + End
 type V = Fix (LitBool + LitInt)
@@ -20,8 +21,8 @@ run e =
     $ e 
     $ Env {}
   of
-    (In (L (B.Lit val))) -> Left val
-    (In (R (A.Lit val))) -> Right val
+    (In (L (Box val))) -> Left val
+    (In (R (Box val))) -> Right val
 
 instance Denote Arith Eff V where
   denote :: Arith (FreeEnv Eff V) -> FreeEnv Eff V

@@ -26,7 +26,7 @@ testEqProgram id res syntax =  TestCase $
 
 testAbort :: Test
 testAbort = testEq "two returns"
-  (A.lit 1)
+  (boxI 1)
   abortSyntax
 
 abortSyntax :: Fix Module
@@ -35,7 +35,7 @@ abortSyntax = cons (return' $ int 1)
 
 testfCall :: Test
 testfCall = testEqProgram "simple function call"
-  (A.lit 7)
+  (boxI 7)
   fCallSyntax
 
 fCallSyntax :: Program (FDecl (Fix Module)) (Fix Module)

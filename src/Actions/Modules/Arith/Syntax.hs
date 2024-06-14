@@ -2,20 +2,21 @@ module Actions.Modules.Arith.Syntax  where
 import Utils.Composition ( type (<:) )
 import Utils.Fix ( injF, Fix, projF )
 import Data.Maybe (fromJust)
+import Data.Aeson (ToJSON)
+import GHC.Generics (Generic)
+import Actions.Values (Lit (Box), box)
 
 -- VALUES
 
-data LitInt v = Lit Int
-  deriving (Functor, Eq)
+type LitInt = Lit Int  
 
-instance Show (LitInt a) where
-  show :: LitInt a -> String
-  show (Lit v) = show v 
+boxI :: (LitInt <: v) => Int -> Fix v
+boxI = box
 
 -- smart constructor
 
-lit :: (LitInt <: v) => Int -> Fix v
-lit = injF . Lit 
+-- lit :: (LitInt <: v) => Int -> Fix v
+-- lit = injF . Box
 
 --- SYNTAX
 
@@ -49,6 +50,6 @@ modulo = bin Mod
 int :: (Arith <: f) => Int -> Fix f
 int =  injF . LitAr
 
-projArith :: (LitInt <: g) => Fix g -> Int
-projArith elem = case fromJust (projF elem) of
-  (Lit int) -> int
+-- projArith :: (LitInt <: g) => Fix g -> Int
+-- projArith elem = case fromJust (projF elem) of
+--   (Lit int) -> int
