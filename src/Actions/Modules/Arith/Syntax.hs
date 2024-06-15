@@ -4,14 +4,14 @@ import Utils.Fix ( injF, Fix, projF )
 import Data.Maybe (fromJust)
 import Data.Aeson (ToJSON)
 import GHC.Generics (Generic)
-import Actions.Values (Lit (Box), box)
+import Actions.Values (Lit (Box), box, boxV)
 
 -- VALUES
 
 type LitInt = Lit Int  
 
 boxI :: (LitInt <: v) => Int -> Fix v
-boxI = box
+boxI = boxV
 
 -- smart constructor
 

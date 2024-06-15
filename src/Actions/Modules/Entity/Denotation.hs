@@ -15,7 +15,7 @@ import Definitions.Entity.Syntax
 import Actions.Modules.Entity.Syntax
 import Actions.Modules.Str.Syntax as Str
 import Definitions.GlobalVars.Syntax (Uuid)
-import Actions.Values
+import Actions.Values as V
 
 getProperty name (EDecl _ params) = return
     $ fromJust 
@@ -48,7 +48,7 @@ denote (PropAssign object propName e)  env = do
   obj :: (EntityDecl (Fix v)) <- getObj object env
   loc              <- getProperty propName  obj
   e'               <- e env
-  return S.null
+  return V.null
 
 denote (ECall obj fname vars) env = do
   (EDecl name params)   <- getObj obj env
@@ -106,6 +106,20 @@ denoteEDecl decl@(EDecl entity props) env = do
   implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
   id :: Uuid                    <- ref $ mapProperties decl values implProps
   return $ box id
+
+denoteEDecl' :: forall eff v.
+  ( MLState Address (Fix v) <: eff, TempEHeap v <: eff, Random String String <: eff
+  , Lit Address <: v, Lit Uuid <: v, LitStr <: v, Null <: v
+  , Show (v (Fix v))
+  ) => EntityDecl (FreeEnv eff (Fix v))
+    -> Env eff (Fix v) -> Free eff (EntityDecl (Fix v))
+denoteEDecl' decl@(EDecl entity props) env = do
+  def@(EDef 
+    name propsDefs iProps funs) <- derefH entity entityDefsH env
+  values                        <- mapM ((\e -> e env) . snd) props
+  implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
+  return $ mapProperties decl values implProps
+
 
 denoteImplicitProps :: forall f e v. 
   (Show e,Random String String <: f, Lit Uuid <: v

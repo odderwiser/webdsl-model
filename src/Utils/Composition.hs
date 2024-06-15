@@ -3,7 +3,7 @@ module Utils.Composition where
 import Prelude hiding (sum)
 import Data.Bifunctor (Bifunctor (bimap))
 import GHC.Generics (Generic)
-import Data.Aeson (ToJSON)
+import Data.Aeson (ToJSON, FromJSON)
 
 --- FUNCTOR COMPOSITION
 
@@ -21,6 +21,7 @@ data (f + g) a
   deriving (Functor, Eq, Generic)
 
 instance (ToJSON (f a), ToJSON (g a)) => ToJSON ((f + g) a)
+instance (FromJSON (f a), FromJSON (g a)) => FromJSON ((f + g) a)
 
 instance (Show (f a), Show (g a)) => Show ((f + g) a) where
   show :: (Show (f a), Show (g a)) => (+) f g a -> String

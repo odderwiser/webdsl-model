@@ -19,38 +19,38 @@ testEq id res syntax =  TestCase $
 testIf :: Test
 testIf = testEq 
   "ifSimple" 
-  (box True)
+  (boxV True)
   ifSimple
     
 
 testIfComplicated :: Test
 testIfComplicated = testEq
   "ifComplicated"
-  (box True)
+  (boxV True)
   ifComplicated
 
 testIfAB :: Test
 testIfAB = testEq "ifAB"
-  (box (2 :: Int))
+  (boxI 2)
   ifSyntax
 
 testIfComp :: Test
 testIfComp = testEq
  "ifComparison"
-  (box (1 :: Int))
+  (boxI 1)
   ifComparison
 
 ----------- new feature tests ------------
 
 testEqu :: Test
 testEqu = testEq "eq"
-  (box True)
+  (boxV True)
   eqSyntax
 
 testCmp :: Test
 testCmp = testEq
  "comparison"
-  (box True)
+  (boxV True)
   cmpSyntax
 
 exprTests :: Test

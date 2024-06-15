@@ -6,15 +6,15 @@ import Actions.Values
 op :: (Functor f, LitInt <: v') 
   => (Int -> Int -> Int) -> Fix v' -> Fix v' 
   -> Free f (Fix v')
-op operand e1 e2 = case (projF e1, projF e2) of
-  (Just (Box e1'), Just (Box e2')) -> return 
-    $ box 
+op operand e1 e2 = case (unbox' e1, unbox' e2) of
+  (e1', e2') -> return 
+    $ boxV 
     $ operand e1' e2'
 
 denote :: (Functor eff, LitInt <: v) 
   => Arith (FreeEnv eff (Fix v)) 
   -> FreeEnv eff (Fix v)
-denote (LitAr int) env = return $ box int
+denote (LitAr int) env = return $ boxV int
 
 denote (OpArith Add a b) env = do 
   a' <- a env 

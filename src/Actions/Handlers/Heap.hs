@@ -8,7 +8,7 @@ import Data.Map (fromList)
 import Actions.Modules.Eval.Syntax (VName)
 import Data.Maybe (mapMaybe, fromJust)
 import Utils.Environment
-import Actions.Handlers.Env (mkAHandler)
+import Actions.Handlers.Env (mkAHandler, mkAHandler')
 
 newLoc :: Map.Map Address v -> Address
 newLoc = Map.size
@@ -44,7 +44,7 @@ heap' = heapHandler const Map.size Map.lookup Map.insert
 
 heap'' :: (Functor g) => 
   Handler_ (MLState Address v) a [(Address, v)] g (a, [(Address, v)])
-heap'' = heapHandler (,) length lookup (\k v list -> (k, v) : list)
+heap'' = heapHandler' (,) length lookup (\k v list -> (k, v) : list)
 
 -- heapHandler :: Functor remEff
 --   => (t1 -> col -> output)
@@ -52,6 +52,14 @@ heap'' = heapHandler (,) length lookup (\k v list -> (k, v) : list)
 --   -> (Address -> t2 -> col -> col)
 --   -> Handler_ (MLState Address v) t1 col remEff output
 heapHandler ret' size' lookup' insert' = Handler_ {
+  ret_ = \output store -> pure $ ret' output store
+  ,hdlr_ = \effect store -> case effect of
+    Ref value k -> let loc  = size' store
+        in k loc $ insert' loc value store
+    Deref key k -> k (fromJust $ lookup' key store) store
+    Assign (key, value) k -> k $ insert' key value store }
+
+heapHandler' ret' size' lookup' insert' = Handler_ {
   ret_ = \output store -> pure $ ret' output store
   ,hdlr_ = \effect store -> case effect of
     Ref value k -> let loc  = size' store

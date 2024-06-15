@@ -12,7 +12,7 @@ type Output = String
 
 run :: FreeEnv Eff V -> Output
 run e = case unwrap $ e $ Env {} of
-  (In (Box str)) -> str
+  (In (V str)) -> str
 
 instance Denote Str Eff V where
   denote :: Str (FreeEnv  Eff V)

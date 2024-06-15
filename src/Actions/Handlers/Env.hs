@@ -53,6 +53,12 @@ mkAHandler envSubtype finder setter = Handler_
       (env', Deref key k)     -> k (fromJust $ finder key env') env
       (env', Assign record k) -> k $ setter record env}
 
+mkAHandler' envSubtype finder setter = Handler_
+  { ret_  = curry pure
+  , hdlr_ = \x env -> case (envSubtype env, x) of
+      (env', Deref key k)     -> k (fromJust $ finder key env') env
+      (env', Assign record k) -> k $ setter record env}
+
 mkRHandler envSubtype finder cont = Handler_
   { ret_  = curry pure
   , hdlr_ = \x env -> case (envSubtype env, x) of

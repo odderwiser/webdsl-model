@@ -1,8 +1,7 @@
 module Actions.Modules.Stmt.Denotation where
 import Utils
 import Actions.Modules.Stmt.Syntax
-import Actions.Handlers.Heap (environment)
-import Syntax (Null(Null), Address)
+import Syntax (Address)
 import Actions.Effects as E
 import Actions.Modules.Eval.Denotation (refEnv)
 import Actions.Modules.Bool.Syntax as B
@@ -54,8 +53,8 @@ executeLoop col' name env stmts = do
 halfOpenRange :: forall g. (LitInt <: g) => Fix g -> Fix g -> [Fix g]
 halfOpenRange a b = map (box :: Int -> Fix g) [a', (a' + step)..(b' - step) ]
   where step = signum (b' - a')
-        a'   = unbox a
-        b'   = unbox b
+        a'   = unbox' a
+        b'   = unbox' b
         
 whileLoop e stmts env = do
   e'      <- e env
@@ -82,15 +81,15 @@ denoteFilter :: forall eff v.
   ) => VName -> [Fix v] -> Filter (FreeEnv eff (Fix v))
      -> FreeEnv eff (Fix v)
 denoteFilter name col (Where e) env = applyFunction filter
-  unbox
+  unbox'
   name col e env
 
 denoteFilter name col (OrdBy e True) env = applyFunction sortOn
-  (unbox :: Fix v -> Int)
+  (unbox' :: Fix v -> Int)
   name col e env
 
 denoteFilter name col (OrdBy e False) env = applyFunction sortOn
-  (negate . (unbox :: Fix v -> Int))
+  (negate . (unbox' :: Fix v -> Int))
   name col e env
 
 denoteFilter name col (Limit e) env = applyDecrease take
@@ -102,7 +101,7 @@ denoteFilter name col (Offset e) env = applyDecrease Prelude.drop
 applyDecrease f col e env = do
   e'            <- e env
   return $ injF 
-    $ f (unbox e') col
+    $ f (unbox' e') col
 
 applyFunction :: forall a b v f. (MLState Address (Fix v) <: f, [] <: v, Null <: v)
   => (((a, b) -> a) -> [(a, Fix v)] -> [(a, Fix v)])

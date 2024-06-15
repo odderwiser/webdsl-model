@@ -7,6 +7,7 @@ import Actions.Arith as A
 import Test.HUnit
 import TestSyntax
 import Actions.Syntax
+import Actions.Values as V
 
 testEq :: Denote m Eff V 
   => String -> Out -> Fix m -> Test
@@ -33,7 +34,7 @@ varSyntax = A.add (var "x") (int 2)
 testVDecl :: Test
 testVDecl = testEq
  "vDecl"
-  S.null
+  V.null
   vDeclSyntax
 
 vDeclSyntax :: Fix Module

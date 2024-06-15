@@ -21,8 +21,8 @@ run e =
     $ e 
     $ Env {}
   of
-    (In (L (Box val))) -> Left val
-    (In (R (Box val))) -> Right val
+    (In (L (V val))) -> Left val
+    (In (R (V val))) -> Right val
 
 instance Denote Arith Eff V where
   denote :: Arith (FreeEnv Eff V) -> FreeEnv Eff V

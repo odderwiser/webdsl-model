@@ -12,9 +12,10 @@ type Module = Arith
 type Output = Int
 
 
-run :: FreeEnv Eff V -> Int
+run :: FreeEnv Eff V -> Maybe Int
 run e = case unwrap $ e $ Env {} of
-  (In (Box int)) -> int
+  (In (V int)) -> Just int
+  _ -> Nothing
 
 instance Denote Arith Eff V where
   denote :: Arith (FreeEnv  Eff V)
@@ -23,7 +24,7 @@ instance Denote Arith Eff V where
 
 testEq :: String -> Int -> Fix Module -> Test
 testEq id res syntax =  TestCase $
-  assertEqual id res $ run $ foldD syntax
+  assertEqual id (Just res) $ run $ foldD syntax
 
 
 testSimple :: Test

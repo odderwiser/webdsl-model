@@ -74,7 +74,17 @@ data IOHandler f val g res -- can be generalised to any monad??
 --   (ioRet handler)
 --   (\ x -> case x of
 --     L y -> ioHdlr handler y
---     R y -> pure $ Op y )
+--     R y -> do 
+--       evaled <- Op y 
+--       return $ return _ )
+
+-- helper :: Free g (IO (Free g res)) -> IO (Free g res)
+-- helper input = do
+--   value <- ( do
+--     input' <- input
+--     _
+--     )
+--   return $ return _
 
 data IOHandler_ f val param g res
   = IOHandler_ 

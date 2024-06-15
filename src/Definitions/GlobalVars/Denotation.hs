@@ -5,7 +5,7 @@ import Actions.Syntax
 import Definitions.GlobalVars.Syntax
 import Utils.Environment (FreeEnv)
 import Utils  as U
-import Actions.Modules.Entity.Denotation (denoteEDecl)
+import Actions.Modules.Entity.Denotation (denoteEDecl, denoteEDecl')
 import Actions.Modules.Str.Syntax (LitStr)
 import Data.Traversable
 import Control.Monad (foldM)
@@ -14,6 +14,7 @@ import Definitions.GlobalVars.Effects (connect, loadVars, getEntity, DbRead, set
 import Actions.Modules.Eval.Denotation (refEnv, derefEnv)
 import Data.Maybe (fromJust)
 import Actions.Values
+import Actions.Handlers.Entity hiding (updateEntity)
 
 -- denoteDef :: forall eff v. (MLState Address (Fix v) <: eff,
 --     EntityDecl <: v, LitAddress <: v, Random String String <: eff,
@@ -25,8 +26,6 @@ import Actions.Values
 --     return ()
 
 type VarEnv = MLState VName Address
-type MaybeEntity v = Maybe (EntityDecl (Fix v))
-type TempEHeap v = MLState Address (MaybeEntity v)
 type Heap v = MLState Address (Fix v)
 
 denote :: forall eff v.
@@ -34,6 +33,9 @@ denote :: forall eff v.
   , Heap v <: eff, TempEHeap v <: eff, DbWrite (EntityDecl (Fix v)) <: eff
   , Denote EntityDecl eff (Fix v)
   , Lit Uuid <: v, Lit Address <: v, EntityDecl <: v
+  , LitStr <: v, Null <: v
+  , Random String String <: eff
+  , Show (v (Fix v))
   ) => VarList (FreeEnv eff (Fix v)) -> FreeEnv eff (Fix v)
 denote (VList list e) env = do
   isSuccess <- connect (Nothing :: MaybeEntity v)
@@ -61,14 +63,17 @@ evaluateVariables ::
   , DbWrite (EntityDecl (Fix v)) <: eff
   , Lit Address <: v, Lit Uuid <: v, EntityDecl <: v
   , Denote EntityDecl eff (Fix v)
+  , LitStr <: v, Null <: v
+  , Random String String <: eff
+  , Show (v (Fix v))
   ) => [GlobalVar (FreeEnv eff (Fix v))] -> Env eff (Fix v)
     -> Free eff (Env eff (Fix v))
 evaluateVariables list env = do
   env' <- foldM phase1 env (getNames list)
-  mapM_ (phase2 env) list
-  mapM_ (phase3 env) (getNames list)
-  mapM_ (writeVars env) list
-  return env
+  mapM_ (phase2 env') list
+  mapM_ (phase3 env') (getNames list)
+  mapM_ (writeVars env') list
+  return env'
 
 -- I should be able to get away with stuffing the environment in as an effect
 
@@ -81,21 +86,23 @@ phase1 :: forall eff v.
 phase1 env name = do
   (loc  :: Address)   <- ref (Nothing :: MaybeEntity v)
   (loc' :: Address)   <- ref (box loc :: Fix v)
-  refEnv name loc env
+  refEnv name loc' env
 
 phase2 :: forall eff v.
   ( Heap v <: eff, TempEHeap v <: eff
   , Denote EntityDecl eff (Fix v)
-  , Lit Address <: v, EntityDecl <: v
+  , Lit Address <: v, EntityDecl <: v, LitStr <: v, Null <: v
+  , Random String String <: eff
+  , Show (v (Fix v))
   ) => Env eff (Fix v) -> GlobalVar (FreeEnv eff (Fix v))
     -> Free eff ()
 phase2 env (VDef name entity) = do
   loc              <- derefEnv name env
   (box' :: Fix v)  <- deref loc
-  entity'          <- U.denote entity env -- doesn't write to environment, only reads. Important: should evaluate objects to fix v and save as such!!
+  entity'          <- denoteEDecl' entity (env :: Env eff (Fix v)) -- doesn't write to environment, only reads. Important: should evaluate objects to fix v and save as such!!
   assign
     ( unbox box' :: Address
-    , Just $ projEntity entity')
+    , Just $ entity')
 
 -- only now we have a guarantee that all objects have SOME uuid
 phase3 :: forall eff v.
@@ -128,12 +135,12 @@ mapParams :: forall f v a.
   , Lit Uuid <: v,  Lit Uuid <: v, Lit Address <: v
   ) => (a, Fix v) -> Free f (a, Fix v)
 mapParams (name, value) = case projF value of
-  Nothing                           -> return (name, value)
   (Just (Box (address :: Address))) -> do
-    (entity :: MaybeEntity v) <- deref address
+    (entity :: MaybeEntity v) <- deref address 
     return 
       ( name
       , box $ getUuid $ fromJust entity )
+  _                       -> return (name, value)
 
 writeVars :: forall f v. (Heap v <: f
   , DbWrite (EntityDecl (Fix v)) <: f

@@ -109,7 +109,9 @@ library
     -- other-extensions:
     build-depends:      base >=4.18.2.1,
                         aeson,
+                        bytestring,
                         containers,
+                        directory,
                         tagsoup,
                         uuid,
                         utf8-string
@@ -145,6 +147,7 @@ test-suite webdsl-tests
                         Actions.ExprTest,
                         Actions.EvalTest,
                         Actions.FunTest,
+                        Actions.GlobalVarTest,
                         Actions.LoopTest,
                         Actions.StmtTest,
                         Actions.StrTest,

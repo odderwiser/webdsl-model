@@ -12,6 +12,7 @@ import Actions.Handlers.Env
 import Data.Maybe (mapMaybe)
 import Actions.Modules.Eval.Syntax
 import Definitions.Fun.Syntax
+import Actions.Values
 
 derefDefs :: Functor eff => FunName -> Env eff (Fix v)
   -> Free eff (FDecl (FreeEnv eff (Fix v)))

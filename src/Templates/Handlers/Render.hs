@@ -58,11 +58,11 @@ renderH = Handler {
 coerceTypes :: ([] <: v', LitInt <: v', LitStr <: v', LitBool <: v')
   => Fix v' -> Fix ([] + LitInt + LitStr + LitBool)
 coerceTypes e = case projF e of
-  Just (Box (int :: Int)) -> box int
+  Just (V int) -> boxI int
   Nothing -> case projF e of
-    Just (Box (bool :: Bool)) -> box bool
+    Just (V (bool :: Bool)) -> boxV bool
     Nothing -> case projF e of
-      Just (Box (str :: String)) -> box str
+      Just (V (str :: String)) -> boxV str
       Nothing -> case projC e of
         list -> injF $ map coerceTypes list
 
@@ -80,17 +80,20 @@ instance (Show' (a e), Show' (b e)) => Show' ((a + b) e) where
 
 instance Show' (LitStr e) where
   show' :: LitStr e -> String
-  show' (Box str) = str
+  show' (V str) = str
+  show' _ = ""
 
 instance Show' (LitInt e) where
   show' :: LitInt e -> String
-  show' (Box int) = show int
+  show' (V int) = show int
+  show' _ = ""
 
 instance Show' (LitBool e) where
   show' :: LitBool e -> String
-  show' (Box bool) = "<input type=\"checkbox\" checked="
+  show' (V bool) = "<input type=\"checkbox\" checked="
     ++ show bool
     ++ " disabled=\"true\">"
+  show' _ = ""
 
 instance (Show' e) => Show' [e] where
   show' :: [e] -> String

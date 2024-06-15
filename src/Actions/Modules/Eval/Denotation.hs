@@ -6,6 +6,7 @@ import Actions.Effects
 import Utils
 import Syntax
 import Actions.Handlers.Heap (environment)
+import Actions.Values
 
 
 derefEnv :: (Functor eff) 

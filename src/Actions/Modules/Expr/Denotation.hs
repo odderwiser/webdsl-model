@@ -10,7 +10,7 @@ import Actions.Values
 op :: (Functor f, LitBool <: v)
   => (a -> a -> Bool) -> a -> a -> Free f (Fix v)
 op operand e1 e2 = return
-  $ box
+  $ boxV
   $ operand e1 e2
 
 opCmp :: (fix ~ Fix v, Functor f, Num a, LitInt <: v, LitBool <: v)
@@ -19,7 +19,7 @@ opCmp :: (fix ~ Fix v, Functor f, Num a, LitInt <: v, LitBool <: v)
 opCmp operand exp1 exp2 = op operand (toNum exp1) (toNum exp2)  
 
 toNum :: forall a g. (Num a, LitInt <: g) => Fix g -> a
-toNum = fromIntegral . (unbox :: Fix g -> Int)
+toNum = fromIntegral . (unbox' :: Fix g -> Int)
     
     
 

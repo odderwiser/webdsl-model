@@ -6,6 +6,7 @@ import Actions.Handlers.Cond
 import Test.HUnit
 import TestSyntax (ifSimple, ifComplicated)
 import Actions.Values (Lit(Box))
+import Actions.Values
 
 type Eff    = Cond + End
 type V      = Fix LitBool
@@ -22,7 +23,7 @@ run e = case unwrap
     $ handle condition
     $ e $ Env {}
   of
-    (In (Box bool)) -> bool
+    (In (V bool)) -> bool
 
 testEq :: String -> Output -> Fix Module -> Test
 testEq id res syntax =  TestCase $

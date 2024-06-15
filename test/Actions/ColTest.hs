@@ -5,7 +5,7 @@ import Test.HUnit (Test (..), assertEqual)
 import Actions.Bool as B
 import Actions.Syntax as Syn
 import Actions.Arith as A
-import Actions.Values (box)
+import Actions.Values (box, boxV)
 
 
 testEq :: String -> Out -> Fix Module -> Test
@@ -14,7 +14,7 @@ testEq id res syntax =  TestCase $
 
 testInt = testEq
   "contains int"
-  (box True)
+  (boxV True)
   (in' (int 1)
     (list [int  2
       , int  4
@@ -23,7 +23,7 @@ testInt = testEq
 
 testBool = testEq
   "contains bool"
-  (box False)
+  (boxV False)
   (in' true (list
       [ false
       , B.and true false
@@ -32,7 +32,7 @@ testBool = testEq
 
 testList = testEq
   "contains list"
-  (box True)
+  (boxV True)
   (in' (list [int 1]) (list [ list []
     , list [A.subtract (int 3) (int 2)]
     , list [ A.add (int 2) (int 3)
@@ -41,14 +41,14 @@ testList = testEq
 
 testComprehension = testEq
   "comprehension"
-  (injF [box False, box True])
+  (injF [boxV False, boxV True])
   (lComp Nothing (gt (var "exp") (int 5))
     "exp"
     (list [int 1, A.add (int 3) (int 6)]) [] :: Fix Module)
 
 testAnd = testEq
   "andList list"
-  (box True)
+  (boxV True)
   (lComp (Just And) (var "exp") "exp"
       (list [ true
       , B.or true false
@@ -58,7 +58,7 @@ testAnd = testEq
 
 testOr = testEq
   "orList list"
-  (box False)
+  (boxV False)
   (lComp (Just Or) (var "exp") "exp"
     (list [ false
       , B.and true false
