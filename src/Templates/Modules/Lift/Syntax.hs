@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use newtype instead of data" #-}
 module Templates.Modules.Lift.Syntax where
 import Utils (BiFix)
 import Actions.Syntax
@@ -13,3 +15,9 @@ instance (Functor s) => Bifunctor (LiftT s) where
 
 consT :: (LiftT Stmt <:: f) => BiFix f e -> BiFix f e -> BiFix f e
 consT s1 s2 = injBf $ LiftT (S s1 s2)
+
+data (Bifunctor s) => Weaken s e = Weaken (s e e)
+
+instance (Bifunctor s) => Functor (Weaken s) where
+  fmap :: (a -> b) -> Weaken s a -> Weaken s b
+  fmap  f (Weaken s) = Weaken $ bimap f f s 

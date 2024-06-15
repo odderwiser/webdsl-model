@@ -5,16 +5,17 @@ import Actions.Effects (MLState, ref)
 import Definitions.Program.Effects (write, EnvType (..), GlobalScope)
 import Definitions.Fun.Syntax (FDecl)
 import Data.Bifunctor (Bifunctor(bimap))
-import Definitions.GlobalVars.Syntax (VarList(VList))
+import Definitions.GlobalVars.Syntax
+import Templates.Modules.Lift.Syntax
 
 foldProgram :: forall f g eff v. (Denote f eff v, Functor g)
     => Program (g (Fix f)) (Fix f) -> Program (g (FreeEnv eff v)) (FreeEnv eff v)
 foldProgram (Fragment defs program) = Fragment (map (fmap foldD) defs) (foldD program)
 
 foldProgramV :: forall f g eff v. (Denote f eff v, Functor g, VarList <: f)
-    => ProgramV (g (Fix f)) (Fix f) -> Program (g (FreeEnv eff v)) (FreeEnv eff v)
+    => ProgramV (Fix f) (g (Fix f)) (Fix f) -> Program (g (FreeEnv eff v)) (FreeEnv eff v)
 foldProgramV (WithVars vars (Fragment defs program)) = foldProgram 
-  (Fragment defs (injF $ VList vars program)) 
+  (Fragment defs (injF $ Weaken $ VList vars program)) 
 
 
 denoteDefs ::

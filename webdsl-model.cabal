@@ -63,6 +63,7 @@ library
         Definitions.GlobalVars.Denotation,
         Definitions.GlobalVars.Effects,
         Definitions.GlobalVars.ActionsFramework,
+        Definitions.GlobalVars.TemplatesFramework,
         Definitions.Pages.Syntax,
         Definitions.Pages.Denotation,
         Definitions.Pages.Framework,

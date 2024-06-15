@@ -15,6 +15,7 @@ import Actions.Modules.Eval.Denotation (refEnv, derefEnv)
 import Data.Maybe (fromJust)
 import Actions.Values
 import Actions.Handlers.Entity hiding (updateEntity)
+import Templates.Modules.Lift.Syntax
 
 -- denoteDef :: forall eff v. (MLState Address (Fix v) <: eff,
 --     EntityDecl <: v, LitAddress <: v, Random String String <: eff,
@@ -37,7 +38,7 @@ denote :: forall eff v.
   , Random String String <: eff
   , Show (v (Fix v))
   ) => VarList (FreeEnv eff (Fix v)) -> FreeEnv eff (Fix v)
-denote (VList list e) env = do
+denote (Weaken (VList list e)) env = do
   isSuccess <- connect (Nothing :: MaybeEntity v)
   env' <- cond' isSuccess
     (loadVariables env)

@@ -5,6 +5,8 @@ import Utils.Fix
 import Data.Maybe (fromJust)
 import Utils.Composition
 import Actions.Values
+import Templates.Modules.Lift.Syntax
+import Data.Bifunctor
 
 type DatabaseLoc = String --this contains file address to be checked
 -- if file exists, do not load the variables, instead populate
@@ -28,6 +30,11 @@ data GlobalVar e = VDef VName (EntityDecl e)
 
 type DatabaseEntry = String
 
-data VarList e = VList [GlobalVar e] e
+data VarListT e f = VList [GlobalVar e] f
     deriving Functor
+
+instance Bifunctor VarListT where 
+    bimap f g (VList list cont) = VList (map (fmap f) list) $ g cont
+
+type VarList = Weaken VarListT
 getNames = map (\(VDef name e) -> name)

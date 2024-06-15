@@ -63,7 +63,7 @@ defaultTypeH = Handler
       Int      -> k $ boxI (0 :: Int)
       Bool     -> k $ boxV False
       List     -> k $ injF []
-      S.Entity -> k $ injF Null
+      S.Entity s -> k $ injF Null
   }
 
 mutateH :: (Functor eff)
