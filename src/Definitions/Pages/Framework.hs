@@ -25,18 +25,18 @@ type Envs = PageDef + T.Envs
 type Eff'' = PageDefs Eff Eff' V + T.Eff''
 type EnvTy = (FreeEnv Eff V \/ PEnv Eff Eff' V)
 type DefSyntax = Envs (Fix Module) \/ Envs Module'
-type Program' = Program DefSyntax (PageCall (Fix Module))
+type Program' = Program DefSyntax (PageCall (Fix Module) Module')
 
 foldProgram :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Functor g)
-    => Program (g (Fix h) \/ g (BiFix f (Fix h))) (PageCall (Fix h))
-    -> Program (g (FreeEnv eff v \/ PEnv eff eff' v)) (PageCall (FreeEnv eff v))
+    => Program (g (Fix h) \/ g (BiFix f (Fix h))) (PageCall (Fix h) (BiFix f (Fix h)))
+    -> Program (g (FreeEnv eff v \/ PEnv eff eff' v)) (PageCall (FreeEnv eff v) ( PEnv eff eff' v))
 foldProgram (Fragment defs pg@(PCall name args)) 
-    = Fragment (fmap T.foldTDefs defs) (fmap foldD pg)
+    = Fragment (fmap T.foldTDefs defs) (bimap foldD foldDT pg)
 
 foldProgram (Program defs) 
     = Fragment (fmap T.foldTDefs defs) (PCall "root" []) -- can root have arguments? 
 
-runProgram :: Program (Envs EnvTy) (PageCall (FreeEnv Eff V)) -> Out'
+runProgram :: Program (Envs EnvTy) (PageCall (FreeEnv Eff V) ( PEnv Eff Eff' V)) -> Out'
 runProgram (Fragment defs pCall) = case unwrap
   $ handleDefs
   $ handle_ pagesH (TEnv { pages = []} :: TEnv Eff Eff' V )

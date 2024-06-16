@@ -38,10 +38,13 @@ import Actions.Effects
 --preprocessing
 type Envs = EntityDef + FDecl
 type EffP = EntityDefsEnv EffA V + FunctionEnv EffA V + End
-type EffA = Abort V + TempEHeap V' + DbRead (EntityDecl V) 
-    + Cond + Random String String + EHeap V' + MLState Address V +  DbWrite (EntityDecl V) +  End 
+type EffA = Abort V +  DbRead (EntityDecl V) 
+    + Cond + Random String String + TempEHeap V' + EHeap V' + MLState Address V +  DbWrite (EntityDecl V) +  End 
 type Sym = VarList + Module
 
+runProgram :: DenoteDef   sym e EffP 
+  => Program (sym e) (FreeEnv EffA V) 
+  -> FilePath -> IO (Out, [(Address, MaybeEntity V')])
 runProgram (Fragment defs exp) = case unwrap
   $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env EffA V )
   $ handle_ entityDefsH (Env { entityDefs =[]} :: Env EffA V ) 
@@ -73,10 +76,10 @@ run e env store file = unwrap
     $ handle_ (dbWriteH file) (Elems {vars = empty, entities = empty, classes = empty} :: Elems V') 
     $ handle_ heap' (makeEnv store)
     $ handle_ eHeapH []
+    $ handle_ tempEHeapH []
     $ handle uuidH
     $ handle condition
     $ handle mockDbReadH
-    $ handle_ tempEHeapH []
     $ handle funReturn
     $ e env
 

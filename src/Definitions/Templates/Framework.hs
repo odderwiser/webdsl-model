@@ -40,6 +40,7 @@ handleDefs defs = handle_
   $ handle_ templatesH (TEnv { templates = []} :: TEnv Eff Eff' V )
   defs
 
+makeTEnv :: Env eff v -> Env eff v -> TEnv eff eff' v -> TEnv eff eff' v
 makeTEnv eEnv fEnv tEnv = TEnv 
     { actionEnv = Env
       { varEnv = []

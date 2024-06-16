@@ -11,14 +11,23 @@ import Actions.Values
 
 derefEnv :: (Functor eff) 
   => VName -> Env eff v -> Free eff Address
-derefEnv name env = do
+derefEnv = derefEnv'
+
+derefEnv' :: (Functor eff', Functor eff) 
+  => VName -> Env eff v -> Free eff' Address
+derefEnv' name env = do
   (loc, env) <- handle_ environment env (deref name)
   return loc
 
 refEnv :: (Functor eff)
   => VName -> Address 
   -> Env eff v -> Free eff (Env eff v)
-refEnv name loc env = do
+refEnv = refEnv'
+
+refEnv' :: (Functor eff, Functor eff')
+  => VName -> Address 
+  -> Env eff v -> Free eff' (Env eff v)
+refEnv' name loc env = do
   (_, env') <- handle_ environment env (assign (name, loc))
   return env'
 

@@ -11,6 +11,7 @@ import Templates.Handlers.Env (templatesH, elementsH, pagesH)
 import Definitions.Templates.Syntax (TemplateDef(TDef))
 import Actions.Modules.Fun.Denotation (dropEnv, refVars, populateEnv)
 import Definitions.Pages.Syntax
+import Templates.Modules.Lift.Syntax (Weaken (Weaken))
 
 denote ::forall eff eff' v. (Stream HtmlOut <: eff'
   , MLState Address v <: eff, Lift eff eff' v, Functor eff,
@@ -47,7 +48,7 @@ populateTCall name args env = do
 denoteP :: (Stream HtmlOut <: eff'
   , MLState Address v <: eff, Lift eff eff' v, Functor eff,
   MLState Address v <: eff', State Address <: eff') =>
-    PageCall (FreeEnv eff v)
+    PageCall (FreeEnv eff v) (PEnv eff eff' v)
   -> PEnv eff eff' v
 denoteP (PCall name args) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) 

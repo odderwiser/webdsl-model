@@ -152,6 +152,7 @@ test-suite webdsl-tests
                         Actions.LoopTest,
                         Actions.StmtTest,
                         Actions.StrTest,
+                        Templates.GlobalVarTest,
                         Templates.LayoutTest,
                         Templates.PageTest,
                         Templates.TemplateTest,

@@ -95,16 +95,20 @@ class (Functor g, Functor h) => g <<: h where
   cmap :: g k -> h k
 
 instance {-# OVERLAPPING #-}  (Functor f, Functor h,
-   f <: h, f' <: h) => (f + f') <<: h where
-  cmap = \case
-    L f -> inj f
-    R f -> inj f
+   f <: h) => f <<: h where
+  cmap = inj 
 
-instance {-# OVERLAPPABLE #-} (Functor f, Functor g', g <<: h,
-  f <: h, (g + g')<<: h) => (f + (g + g')) <<: h where
+instance {-# OVERLAPPING #-}  (Functor f, Functor h,
+   f <: h, f' <<: h) => (f + f') <<: h where
   cmap = \case
     L f -> inj f
     R f -> cmap f
+
+-- instance {-# OVERLAPPABLE #-} (Functor f, Functor g', g <<: h,
+--   f <: h, (g + g')<<: h) => (f + (g + g')) <<: h where
+--   cmap = \case
+--     L f -> inj f
+--     R f -> cmap f
 
 
 infix 5 <

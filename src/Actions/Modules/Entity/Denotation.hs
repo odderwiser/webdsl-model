@@ -110,15 +110,15 @@ denoteEDecl decl@(EDecl entity props) env = do
 denoteEDecl' :: forall eff v.
   ( MLState Address (Fix v) <: eff, TempEHeap v <: eff, Random String String <: eff
   , Lit Address <: v, Lit Uuid <: v, LitStr <: v, Null <: v
-  , Show (v (Fix v))
+  , Show (v (Fix v)), EntityDecl <: v
   ) => EntityDecl (FreeEnv eff (Fix v))
-    -> Env eff (Fix v) -> Free eff (EntityDecl (Fix v))
+    -> Env eff (Fix v) -> Free eff (Fix v)
 denoteEDecl' decl@(EDecl entity props) env = do
   def@(EDef 
     name propsDefs iProps funs) <- derefH entity entityDefsH env
   values                        <- mapM ((\e -> e env) . snd) props
   implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
-  return $ mapProperties decl values implProps
+  return $ injF $ mapProperties decl values implProps
 
 
 denoteImplicitProps :: forall f e v. 

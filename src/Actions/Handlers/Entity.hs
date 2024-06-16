@@ -37,6 +37,7 @@ import qualified Data.Map as Map
 import Actions.Modules.Arith.Syntax (boxI)
 import System.Directory (doesFileExist)
 import qualified Data.Set as Set (Set, union, singleton)
+import Data.Map (Map)
 
 
 entityDefsH :: (Functor eff, Functor eff')
@@ -191,3 +192,7 @@ type TempEHeap v = MLState Address (MaybeEntity v)
 tempEHeapH :: (Functor g) => Handler_ (TempEHeap v) val
   [(Address, (MaybeEntity v))] g (val, [(Address, MaybeEntity v)])
 tempEHeapH = heap''
+
+tempEHeapH' :: (Functor g) => Handler_ (TempEHeap v) val
+  (Map Address (MaybeEntity v)) g val
+tempEHeapH' = heap'

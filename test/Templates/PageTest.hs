@@ -20,7 +20,7 @@ testEq id res syntax =  T.TestCase $
   T.assertEqual id res $ Tp.run $ foldDT syntax
 
 testEqProgram :: String -> Out'
-    -> Program DefSyntax (PageCall (Fix Module)) -> T.Test
+    -> Program DefSyntax (PageCall (Fix Module) Module') -> T.Test
 testEqProgram id res syntax =  TestCase $
   assertEqual id res $ runProgram $ foldProgram syntax
 
