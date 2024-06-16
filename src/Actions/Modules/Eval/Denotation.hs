@@ -7,6 +7,7 @@ import Utils
 import Syntax
 import Actions.Handlers.Heap (environment)
 import Actions.Values
+import Templates.Modules.Lift.Syntax
 
 
 derefEnv :: (Functor eff) 
@@ -40,22 +41,22 @@ denote :: forall v eff. ( MLState Address (Fix v) <: eff, Null <: v)
   => Eval (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 
-denote (Var name)            env = do
+denote (Weaken (Var name))            env = do
   loc         <- derefEnv name env
   deref loc
 
-denote (VDecl name k)        env = do
+denote (Weaken (VDecl name k))        env = do
   loc   <- ref (injF Null :: Fix v)
   env'  <- refEnv name loc env 
   k env'
 
-denote (VValDecl name e k) env = do
+denote (Weaken (VValDecl name e k)) env = do
   v     <- e env
   loc   <- ref v
   env'  <- refEnv name loc env
   k env'
 
-denote (VAssign name e)    env = do
+denote (Weaken (VAssign name e))    env = do
   v <- e env
   loc <- derefEnv name env
   assign (loc, v)

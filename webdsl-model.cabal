@@ -81,6 +81,8 @@ library
         Templates.Handlers.Layout,
         Templates.Modules.Attributes.Syntax,
         Templates.Modules.Attributes.Denotation,
+        Templates.Modules.Forms.Syntax,
+        Templates.Modules.Forms.Denotation,
         Templates.Modules.Layout.Syntax,
         Templates.Modules.Layout.Denotation,
         Templates.Modules.Lift.Syntax,

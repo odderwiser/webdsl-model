@@ -1,5 +1,5 @@
 module Definitions.GlobalVars.Syntax where
-import Actions.Modules.Eval.Syntax (Eval(Var), VName)
+import Actions.Modules.Eval.Syntax (VName)
 import Actions.Modules.Entity.Syntax (EntityDecl (EDecl))
 import Utils.Fix
 import Data.Maybe (fromJust)

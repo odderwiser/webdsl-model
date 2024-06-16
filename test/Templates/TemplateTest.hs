@@ -9,6 +9,7 @@ import Syntax as S
 import Actions.Arith as A
 import Actions.Syntax as A
 import Actions.Str as As
+import Templates.Modules.Lift.Denotation (consT)
 
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
