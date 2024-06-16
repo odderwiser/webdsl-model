@@ -16,9 +16,17 @@ import Data.Maybe (fromJust)
 import Actions.Values
 import Actions.Handlers.Entity hiding (updateEntity)
 import Templates.Modules.Lift.Syntax
+import Actions.Handlers.Heap (global)
 
 type VarEnv = MLState VName Address
 type Heap v = MLState Address (Fix v)
+
+refGlobalEnv :: (Functor eff, Functor eff')
+  => VName -> Address 
+  -> Env eff v -> Free eff' (Env eff v)
+refGlobalEnv name loc env = do
+  (_, env') <- handle_ global env (assign (name, loc))
+  return env' 
 
 denoteT :: forall f v g v'. ( Denote EntityDecl f (Fix v)
   , EHeap v <: g,  Heap v <: g, Heap v <: f
@@ -92,7 +100,7 @@ loadVariables env = do
     (entity :: EntityDecl (Fix v))  <- getEntity id
     assign (id, entity)
     (loc :: Address)                <- ref (box id :: Fix v)
-    refEnv' name loc env' )
+    refGlobalEnv name loc env' )
     env vars
 
 evaluateVariables ::
@@ -125,7 +133,7 @@ phase1 :: forall eff eff' v.
 phase1 env name = do
   (loc  :: Address)   <- ref (Nothing :: MaybeEntity v)
   (loc' :: Address)   <- ref (box loc :: Fix v)
-  refEnv' name loc' env
+  refGlobalEnv name loc' env
 
 phase2 :: forall eff eff' v.
   ( Functor eff', Heap v <: eff', TempEHeap v <: eff'

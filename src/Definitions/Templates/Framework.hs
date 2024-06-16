@@ -46,6 +46,7 @@ makeTEnv eEnv fEnv tEnv = TEnv
       { varEnv = []
       , entityDefs = entityDefs eEnv
       , defs = U.defs  fEnv
+      , globalVars = []
       }
     , templates = templates tEnv
     , elements = []

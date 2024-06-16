@@ -69,8 +69,24 @@ heapHandler' ret' size' lookup' insert' = Handler_ {
 
 environment :: (Functor g) => Handler_ (MLState VName Address)
   a (Env eff v) g (a, Env eff v)
-environment = mkAHandler varEnv lookup insertMap
+environment = Handler_
+  { ret_  = curry pure
+  , hdlr_ = \x env -> case x of
+      (Deref key k)     -> k (fromJust $ lookup key (varEnv env ++ globalVars env)) env
+      (Assign record k) -> k $ insertMap record env}
+
+global :: (Functor g) => Handler_ (MLState VName Address)
+  a (Env eff v) g (a, Env eff v)
+global = Handler_
+  { ret_  = curry pure
+  , hdlr_ = \x env -> case x of
+      (Deref key k)     -> k (fromJust $ lookup key (varEnv env ++ globalVars env)) env
+      (Assign record k) -> k $ insertMap' record env
+  }
 
 insertMap :: (VName, Address) -> Env eff v  -> Env eff v
 insertMap record env    = env { varEnv = record : varEnv env}
 --insertMap record (EList envs) = EList $ map (insertMap record) envs
+
+insertMap' :: (VName, Address) -> Env eff v  -> Env eff v
+insertMap' record env    = env { globalVars = record : globalVars env}

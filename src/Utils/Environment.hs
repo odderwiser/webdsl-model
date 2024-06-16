@@ -23,12 +23,10 @@ type TClosure eff eff' v = (TEnv eff eff' v, PEnv eff eff' v)
 
 data Env eff v = Env
     { varEnv     :: [(VName, Address)] -- this is for variables
+    , globalVars :: [(VName, Address)] 
     , defs       :: [Function eff v] -- this is for functions
     , entityDefs :: [EntityDef (FreeEnv eff v)] -- this is for all the entity definitions
     , objVarEnv  :: [(PName, Address)]
-    -- , entities   :: [((Address, Maybe Uuid), Maybe (EntityDecl Address))]
-    -- , attributes :: [(AttName, String)]
-    -- , pages      :: [(PgName, PageDef (FreeEnv eff v))]
     }
 
 data TEnv eff eff' v =  TEnv

@@ -137,3 +137,6 @@ instance DenoteT PageCall EffA Eff' V where
 
 instance DenoteT VarListT EffA Eff' V where
   denoteT = D.denoteT
+
+-- eDefEnv :: EName -> Props -> [FDecl e] -> EntityDecl e
+eDefEnv a b c = Left $ eDef a b c
