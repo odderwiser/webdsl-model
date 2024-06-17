@@ -4,6 +4,7 @@ import Utils
 import Templates.Modules.Layout.Syntax hiding (Title)
 import Templates.Modules.Attributes.Syntax
 import Text.HTML.TagSoup (Tag (TagText, TagOpen), renderTags, escapeHTML)
+import Actions.Effects (MLState)
 
 -- Layout ---
 type IsEscaped = Bool
@@ -11,19 +12,22 @@ type IsEscaped = Bool
 -- data RenderHtml k 
 --     = RenderStartTag ClassName (Maybe (AttList String)) String k
 --     | RenderOutput String IsEscaped k
---     | RenderString String k -- should this perhaps be escaped?
+--     | RenderString String k name="form_8548065150eda95eaa01b0c5e403383118308a5602" -- should this perhaps be escaped?
 --     | RenderEndTag String k
 --     | WriteTitle String k
 --     | RenderLink String k
 --     deriving Functor
 
-data HtmlOut = HeaderOut | TitleOut | BodyOut 
+data HtmlOut = HeaderOut | TitleOut | BodyOut | IsPageCall
 -- data Content =  
 data HtmlContent = Tag (Tag String) | Content 
 
 data Stream t k 
     = Out t String k
     deriving Functor
+
+isPageCall :: Stream HtmlOut <: f => Free f ()
+isPageCall = Op $ inj $ Out IsPageCall "" $ Pure ()
 
 renderTag :: (Stream HtmlOut  <: f) 
     => Tag String -> Free f ()
@@ -80,3 +84,5 @@ data Render v k
 --todo: rename to renderValue
 render :: (Render v <: f) => Fix v -> Free f String
 render v = Op $ inj $ Render v Pure
+
+type ReqParamsSt = MLState String String

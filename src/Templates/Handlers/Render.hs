@@ -11,18 +11,21 @@ import Actions.Values
 
 data PageR = PageR {
   title  :: Maybe String,
-  body   :: String
+  body   :: String,
+  pageCall :: Bool 
 }
 
 renderHtmlH :: forall remEff val v. (Functor remEff)
   => Handler_ (Stream HtmlOut)
   val PageR remEff (val, String)
 renderHtmlH = Handler_ {
-  ret_ = \x pageR -> pure (x, writeOut pageR),
+  ret_ = \x pageR -> pure (x, 
+    (if pageCall pageR then writeOutP else writeOut) pageR),
   hdlr_ = \effect pageR -> case effect of
     (Out BodyOut str k)    ->
       k $ writeBody str pageR
     (Out TitleOut title k) -> k $ pageR { title = Just title }
+    (Out IsPageCall token k) -> k $ pageR {pageCall = True }
   }
 
 -- mapAttributes :: [(String, String)] -> String
@@ -43,6 +46,20 @@ writeOut pageR =
     ++ "</head><body>"
     ++ body pageR
     ++ "</body></html>"
+
+writeOutP :: PageR -> [Char]
+writeOutP pageR =
+  let title' = case title pageR of
+        Nothing -> ""
+        Just t  -> "<title>"
+          ++ t
+          ++ "</title>"
+  in
+    "<html><head>"
+    ++ title'
+    ++ "</head>"
+    ++ body pageR
+    ++ "</html>"
 
 
 writeBody elem pageR = pageR { body = body pageR ++ elem}

@@ -42,7 +42,7 @@ import Templates.Modules.Lift.Denotation as Lt
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 
-type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address 
+type Eff' = ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address 
     + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite (EntityDecl V) + End
 type Envs = PageDef + TemplateDef + EntityDef + FDecl
 type Eff'' = PageDefs EffA Eff' V + TDefs EffA Eff' V + EntityDefsEnv EffA V 
@@ -59,7 +59,7 @@ foldProgramVT (WithVars vars (Fragment defs program)) = T.foldTProgram $ Fragmen
     (injBf $ VList vars program)
 
 foldProgramVT (WithVars vars (Program defs)) = foldProgramVT 
-    (WithVars vars (Fragment defs (injBf $ PCall "root" [])))
+    (WithVars vars (Fragment defs (injBf $ PCall "root" [] [])))
 
 instance DenoteDef FDecl EnvTy Eff'' where --- Maybe?? This works???
   denoteDef decl = F.denoteDef $ fmap (\(Left d) -> d) decl
@@ -97,6 +97,7 @@ run e file = do
         $ handle_ stateH []
         $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
         $ handle_ attributeH ("section", 1)
+        $ handle_ paramsH mkParamsMap
         $ e 
     return str
 

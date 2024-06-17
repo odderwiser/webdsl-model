@@ -27,23 +27,23 @@ testEqProgram id res syntax =  TestCase $
 defsSyn :: [DefSyntax]
 defsSyn = [
     pDefEnv "root" [] 
-      $ tCall "inside" [(A.add (int 2) (int 1), Int)],
+      [ tCall "inside" [(A.add (int 2) (int 1), Int)]],
     tDefEnv "inside" [("a", Int)] 
       $ output $ var "a" 
     ]
 
 pCallSyntax :: Program'
-pCallSyntax = Fragment defsSyn $ PCall "root" []
+pCallSyntax = Fragment defsSyn pCallRoot
 
 testPCall = testEqProgram "page Call"
-    (   "<html><head></head><body>"
+    (   "<html><head></head><body id=\"root\">"
      ++ "3</body></html>")
      pCallSyntax
 
 properProgramSyntax = Program defsSyn
 
 testProperProgram = testEqProgram "root page" 
-    (   "<html><head></head><body>"
+    (   "<html><head></head><body id=\"root\">"
      ++ "3</body></html>")
      properProgramSyntax
 

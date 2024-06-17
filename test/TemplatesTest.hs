@@ -4,6 +4,7 @@ import Templates.LayoutTest (lookupTests)
 import Templates.XmlTest (xmlTests)
 import Templates.TemplateTest (templateTests)
 import Templates.PageTest (pageTests)
+import Templates.FormsTest (testForms)
 
 
 templatesTests :: Test
@@ -12,4 +13,5 @@ templatesTests = TestList
   , xmlTests
   , templateTests
   , pageTests
+  , testForms
   ]

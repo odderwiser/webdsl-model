@@ -19,9 +19,10 @@ import Templates.Modules.Lift.Denotation as Lt
 import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt)
 import Actions.Handlers.Entity (uuidH, eHeapH)
+import Templates.Modules.Forms.Denotation as F
 
 type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
-type T = Layout +: S.Render +: Page +: LiftT Stmt
+type T = Forms +: Layout +: S.Render +: Page +: LiftT Stmt
 --running syntax
 type Module' = BiFix T (Fix Module)   
 type Out' = String
@@ -41,7 +42,7 @@ runApplied e = case unwrap
     $ handle_ heap (makeEnv [])
     $ handle renderH
     $ handle_ stateH []
-    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
+    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
     $ handle_ attributeH ("section", 1)
     $ e 
   of
@@ -80,3 +81,6 @@ instance DenoteT Page Eff Eff' V where
 
 instance DenoteT (LiftT Stmt) Eff Eff' V where
   denoteT = Lt.denote
+
+instance DenoteT Forms Eff Eff' V where
+  denoteT = F.denoteR

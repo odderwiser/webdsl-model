@@ -117,7 +117,8 @@ library
                         directory,
                         tagsoup,
                         uuid,
-                        utf8-string
+                        utf8-string,
+                        http-types,
     hs-source-dirs:     src
     default-language:   Haskell2010
     default-extensions: AllowAmbiguousTypes,
@@ -154,6 +155,7 @@ test-suite webdsl-tests
                         Actions.LoopTest,
                         Actions.StmtTest,
                         Actions.StrTest,
+                        Templates.FormsTest,
                         Templates.GlobalVarTest,
                         Templates.LayoutTest,
                         Templates.PageTest,

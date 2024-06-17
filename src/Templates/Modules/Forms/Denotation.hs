@@ -37,13 +37,15 @@ denoteR (Input writeLoc Bool) env = do
 denoteR (Input writeLoc String) env = do
     renderTag $ TagOpen "input" 
         [ ("type", "text")
+       -- , ("value", "")
         , ("class", "inputString")
-        , ("value", "")] -- possibly inputtable
+        ] -- possibly inputtable
 
 denoteR (Input writeLoc Int) env = do
     renderTag $ TagOpen "input" 
-        [ ("class", "inputInt")
-        , ("value", "0")] 
+        [ ("value", "0")
+        , ("class", "inputInt")
+        ] 
 -- I should have cases for entities but I can't figure out how they work
 
 denoteR (Submit action name) env = do

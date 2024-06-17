@@ -41,22 +41,22 @@ denote :: forall v eff. ( MLState Address (Fix v) <: eff, Null <: v)
   => Eval (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 
-denote (Weaken (Var name))            env = do
+denote (Var name)            env = do
   loc         <- derefEnv name env
   deref loc
 
-denote (Weaken (VDecl name k))        env = do
+denote (VDecl name k)        env = do
   loc   <- ref (injF Null :: Fix v)
   env'  <- refEnv name loc env 
   k env'
 
-denote (Weaken (VValDecl name e k)) env = do
+denote (VValDecl name e k) env = do
   v     <- e env
   loc   <- ref v
   env'  <- refEnv name loc env
   k env'
 
-denote (Weaken (VAssign name e))    env = do
+denote (VAssign name e)    env = do
   v <- e env
   loc <- derefEnv name env
   assign (loc, v)

@@ -26,7 +26,7 @@ testEqProgram id res syntax =  do
 defsSyn :: [DefSyntax]
 defsSyn = [
     pDefEnv "root" [] 
-      $ output $ pAccess (var "left") "a",
+      [output $ pAccess (var "left") "a"],
     tDefEnv "inside" [("a", Int)] 
       $ output $ pAccess (var "left") "a",
     eDefEnv "obj" [("a", Int)] []
@@ -36,10 +36,10 @@ pCallSyntax :: ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module))
 pCallSyntax = WithVars 
     [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")]) 
     , VDef "right" (EDecl "obj" [("a", int 5), ("other", var "left")])
-    ] $ Fragment defsSyn $ injBf $ PCall "root" []
+    ] $ Fragment defsSyn $ injBf $ pCallRoot
 
 testPCall = testEqProgram "test1"
-    (   "<html><head></head><body>"
+    (   "<html><head></head><body id=\"root\">"
      ++ "1</body></html>")
      pCallSyntax
 
