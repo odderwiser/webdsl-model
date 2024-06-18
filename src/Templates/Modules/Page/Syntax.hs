@@ -7,18 +7,18 @@ import Utils
 import Definitions.Pages.Syntax (PgName)
 
 
-data Page e f
-  = PNavigate PgName [e] String
-  | TCall TName (Attributes e) [(e, Type)] (Maybe f) -- template name, attributes, args, elements???
+data Page t a
+  = PNavigate PgName [a] String
+  | TCall TName (Attributes a) [(a, Type)] (Maybe t) -- template name, attributes, args, elements???
   | Elements -- retrieve and evaluate elements
   deriving Functor
 
 instance Bifunctor Page where
   bimap :: (a -> b) -> (c -> d) -> Page a c -> Page b d
-  bimap f g (PNavigate name list path) = PNavigate name (map f list) path
-  bimap f g (TCall name atts list elems) =
+  bimap g f(PNavigate name list path) = PNavigate name (map f list) path
+  bimap g f (TCall name atts list elems) =
     TCall name (fmap f atts) (map (first f) list) $ fmap g elems
-  bimap f g Elements = Elements
+  bimap g f Elements = Elements
 
 
 tCall :: (Page <:: f) => TName ->  [(e, Type)] -> BiFix f e

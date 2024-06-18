@@ -69,11 +69,11 @@ bubbleDown ::
 bubbleDown = fold Pure (Op . cmap)
 
 instance DenoteT Layout Eff Eff' V where
-  denoteT :: Layout (FreeEnv Eff V) (PEnv Eff Eff' V) -> PEnv Eff Eff' V
+  denoteT :: Layout (PEnv Eff Eff' V) (FreeEnv Eff V) -> PEnv Eff Eff' V
   denoteT = L.denote
 
 instance DenoteT S.Render Eff Eff' V where
-  denoteT :: S.Render (FreeEnv Eff V) (PEnv Eff Eff' V) -> PEnv Eff Eff' V
+  denoteT :: S.Render (PEnv Eff Eff' V) (FreeEnv Eff V) -> PEnv Eff Eff' V
   denoteT = X.denote
 
 instance DenoteT Page Eff Eff' V where

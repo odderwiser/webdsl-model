@@ -10,6 +10,7 @@ import Actions.Arith as A
 import Actions.Syntax as A
 import Actions.Str as As
 import Templates.Modules.Lift.Denotation (consT)
+import Definitions.Templates.Syntax (tDef)
 
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
@@ -24,10 +25,10 @@ testEqProgram id res syntax =  TestCase $
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    tDefEnv "nestedVars" [("a", Int), ("b", S.String)] 
-      $ tCall "inside" [(A.add (var "a") (int 1), Int)],
-    tDefEnv "inside" [("a", Int)] 
-      $ output $ var "a" 
+    tDef "nestedVars" [("a", Int), ("b", S.String)] 
+      [Right $ tCall "inside" [(A.add (var "a") (int 1), Int)]],
+    tDef "inside" [("a", Int)] 
+      [ Right $ output $ var "a" ] 
     ]
 
 tCallSyntax :: Program DefSyntax Module'
@@ -42,9 +43,9 @@ testTCall = testEqProgram "test TCall"
 
 elementsSyntax :: Program DefSyntax Module'
 elementsSyntax = Fragment 
-  [ tDefEnv "withElems" [] Ts.elements
-  , tDefEnv "callElems" [("a", Int)] $ tCallElems "withElems" [] $ output $ var "a" 
-  ] $ tCall "callElems" [((int 1), Int)]
+  [ tDef "withElems" [] [Right Ts.elements]
+  , tDef "callElems" [("a", Int)] [Right $ tCallElems "withElems" [] $ output $ var "a" ] 
+  ] $ tCall "callElems" [(int 1, Int)]
 
 testElems = testEqProgram "test Elems"
   (   "<html><head></head><body>"
@@ -53,8 +54,8 @@ testElems = testEqProgram "test Elems"
 
 elementsSyntaxCons :: Program DefSyntax Module'
 elementsSyntaxCons = Fragment 
-  [ tDefEnv "withElems" [] Ts.elements
-  , tDefEnv "callElems" [("a", Int)] $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a")
+  [ tDef "withElems" [] [ Right $ Ts.elements ]
+  , tDef "callElems" [("a", Int)] $ [ Right $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a") ]
   ] $ tCall "callElems" [((int 1), Int)]
 
 testElemsCons = testEqProgram "test Elems"

@@ -13,6 +13,7 @@ import Actions.Arith as A
 import Actions.Syntax
 import Definitions.Templates.Framework (tDefEnv)
 import Definitions.Pages.Syntax
+import Definitions.Templates.Syntax (tDef)
 
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
@@ -20,16 +21,16 @@ testEq id res syntax =  T.TestCase $
   T.assertEqual id res $ Tp.run $ foldDT syntax
 
 testEqProgram :: String -> Out'
-    -> Program DefSyntax (PageCall (Fix Module) Module') -> T.Test
+    -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
 testEqProgram id res syntax =  TestCase $
   assertEqual id res $ runProgram $ foldProgram syntax
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    pDefEnv "root" [] 
-      [ tCall "inside" [(A.add (int 2) (int 1), Int)]],
-    tDefEnv "inside" [("a", Int)] 
-      $ output $ var "a" 
+    pDef "root" [] 
+      [ Right $ tCall "inside" [(A.add (int 2) (int 1), Int)]],
+    tDef "inside" [("a", Int)] 
+      [Right $ output $ var "a"] 
     ]
 
 pCallSyntax :: Program'

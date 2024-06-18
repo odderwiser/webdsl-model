@@ -12,6 +12,8 @@ import Templates.Modules.Attributes.Syntax (AttName)
 import Definitions.Pages.Syntax (PageDef)
 import Actions.Modules.Entity.Syntax (EntityDecl)
 import Utils.Fix
+import Templates.Modules.Forms.Syntax (EvalT)
+import Utils.Composition
 
 type Function eff v = FDecl (FreeEnv eff v)
 type FreeEnv eff v = Env eff v -> Free eff v -- exp Env
@@ -32,8 +34,8 @@ data Env eff v = Env
 data TEnv eff eff' v =  TEnv
   { actionEnv   :: Env eff v
   , attributes  :: [(AttName, String)]
-  , pages       :: [PageDef (PEnv eff eff' v)]
-  , templates   :: [TemplateDef (PEnv eff eff' v)]
+  , pages       :: [PageDef (PEnv eff eff' v) (FreeEnv eff v)]
+  , templates   :: [TemplateDef (PEnv eff eff' v) (FreeEnv eff v)]
   , elements    :: [(Address, TClosure eff eff' v)]
   }
 

@@ -7,7 +7,7 @@ import Text.HTML.TagSoup
 
 denote :: forall eff eff' v. (E.Attribute <: eff', Stream HtmlOut <: eff',
     State AttList <: eff')
-  => Layout (FreeEnv eff v) (PEnv eff eff' v)
+  => Layout (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
 denote (Header False e) env = do
     renderTag $ TagOpen "h1" [("class", "header section1")]

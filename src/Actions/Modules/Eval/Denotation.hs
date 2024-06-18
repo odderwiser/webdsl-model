@@ -25,7 +25,7 @@ refEnv :: (Functor eff)
   -> Env eff v -> Free eff (Env eff v)
 refEnv = refEnv'
 
-refEnv' :: (Functor eff, Functor eff')
+refEnv' :: (Functor eff')
   => VName -> Address 
   -> Env eff v -> Free eff' (Env eff v)
 refEnv' name loc env = do

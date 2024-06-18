@@ -15,7 +15,7 @@ import Actions.Bool (true)
 import Actions.Arith (int)
 
 testEq :: ()
-  => String -> Out' -> Program DefSyntax (PageCall (Fix Module) Module') -> T.Test
+  => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
 testEq id res syntax =  T.TestCase $
   T.assertEqual id res $ runProgram $ foldProgram syntax
 
@@ -30,13 +30,13 @@ testForms= testEq "test Forms"
      ++ "<button class=\"button\">submit</button></form></body></html>")
     formsSyntax
 
-formsSyntax :: Program DefSyntax (PageCall (Fix Module) Module')
+formsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 formsSyntax = Program 
-    [ pDefEnv "root" [] [form False $ consT 
+    [ pDef "root" [] [Right $ form False $ consT 
         (label (S.str "labelBool") $ input true Bool)
         $ consT (label (S.str "labelInt") $ input (int 1) Int) 
         $ consT (label (S.str "labelStr") $ input (S.str "a") S.String)  
-        $ submit (int 1) (S.str "submit")]
+        $ submit (int 1) (S.str "submit") ]
     ]
 
 formsTests = T.TestList 

@@ -30,11 +30,11 @@ data GlobalVar e = VDef VName (EntityDecl e)
 
 type DatabaseEntry = String
 
-data VarListT e f = VList [GlobalVar e] f
+data VarListT t a = VList [GlobalVar a] t
     deriving Functor
 
 instance Bifunctor VarListT where 
-    bimap f g (VList list cont) = VList (map (fmap f) list) $ g cont
+    bimap g f (VList list cont) = VList (map (fmap f) list) $ g cont
 
 type VarList = Weaken VarListT
 getNames = map (\(VDef name e) -> name)

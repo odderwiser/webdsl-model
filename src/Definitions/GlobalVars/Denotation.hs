@@ -36,7 +36,7 @@ denoteT :: forall f v g v'. ( Denote EntityDecl f (Fix v)
   , Lit Uuid <: v,  Lit Address <: v
   , EntityDecl <: v, Null <: v,  Show (v (Fix v)), v' ~ Fix v
   , Functor g, Lift f g (Fix v)
-  ) => VarListT (FreeEnv f v') (PEnv f g v') -> PEnv f g v'
+  ) => VarListT  (PEnv f g v') (FreeEnv f v') -> PEnv f g v'
 denoteT (VList list t) env = do
   env' <- denoteWeaken' list (actionEnv env :: Env f v') U.lift
   t env {actionEnv = env'}

@@ -23,6 +23,7 @@ data (f + g) a
 instance (ToJSON (f a), ToJSON (g a)) => ToJSON ((f + g) a)
 instance (FromJSON (f a), FromJSON (g a)) => FromJSON ((f + g) a)
 
+
 instance (Show (f a), Show (g a)) => Show ((f + g) a) where
   show :: (Show (f a), Show (g a)) => (+) f g a -> String
   show (L f) = show f

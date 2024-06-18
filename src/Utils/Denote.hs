@@ -4,6 +4,7 @@ import Utils.Composition
 import Utils.Fix
 import Utils.Environment (FreeEnv, PEnv, Env)
 import Data.Bifunctor (Bifunctor (bimap))
+import Templates.Modules.Lift.Syntax (LiftT (..))
 
 
 class Functor sym => Denote sym eff v where
@@ -27,6 +28,13 @@ class (Functor eff', Functor sym) => DenoteDef sym e eff' where
     denoteDefList ::  [sym e] -> Free eff' [()]
     denoteDefList = mapM denoteDef
 
+class (Functor eff', Bifunctor sym) => DenoteDef' sym f e eff' where
+    denoteDef' :: sym f e  -> Free eff' ()
+    denoteDefList' ::  [sym f e] -> Free eff' [()]
+    denoteDefList' = mapM denoteDef'
+
+instance DenoteDef sym e eff' => DenoteDef' (LiftT sym) f e eff' where
+  denoteDef' (LiftE x)  = denoteDef x
 
 instance  (DenoteDef sym1 e eff', DenoteDef sym2 e eff')
     => DenoteDef (sym1 + sym2) e eff' where
@@ -36,12 +44,18 @@ instance  (DenoteDef sym1 e eff', DenoteDef sym2 e eff')
         (L f) -> denoteDef f
         (R f) -> denoteDef f
 
+instance  (DenoteDef' sym1 e f eff', DenoteDef' sym2 e f eff')
+    => DenoteDef' (sym1 +: sym2) e f eff' where
+    denoteDef' a = case a of
+        (L' f) -> denoteDef' f
+        (R' f) -> denoteDef' f
+
 foldDef (In f) = denoteDef f
 
 
 
 class DenoteT sym eff eff' v where
-    denoteT :: sym (FreeEnv eff v) (PEnv eff eff' v) -> PEnv eff eff' v 
+    denoteT :: sym (PEnv eff eff' v) (FreeEnv eff v) -> PEnv eff eff' v 
 
 instance  (DenoteT sym1 eff eff' v,
     DenoteT sym2 eff eff' v)
@@ -54,7 +68,7 @@ instance  (DenoteT sym1 eff eff' v,
 
 foldDT :: (Denote f eff v, DenoteT g eff eff' v, Bifunctor g)
     => BiFix g (Fix f) -> PEnv eff  eff' v 
-foldDT (BIn elem) = denoteT $ bimap foldD foldDT elem
+foldDT (BIn elem) = denoteT $ bimap foldDT foldD elem
 
 
 

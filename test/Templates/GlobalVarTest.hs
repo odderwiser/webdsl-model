@@ -12,11 +12,12 @@ import Templates.Syntax
 import Actions.Arith as A
 import Definitions.Pages.Syntax
 import Actions.Syntax
-import Definitions.Entity.Syntax (EntityDef(EDef))
+import Definitions.Entity.Syntax ( EntityDef(EDef), eDef' )
 import Definitions.GlobalVars.Syntax
+import Definitions.Templates.Syntax (tDef)
 
 testEqProgram :: ()
-  => String -> Out' -> ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module)) 
+  => String -> Out' -> ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module))
   ->  IO Test
 testEqProgram id res syntax =  do
     program <- runProgram (foldProgramVT syntax) ("./test/Actions/dbsT/"++id++ ".txt")
@@ -25,16 +26,16 @@ testEqProgram id res syntax =  do
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    pDefEnv "root" [] 
-      [output $ pAccess (var "left") "a"],
-    tDefEnv "inside" [("a", Int)] 
-      $ output $ pAccess (var "left") "a",
-    eDefEnv "obj" [("a", Int)] []
+    pDef "root" []
+      [ Right $ output $ pAccess (var "left") "a"],
+    tDef "inside" [("a", Int)]
+      [ Right $ output $ pAccess (var "left") "a"],
+    eDef' "obj" [("a", Int)] []
     ]
 
 pCallSyntax :: ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module))
-pCallSyntax = WithVars 
-    [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")]) 
+pCallSyntax = WithVars
+    [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")])
     , VDef "right" (EDecl "obj" [("a", int 5), ("other", var "left")])
     ] $ Fragment defsSyn $ injBf $ pCallRoot
 

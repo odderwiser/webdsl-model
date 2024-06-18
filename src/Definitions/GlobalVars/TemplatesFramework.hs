@@ -9,7 +9,7 @@ import Definitions.Fun.Syntax
 import Definitions.Entity.Syntax
 import Definitions.Templates.Syntax
 import Definitions.GlobalVars.ActionsFramework (EffA)
-import Definitions.GlobalVars.Denotation as D 
+import Definitions.GlobalVars.Denotation as D
 import Definitions.Templates.Denotation
 import Definitions.Pages.Denotation as P
 import Templates.Effects as E
@@ -42,52 +42,52 @@ import Templates.Modules.Lift.Denotation as Lt
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 
-type Eff' = ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address 
+type Eff' = ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address
     + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite (EntityDecl V) + End
-type Envs = PageDef + TemplateDef + EntityDef + FDecl
-type Eff'' = PageDefs EffA Eff' V + TDefs EffA Eff' V + EntityDefsEnv EffA V 
+type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
+type Eff'' = PageDefs EffA Eff' V + TDefs EffA Eff' V + EntityDefsEnv EffA V
     + FunctionEnv EffA V + End
-type EnvTy = (FreeEnv EffA V \/ PEnv EffA Eff' V)
+type EnvTy = FreeEnv EffA V 
 type T = PageCall +: VarListT +: Layout +: S.Render +: Page +: LiftT Stmt
-type DefSyntax = Envs (Fix Module) \/ Envs (BiFix T (Fix Module))
+type DefSyntax = Envs  (BiFix T (Fix Module)) (Fix Module) 
 
-foldProgramVT :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Functor g, VarListT <:: f, PageCall <:: f)
-    => ProgramV (Fix h) (g (Fix h) \/ g (BiFix f (Fix h))) (BiFix f (Fix h))
-    -> Program (g (FreeEnv eff v \/ PEnv eff eff' v)) (PEnv eff eff' v)
-foldProgramVT (WithVars vars (Fragment defs program)) = T.foldTProgram $ Fragment 
+foldProgramVT :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g, VarListT <:: f, PageCall <:: f)
+    => ProgramV (Fix h) (g (BiFix f (Fix h)) (Fix h)) (BiFix f (Fix h))
+    -> Program (g (PEnv eff eff' v) (FreeEnv eff v )) (PEnv eff eff' v)
+foldProgramVT (WithVars vars (Fragment defs program)) = T.foldTProgram $ Fragment
     defs
     (injBf $ VList vars program)
 
-foldProgramVT (WithVars vars (Program defs)) = foldProgramVT 
+foldProgramVT (WithVars vars (Program defs)) = foldProgramVT
     (WithVars vars (Fragment defs (injBf $ PCall "root" [] [])))
 
 instance DenoteDef FDecl EnvTy Eff'' where --- Maybe?? This works???
-  denoteDef decl = F.denoteDef $ fmap (\(Left d) -> d) decl
+  denoteDef = F.denoteDef
 
 instance DenoteDef EntityDef EnvTy Eff'' where
-  denoteDef decl = E.denoteDef $ fmap (\(Left d) -> d) decl
+  denoteDef = E.denoteDef
 
-instance DenoteDef TemplateDef EnvTy Eff'' where
-  denoteDef decl = T.denoteDefT $ fmap (\(Right d) -> d) decl
+instance DenoteDef' TemplateDef (PEnv EffA Eff' V) EnvTy Eff'' where
+  denoteDef' = T.denoteDefT
 
-instance DenoteDef PageDef EnvTy Eff'' where
-  denoteDef decl = P.denoteDef $ fmap (\(Right d) -> d) decl
+instance DenoteDef' PageDef (PEnv EffA Eff' V) EnvTy Eff'' where
+  denoteDef' = P.denoteDef
 
-runProgram :: Program (Envs EnvTy) (PEnv EffA Eff' V) -> FilePath 
+runProgram :: Program (Envs (PEnv EffA Eff' V) EnvTy) (PEnv EffA Eff' V) -> FilePath
     -> IO T.Out'
 runProgram (Fragment defs pCall) = case unwrap
   $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env EffA V )
   $ handle_ entityDefsH (Env { entityDefs =[]} :: Env EffA V )
   $ handle_ templatesH (TEnv { templates = []} :: TEnv EffA Eff' V )
   $ handle_ pagesH (TEnv { pages = []} :: TEnv EffA Eff' V )
-  $ denoteDefList defs of
-  ((((_, tEnv'), tEnv), env'), env) -> 
-    run $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}  
+  $ denoteDefList' defs of
+  ((((_, tEnv'), tEnv), env'), env) ->
+    run $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
 run:: Free Eff' () -> FilePath -> IO T.Out'
 run e file = do
     ((_, str), _) <- unwrap
-        $ handle_ (dbWriteH file) (Elems {vars = empty, entities = empty, classes = empty} :: Elems V') 
+        $ handle_ (dbWriteH file) (Elems {vars = empty, entities = empty, classes = empty} :: Elems V')
         $ handle_ heap (makeEnv [])
         $ handle_ eHeapH []
         $ handle_ tempEHeapH' (makeEnv [])
@@ -98,7 +98,7 @@ run e file = do
         $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
         $ handle_ attributeH ("section", 1)
         $ handle_ paramsH mkParamsMap
-        $ e 
+        $ e
     return str
 
 instance Lift EffA Eff' V where
@@ -113,7 +113,7 @@ handleExp e = bubbleDown
   $ handle mockDbReadH
   $ handle funReturn
   e
-    
+
 
 -- probably a beeter way to implement this??
 bubbleDown ::

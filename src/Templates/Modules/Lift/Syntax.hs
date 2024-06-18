@@ -5,12 +5,13 @@ import Data.Bifunctor
 import Utils.Composition
 import Utils.Fix
 
-data LiftT s e f = LiftT (s f)
+data LiftT s t a = LiftT (s t) | LiftE (s a)
   deriving Functor
 
 instance (Functor s) => Bifunctor (LiftT s) where
   bimap :: (a -> b) -> (c -> d) -> LiftT s a c -> LiftT s b d
-  bimap f g (LiftT s) = LiftT $ fmap g s 
+  bimap g f (LiftT s) = LiftT $ fmap g s
+  bimap g f (LiftE s) = LiftE $ fmap f s 
 
 data (Bifunctor s) => Weaken s e = Weaken (s e e)
 

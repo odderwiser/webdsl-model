@@ -12,6 +12,7 @@ import Definitions.Pages.Syntax (PgName, PageDef (..))
 import qualified Data.Map as Map
 import Templates.Effects (ReqParamsSt)
 import Data.IntMap (findWithDefault)
+import Definitions.Templates.Denotation (TDefs)
 
 type AttsEnv = MLState AttName String
 
@@ -21,10 +22,10 @@ attsH :: (Functor eff, Functor eff')
 attsH = mkAHandler U.attributes
    lookup (\record env -> env {U.attributes = record : U.attributes env})
 
-type TempEnv eff eff' v = MLState (TName, [Type]) (TemplateDef (PEnv eff eff' v))
+type TempEnv eff eff' v = MLState (TName, [Type]) (TemplateDef (PEnv eff eff' v) (Env eff v) )
 
 templatesH :: (Functor eff, Functor eff')
-  => Handler_ (TempEnv eff eff'' v)
+  => Handler_ (TDefs eff eff'' v)
   a (TEnv eff eff'' v) eff' (a, TEnv eff eff'' v)
 templatesH = mkRHandler U.templates
   (\ key env -> find (\val -> mapToKey val == key ) $ env)
@@ -33,7 +34,7 @@ templatesH = mkRHandler U.templates
 
 mapToKey (TDef name args _) = (name, map snd args)
 
-type PgEnv eff eff' v = MLState PgName (PageDef (PEnv eff eff' v))
+type PgEnv eff eff' v = MLState PgName (PageDef (PEnv eff eff' v) (FreeEnv eff v) )
 
 pagesH :: (Functor eff, Functor eff')
   => Handler_ (PgEnv eff eff'' v)
