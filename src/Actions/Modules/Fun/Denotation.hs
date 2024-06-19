@@ -72,3 +72,12 @@ refVars envTuples env = do
   (_, env') <- handle_ environment env
     $ mapM assign envTuples
   return env'
+
+refVar :: (Functor eff,
+  MLState Address v <: eff')
+  => VName -> Address -> Env eff v
+  -> Free eff' (Env eff v)
+refVar name value env = do
+  (_, env') <- handle_ environment env
+    $ assign (name, value)
+  return env'
