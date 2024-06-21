@@ -13,6 +13,7 @@ import Actions.Values
 import Actions.Str as S
 import Actions.Bool (true)
 import Actions.Arith (int)
+import Actions.Modules.Eval.Syntax (var)
 
 testEq :: ()
   => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
@@ -22,13 +23,19 @@ testEq id res syntax =  T.TestCase $
 --- Tests  
 
 testForms= testEq "test Forms" 
-    (   "<html><head></head>"
-     ++ "<body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\">"
-     ++ "<label>labelBool</label><input type=\"checkbox\" class=\"inputBool\">"
-     ++ "<label>labelInt</label><input value=\"0\" class=\"inputInt\">"
-     ++ "<label>labelStr</label><input type=\"text\" class=\"inputString\">"
-     ++ "<button class=\"button\">submit</button></form></body></html>")
-    formsSyntax
+  (formsOutput 1)
+  formsSyntax
+
+testFormsWithVars = testEq "test vars"
+  (formsOutput 0)
+  formsWithVarsSyntax
+
+formsOutput int = "<html><head></head>"
+  ++ "<body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\">"
+  ++ "<label>labelBool</label><input type=\"checkbox\" class=\"inputBool\" value=\"true\">"
+  ++ "<label>labelInt</label><input value=\""++ show int++"\" class=\"inputInt\">"
+  ++ "<label>labelStr</label><input type=\"text\" value=\"a\" class=\"inputString\">"
+  ++ "<button class=\"button\">submit</button></form></body></html>"
 
 formsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 formsSyntax = Program 
@@ -39,6 +46,21 @@ formsSyntax = Program
         $ submit (int 1) (S.str "submit") ]
     ]
 
+formsWithVarsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
+formsWithVarsSyntax = Program 
+    [ pDef "root" [] 
+      [ Right $ form False $ consT 
+        (label (S.str "labelBool") $ input (var "b") Bool)
+        $ consT (label (S.str "labelInt") $ input (var "a") Int) 
+        $ consT (label (S.str "labelStr") $ input (var "c") S.String)  
+        $ submit (int 1) (S.str "submit")
+      , Left $ VarDeclT "a"
+      , Left $ VarInit "b" true
+      , Left $ VarInit "c" (S.str "a")
+      ]
+    ]
+
 formsTests = T.TestList 
     [ testForms
+    , testFormsWithVars
     ]

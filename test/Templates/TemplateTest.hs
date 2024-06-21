@@ -54,9 +54,9 @@ testElems = testEqProgram "test Elems"
 
 elementsSyntaxCons :: Program DefSyntax Module'
 elementsSyntaxCons = Fragment 
-  [ tDef "withElems" [] [ Right $ Ts.elements ]
-  , tDef "callElems" [("a", Int)] $ [ Right $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a") ]
-  ] $ tCall "callElems" [((int 1), Int)]
+  [ tDef "withElems" [] [ Right Ts.elements ]
+  , tDef "callElems" [("a", Int)] [ Right $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a") ]
+  ] $ tCall "callElems" [(int 1, Int)]
 
 testElemsCons = testEqProgram "test Elems"
   (   "<html><head></head><body>"
