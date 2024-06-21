@@ -37,14 +37,14 @@ import qualified Templates.Modules.Page.Denotation as P
 import qualified Templates.Modules.Lift.Denotation as Lt
 import qualified Templates.Modules.Forms.Denotation as F
 import Templates.Framework (Module')
-import Templates.Handlers.Forms (singleAccessState, idH)
+import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState)
 
 type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
 type Eff'' = PageDefs Eff Eff' V + TDefs Eff Eff' V + EntityDefsEnv Eff V + FunctionEnv Eff V + End
 type EnvTy = FreeEnv Eff V
 type DefSyntax = Envs Module' (Fix Module)
 type Program' = Program DefSyntax (PageCall T.Module' (Fix Module))
-type Eff' = Random Label LabelId + State (Maybe LabelId) + ReqParamsSt + Attribute + Stream HtmlOut
+type Eff' = State E.Seed + Random Label LabelId + State (Maybe LabelId) + ReqParamsSt + Attribute + Stream HtmlOut
   + State AttList + E.Render V' + MLState Address V + State Address + End
 
 
@@ -91,8 +91,9 @@ runApplied e = case unwrap
     $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
     $ handle_ attributeH ("section", 1)
     $ handle_ paramsH mkParamsMap
-     $ handle_ singleAccessState Nothing
+    $ handle_ singleAccessState Nothing
     $ handle idH
+    $ handle_ autoIncrementState (E.Seed 0)
     $ e
   of
     ((_, str), heap)    -> str

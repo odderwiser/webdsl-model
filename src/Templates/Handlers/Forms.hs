@@ -16,6 +16,15 @@ singleAccessState = Handler_ {
     (PutS v k, box) -> k v 
 }
 
+autoIncrementState :: (Functor remEff, Num a) =>
+  Handler_ (State a) val a remEff val
+autoIncrementState = Handler_ {
+  ret_ = \val rep -> pure val,
+  hdlr_= \eff box -> case (eff, box) of
+    (GetS k, i) -> k i (i+1)
+    (PutS v k, box) -> k v 
+}
+
 idH :: (Functor eff)
   => Handler (Random String String) val eff val
 idH = Handler

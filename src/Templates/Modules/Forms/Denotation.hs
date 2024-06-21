@@ -19,6 +19,7 @@ import Actions.Arith (LitInt)
 denoteR :: forall eff eff' v v'.
   ( E.Attribute <: eff', Stream HtmlOut <: eff'
   , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
+  , State Seed <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
   , Lift eff eff' v)
   => Forms (PEnv eff eff' v) (FreeEnv eff v)
@@ -39,36 +40,43 @@ denoteR (Label name contents) env = do -- attribute "for"
   contents env
 
 denoteR (Input exp Bool) env = do
-  exp'      <- lift $ exp $ actionEnv env
-  value     <- case (projF exp':: Maybe (LitBool v)) of
+  exp'         <- lift $ exp $ actionEnv env
+  value        <- case (projF exp':: Maybe (LitBool v)) of
     Just (V True)  -> return [("value", "true")]
     Just (V False) -> return [("value", "false")]
     Nothing        -> return []
-  label <- get
+  label        <- get
+  seed :: Seed <- get
+  inputName    <- encode $ show label ++ show value ++  show seed
   renderInput label
-    $  [("type", "checkbox"), ("class", "inputBool")] 
+    $  [("class", "inputBool"), ("type", "checkbox"), ("name", inputName)] 
     ++ value
 
 denoteR (Input exp String) env = do
-  exp'      <- lift $ exp $ actionEnv env
-  value     <- case (projF exp':: Maybe (LitStr v)) of
+  exp'         <- lift $ exp $ actionEnv env
+  value        <- case (projF exp':: Maybe (LitStr v)) of
     Just (V str) -> return [("value", str)]
     Nothing      -> return [] 
-  label <- get
+  label        <- get
+  seed :: Seed <- get
+  inputName    <- encode $ show label ++ show value ++ show seed
   renderInput label
-    $  [("type", "text")] 
-    ++ value 
-    ++ [("class", "inputString")]
+    $  [("class", "inputString"), ("name", inputName), ("type", "text")] 
+    ++ value
+
 
 denoteR (Input exp Int) env = do
-  exp'      <- lift $ exp $ actionEnv env
-  value     <- case (projF exp':: Maybe (LitInt v)) of
+  exp'         <- lift $ exp $ actionEnv env
+  value        <- case (projF exp':: Maybe (LitInt v)) of
     Just (V int) -> return int
     Nothing      -> return 0 
-  label <- get
+  label        <- get
+  seed :: Seed <- get
+  inputName    <- encode $ show label ++ show value ++ show seed
   renderInput label
-    [ ("value", show value)
-    , ("class", "inputInt")
+    [ ("class", "inputInt")
+    , ("name", inputName)
+    , ("value", show value)
     ]
 -- I should have cases for entities but I can't figure out how they work
 
@@ -79,7 +87,8 @@ denoteR (Submit action name) env = do
   renderPlainText (unbox name) True
   renderTag $ TagClose "button"
 
-renderInput :: (Stream HtmlOut <: f, State (Maybe (LabelId)) <: f) => Maybe LabelId ->  [H.Attribute String] -> Free f ()
+renderInput :: (Stream HtmlOut <: f, State (Maybe LabelId) <: f) 
+  => Maybe LabelId ->  [H.Attribute String] -> Free f ()
 renderInput label atts = do 
   id <- case label of 
     Just label -> return [("id", label)]

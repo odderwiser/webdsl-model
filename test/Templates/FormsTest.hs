@@ -40,7 +40,7 @@ testFormsWithVars = testEqId "test vars"
   formsWithVarsSyntax
 
 type IsEqualToLast = Bool
-data HtmlOutput = Uuid String | Id IsEqualToLast | Plain String
+data HtmlOutput = Uuid String | Id IsEqualToLast | Name | Plain String
 
 compareRes (Plain expected : tail) lastId output idMap result =
   let (bool, res) = compareRes tail lastId (drop (length expected) output) idMap (result++expected)
@@ -54,6 +54,10 @@ compareRes (Id True     : tail) lastId output idMap result =
   let id = take 32 output
       (bool, res) = compareRes tail "" (drop 32 output) idMap (result ++ id)
   in  (take 32 output == lastId && bool, res)
+compareRes (Name     : tail) lastId output idMap result =
+  let id = take 32 output
+      (bool, res) = compareRes tail "" (drop 32 output) (Set.insert id idMap) (result ++ id)
+  in  (Set.notMember id idMap && bool, res) 
 compareRes []                      lastId "" idMap result = (True, result)
 compareRes []                      lastId oopsie idMap result = (False, result++ "oopsie: "++ oopsie)
 
@@ -62,11 +66,14 @@ compareRes []                      lastId oopsie idMap result = (False, result++
 formsOutput int =
   [ Plain "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
   , Id False, Plain "\">labelBool</label><input id=\""
-  , Id True,  Plain  "\" type=\"checkbox\" class=\"inputBool\" value=\"true\"><label for=\""
+  , Id True , Plain  "\" class=\"inputBool\" type=\"checkbox\" name=\""
+  , Name    , Plain "\" value=\"true\"><label for=\""
   , Id False, Plain "\">labelInt</label><input id=\""
-  , Id True,  Plain $ "\" value=\""++ show int++"\" class=\"inputInt\"><label for=\""
+  , Id True , Plain "\" class=\"inputInt\" name=\""
+  , Name    , Plain $ "\" value=\""++ show int++"\"><label for=\""
   , Id False, Plain "\">labelStr</label><input id=\""
-  , Id True,  Plain $ "\" type=\"text\" value=\"a\" class=\"inputString\">"
+  , Id True , Plain "\" class=\"inputString\" name=\""
+  , Name    , Plain $ "\" type=\"text\" value=\"a\">"
   ++ "<button class=\"button\">submit</button></form></body></html>" ]
 
 formsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
@@ -106,7 +113,8 @@ doubleLabelOutput =
   [ Plain "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
   , Id False, Plain "\">unused</label><label for=\""
   , Id False, Plain "\">used</label><input id=\""
-  , Id True,  Plain "\" type=\"text\" value=\"a\" class=\"inputString\"></form></body></html>" ]
+  , Id True ,  Plain "\" class=\"inputString\" name=\""
+  , Name    , Plain "\" type=\"text\" value=\"a\"></form></body></html>" ]
 
 noLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 noLabelSyntax = Program
@@ -124,8 +132,10 @@ noLabelOutput =
   [ Plain "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
   , Id False, Plain "\">unused</label><label for=\""
   , Id False, Plain "\">used</label><input id=\""
-  , Id True,  Plain $ "\" type=\"text\" value=\"a\" class=\"inputString\">"
-    ++ "<input type=\"checkbox\" class=\"inputBool\" value=\"false\">"
+  , Id True,  Plain $ "\" class=\"inputString\" name=\""
+  , Name    , Plain $ "\" type=\"text\" value=\"a\">"
+    ++ "<input class=\"inputBool\" type=\"checkbox\" name=\""
+  , Name    , Plain "\" value=\"false\">"
   , Plain "</form></body></html>" ]
 
 formsTests = T.TestList

@@ -20,9 +20,9 @@ import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt)
 import Actions.Handlers.Entity (uuidH, eHeapH)
 import Templates.Modules.Forms.Denotation as F
-import Templates.Handlers.Forms (singleAccessState, idH)
+import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState)
 
-type Eff' = Random Label LabelId + State (Maybe LabelId) 
+type Eff' = State Seed + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
 type T = Forms +: Layout +: S.Render +: Page +: LiftT Stmt
 --running syntax
@@ -48,6 +48,7 @@ runApplied e = case unwrap
     $ handle_ attributeH ("section", 1)
     $ handle_ singleAccessState Nothing
     $ handle idH
+    $ handle_ autoIncrementState (Seed 0)
     $ e 
   of
     ((_, str), heap)    -> str

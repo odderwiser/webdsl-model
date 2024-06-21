@@ -86,7 +86,8 @@ render :: (Render v <: f) => Fix v -> Free f String
 render v = Op $ inj $ Render v Pure
 
 type ReqParamsSt = MLState String String
-type Seed = Int
+newtype Seed = Seed Int
+    deriving (Eq, Num, Show)
 type Label = String
 type LabelId = String
 

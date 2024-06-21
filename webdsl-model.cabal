@@ -130,6 +130,7 @@ library
                         FlexibleInstances,
                         FunctionalDependencies,
                         GADTs,
+                        GeneralizedNewtypeDeriving,
                         InstanceSigs,
                         LambdaCase,
                         MultiParamTypeClasses,
