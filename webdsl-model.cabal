@@ -77,6 +77,7 @@ library
         Templates.Framework,
         Templates.Effects,
         Templates.Handlers.Env,
+        Templates.Handlers.Forms,
         Templates.Handlers.Render,
         Templates.Handlers.Layout,
         Templates.Modules.Attributes.Syntax,

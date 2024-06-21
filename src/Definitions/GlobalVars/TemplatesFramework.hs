@@ -41,9 +41,11 @@ import Templates.Modules.Page.Denotation as P
 import Templates.Modules.Lift.Denotation as Lt
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
+import Templates.Handlers.Forms (singleAccessState, idH)
 
-type Eff' = ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address
-    + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite (EntityDecl V) + End
+type Eff' = Random Label LabelId + State (Maybe LabelId) 
+  + ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address
+  + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite (EntityDecl V) + End
 type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
 type Eff'' = PageDefs EffA Eff' V + TDefs EffA Eff' V + EntityDefsEnv EffA V
     + FunctionEnv EffA V + End
@@ -86,20 +88,22 @@ runProgram (Fragment defs pCall) = case unwrap
 
 run:: Free Eff' () -> FilePath -> IO T.Out'
 run e file = do
-    ((_, str), _) <- unwrap
-        $ handle_ (dbWriteH file) (Elems {vars = empty, entities = empty, classes = empty} :: Elems V')
-        $ handle_ heap (makeEnv [])
-        $ handle_ eHeapH []
-        $ handle_ tempEHeapH' (makeEnv [])
-        $ handle mockDbReadH
-        $ handle_ stateElH Nothing
-        $ handle renderH
-        $ handle_ stateH []
-        $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
-        $ handle_ attributeH ("section", 1)
-        $ handle_ paramsH mkParamsMap
-        $ e
-    return str
+  ((_, str), _) <- unwrap
+    $ handle_ (dbWriteH file) (Elems {vars = empty, entities = empty, classes = empty} :: Elems V')
+    $ handle_ heap (makeEnv [])
+    $ handle_ eHeapH []
+    $ handle_ tempEHeapH' (makeEnv [])
+    $ handle mockDbReadH
+    $ handle_ stateElH Nothing
+    $ handle renderH
+    $ handle_ stateH []
+    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
+    $ handle_ attributeH ("section", 1)
+    $ handle_ paramsH mkParamsMap
+    $ handle_ singleAccessState Nothing
+    $ handle idH
+    $ e
+  return str
 
 instance Lift EffA Eff' V where
   lift  = handleExp

@@ -9,7 +9,7 @@ import Actions.Values (unbox, Lit (V), Null (Null))
 import Actions.Str
 import Syntax
 import Actions.Bool (LitBool)
-import Actions.Effects (ref, MLState)
+import Actions.Effects (ref, MLState, Random)
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Modules.Eval.Denotation (refEnv')
 import qualified Actions.Modules.Eval.Syntax
@@ -18,8 +18,8 @@ import Actions.Arith (LitInt)
 
 denoteR :: forall eff eff' v v'.
   ( E.Attribute <: eff', Stream HtmlOut <: eff'
-  , State AttList <: eff', LitStr <: v', LitBool <: v', LitInt <: v'
-  , v ~ Fix v'
+  , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
+  , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
   , Lift eff eff' v)
   => Forms (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
@@ -29,9 +29,12 @@ denoteR (Form False body) env = do -- here name and id is generated, and action 
   renderTag $ TagClose "form"
 
 denoteR (Label name contents) env = do -- attribute "for"
-  renderTag $ TagOpen "label" []
-  name' <- lift $ name $ actionEnv env
-  renderPlainText (unbox name') True
+  name'      <- lift $ name $ actionEnv env
+  nameId     <- encode (unbox name' :: Label)
+  put       (Just nameId)
+  renderTag $ TagOpen "label" [("for", nameId)]
+  renderPlainText 
+    (unbox name') True
   renderTag $ TagClose "label"
   contents env
 
@@ -40,8 +43,9 @@ denoteR (Input exp Bool) env = do
   value     <- case (projF exp':: Maybe (LitBool v)) of
     Just (V True)  -> return [("value", "true")]
     Just (V False) -> return [("value", "false")]
-    Nothing        -> return [] 
-  renderInput
+    Nothing        -> return []
+  label <- get
+  renderInput label
     $  [("type", "checkbox"), ("class", "inputBool")] 
     ++ value
 
@@ -50,7 +54,8 @@ denoteR (Input exp String) env = do
   value     <- case (projF exp':: Maybe (LitStr v)) of
     Just (V str) -> return [("value", str)]
     Nothing      -> return [] 
-  renderInput 
+  label <- get
+  renderInput label
     $  [("type", "text")] 
     ++ value 
     ++ [("class", "inputString")]
@@ -60,7 +65,8 @@ denoteR (Input exp Int) env = do
   value     <- case (projF exp':: Maybe (LitInt v)) of
     Just (V int) -> return int
     Nothing      -> return 0 
-  renderInput
+  label <- get
+  renderInput label
     [ ("value", show value)
     , ("class", "inputInt")
     ]
@@ -73,8 +79,12 @@ denoteR (Submit action name) env = do
   renderPlainText (unbox name) True
   renderTag $ TagClose "button"
 
-renderInput :: (Stream HtmlOut <: f) => [H.Attribute String] -> Free f ()
-renderInput atts = renderTag $ TagOpen "input" atts
+renderInput :: (Stream HtmlOut <: f, State (Maybe (LabelId)) <: f) => Maybe LabelId ->  [H.Attribute String] -> Free f ()
+renderInput label atts = do 
+  id <- case label of 
+    Just label -> return [("id", label)]
+    Nothing    -> return []  
+  renderTag $ TagOpen "input" $ id ++ atts
 
 denoteNames ::  forall eff eff' v.
   ( Heap v <: eff', Null <: v

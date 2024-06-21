@@ -4,7 +4,7 @@ import Utils
 import Templates.Modules.Layout.Syntax hiding (Title)
 import Templates.Modules.Attributes.Syntax
 import Text.HTML.TagSoup (Tag (TagText, TagOpen), renderTags, escapeHTML)
-import Actions.Effects (MLState)
+import Actions.Effects (MLState, random, Random)
 
 -- Layout ---
 type IsEscaped = Bool
@@ -86,3 +86,9 @@ render :: (Render v <: f) => Fix v -> Free f String
 render v = Op $ inj $ Render v Pure
 
 type ReqParamsSt = MLState String String
+type Seed = Int
+type Label = String
+type LabelId = String
+
+encode ::  (Show e, Random Label v <: f) => e -> Free f v
+encode = random

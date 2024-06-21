@@ -19,13 +19,13 @@ import Definitions.Entity.Syntax (EntityDef)
 import Definitions.Templates.Syntax (TemplateDef)
 import Definitions.Templates.Framework (handleDefs)
 import Templates.Modules.Page.Denotation (denoteP)
-import Templates.Effects (ReqParamsSt, Attribute, Stream, HtmlOut, State)
+import Templates.Effects (ReqParamsSt, Attribute, Stream, HtmlOut, State, LabelId, Label)
 import Templates.Handlers.Render as R
 import Templates.Handlers.Layout
 import Actions.Handlers.Heap
 import Templates.Modules.Attributes.Syntax (AttList)
 import qualified Templates.Effects as E
-import Actions.Effects (MLState)
+import Actions.Effects (MLState, Random)
 import Syntax (Address)
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
@@ -37,13 +37,14 @@ import qualified Templates.Modules.Page.Denotation as P
 import qualified Templates.Modules.Lift.Denotation as Lt
 import qualified Templates.Modules.Forms.Denotation as F
 import Templates.Framework (Module')
+import Templates.Handlers.Forms (singleAccessState, idH)
 
 type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
 type Eff'' = PageDefs Eff Eff' V + TDefs Eff Eff' V + EntityDefsEnv Eff V + FunctionEnv Eff V + End
 type EnvTy = FreeEnv Eff V
 type DefSyntax = Envs Module' (Fix Module)
 type Program' = Program DefSyntax (PageCall T.Module' (Fix Module))
-type Eff' = ReqParamsSt + Attribute + Stream HtmlOut 
+type Eff' = Random Label LabelId + State (Maybe LabelId) + ReqParamsSt + Attribute + Stream HtmlOut
   + State AttList + E.Render V' + MLState Address V + State Address + End
 
 
@@ -51,10 +52,10 @@ type Eff' = ReqParamsSt + Attribute + Stream HtmlOut
 foldProgram :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
     => Program ((g (BiFix f (Fix h)))  (Fix h)) (PageCall (BiFix f (Fix h)) (Fix h))
     -> Program ((g ( PEnv eff eff' v)) (FreeEnv eff v)) (PageCall ( PEnv eff eff' v) (FreeEnv eff v))
-foldProgram (Fragment defs pg@(PCall name args params)) 
+foldProgram (Fragment defs pg@(PCall name args params))
     = Fragment (fmap T.foldTDefs defs) (bimap foldDT foldD pg)
 
-foldProgram (Program defs) 
+foldProgram (Program defs)
     = Fragment (fmap T.foldTDefs defs) (PCall "root" [] []) -- can root have arguments? 
 
 runProgram :: Program (Envs (PEnv Eff Eff' V) EnvTy) (PageCall (PEnv Eff Eff' V) (FreeEnv Eff V)) -> T.Out'
@@ -64,13 +65,13 @@ runProgram (Fragment defs pCall) = case unwrap
   $ handle_ templatesH (TEnv { templates = []} :: TEnv Eff Eff' V )
   $ handle_ pagesH (TEnv { pages = []} :: TEnv Eff Eff' V )
   $ denoteDefList' defs of
-  ((((_, tEnv'), tEnv), env'), env) -> 
+  ((((_, tEnv'), tEnv), env'), env) ->
     runApplied
     $ denoteP pCall
-    $ ((makeTEnv env' env tEnv) :: TEnv Eff Eff' V) { U.pages = pages tEnv'} 
+    $ ((makeTEnv env' env tEnv) :: TEnv Eff Eff' V) { U.pages = pages tEnv'}
 
 makeTEnv :: Env eff v -> Env eff v -> TEnv eff eff' v -> TEnv eff eff' v
-makeTEnv eEnv fEnv tEnv = TEnv 
+makeTEnv eEnv fEnv tEnv = TEnv
     { actionEnv = Env
       { varEnv = []
       , entityDefs = entityDefs eEnv
@@ -90,18 +91,20 @@ runApplied e = case unwrap
     $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
     $ handle_ attributeH ("section", 1)
     $ handle_ paramsH mkParamsMap
-    $ e 
+     $ handle_ singleAccessState Nothing
+    $ handle idH
+    $ e
   of
     ((_, str), heap)    -> str
 
 test exp env env' tEnv tEnv' = denoteP exp
-  $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'} 
+  $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
 instance DenoteDef' PageDef (PEnv Eff Eff' V) EnvTy Eff'' where
   denoteDef' = D.denoteDef
 
 instance DenoteDef FDecl EnvTy Eff'' where --- Maybe?? This works???
-  denoteDef = F.denoteDef 
+  denoteDef = F.denoteDef
 
 instance DenoteDef EntityDef EnvTy Eff'' where
   denoteDef = E.denoteDef
@@ -117,7 +120,7 @@ handleExp e = bubbleDown
   $ handle funReturn
   $ handle condition
   e
-    
+
 
 -- probably a beeter way to implement this??
 bubbleDown ::
@@ -145,4 +148,4 @@ instance DenoteT (LiftT Stmt) Eff Eff' V where
 instance DenoteT Forms Eff Eff' V where
   denoteT = F.denoteR
 
-pDefEnv a b c = Right $ pDef a b c 
+pDefEnv a b c = Right $ pDef a b c

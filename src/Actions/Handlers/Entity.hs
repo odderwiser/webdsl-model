@@ -14,9 +14,7 @@ import Actions.Handlers.Env (dropAction, mkAHandler, mkRHandler, mkAHandler')
 import Data.List (find)
 import Definitions.Entity.Denotation
 import Definitions.Entity.Syntax
-import Data.UUID.V1 (nextUUID)
 import Data.UUID (toString)
-import Data.UUID.V4 (nextRandom)
 import Data.UUID.V3 (generateNamed, namespaceOID)
 import qualified Codec.Binary.UTF8.String as S (encode, decode)
 import Actions.Modules.Str.Syntax

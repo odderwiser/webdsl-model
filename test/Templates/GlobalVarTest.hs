@@ -20,7 +20,7 @@ testEqProgram :: ()
   => String -> Out' -> ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module))
   ->  IO Test
 testEqProgram id res syntax =  do
-    program <- runProgram (foldProgramVT syntax) ("./test/Actions/dbsT/"++id++ ".txt")
+    program <- runProgram (foldProgramVT syntax) ("./test/Templates/dbs/"++id++ ".txt")
     return $ TestCase $
         assertEqual id res program
 

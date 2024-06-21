@@ -9,7 +9,7 @@ import Templates.Handlers.Render as R
 import Templates.Handlers.Layout
 import Actions.Handlers.Return (funReturn, funReturn')
 import Actions.Handlers.Cond (condition)
-import Actions.Effects (MLState)
+import Actions.Effects (MLState, Random)
 import Syntax (Address)
 import Actions.Handlers.Heap (heap, makeEnv)
 import Templates.Modules.Layout.Denotation as L
@@ -20,8 +20,10 @@ import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt)
 import Actions.Handlers.Entity (uuidH, eHeapH)
 import Templates.Modules.Forms.Denotation as F
+import Templates.Handlers.Forms (singleAccessState, idH)
 
-type Eff' = Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
+type Eff' = Random Label LabelId + State (Maybe LabelId) 
+  + Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
 type T = Forms +: Layout +: S.Render +: Page +: LiftT Stmt
 --running syntax
 type Module' = BiFix T (Fix Module)   
@@ -44,6 +46,8 @@ runApplied e = case unwrap
     $ handle_ stateH []
     $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
     $ handle_ attributeH ("section", 1)
+    $ handle_ singleAccessState Nothing
+    $ handle idH
     $ e 
   of
     ((_, str), heap)    -> str
