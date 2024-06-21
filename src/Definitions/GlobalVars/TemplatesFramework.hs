@@ -45,7 +45,7 @@ import Templates.Handlers.Forms (singleAccessState, idH)
 
 type Eff' = Random Label LabelId + State (Maybe LabelId) 
   + ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address
-  + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite (EntityDecl V) + End
+  + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite (EntityDecl V) V + End
 type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
 type Eff'' = PageDefs EffA Eff' V + TDefs EffA Eff' V + EntityDefsEnv EffA V
     + FunctionEnv EffA V + End
@@ -89,7 +89,7 @@ runProgram (Fragment defs pCall) = case unwrap
 run:: Free Eff' () -> FilePath -> IO T.Out'
 run e file = do
   ((_, str), _) <- unwrap
-    $ handle_ (dbWriteH file) (Elems {vars = empty, entities = empty, classes = empty} :: Elems V')
+    $ handle_ (dbWriteH file) []
     $ handle_ heap (makeEnv [])
     $ handle_ eHeapH []
     $ handle_ tempEHeapH' (makeEnv [])

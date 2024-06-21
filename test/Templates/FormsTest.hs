@@ -129,14 +129,14 @@ noLabelSyntax = Program
 testNoLabel = testEqId "test no label" noLabelOutput noLabelSyntax
 
 noLabelOutput =
-  [ Plain "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
+  [ Plain     "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
   , Id False, Plain "\">unused</label><label for=\""
   , Id False, Plain "\">used</label><input id=\""
-  , Id True,  Plain $ "\" class=\"inputString\" name=\""
-  , Name    , Plain $ "\" type=\"text\" value=\"a\">"
-    ++ "<input class=\"inputBool\" type=\"checkbox\" name=\""
+  , Id True,  Plain "\" class=\"inputString\" name=\""
+  , Name    , Plain "\" type=\"text\" value=\"a\">"
+  , Plain   "<input class=\"inputBool\" type=\"checkbox\" name=\""
   , Name    , Plain "\" value=\"false\">"
-  , Plain "</form></body></html>" ]
+  , Plain   "</form></body></html>" ]
 
 formsTests = T.TestList
     [ testForms

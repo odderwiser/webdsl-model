@@ -9,7 +9,7 @@ import Definitions.Fun.Denotation as F
 import Definitions.Fun.Syntax
 import Actions.Handlers.Env (FunctionEnv, defsH)
 import Definitions.Program.Syntax
-import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity)
+import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps)
 import Actions.Handlers.Return (funReturn)
 import Actions.Framework as A hiding (run)
 import Syntax
@@ -39,7 +39,7 @@ import Actions.Effects
 type Envs = EntityDef + FDecl
 type EffP = EntityDefsEnv EffA V + FunctionEnv EffA V + End
 type EffA = Abort V +  DbRead (EntityDecl V) 
-    + Cond + Random String String + TempEHeap V' + EHeap V' + MLState Address V +  DbWrite (EntityDecl V) +  End 
+    + Cond + Random String String + TempEHeap V' + EHeap V' + MLState Address V +  DbWrite (EntityDecl V) V +  End 
 type Sym = VarList + Module
 
 runProgram :: DenoteDef   sym e EffP 
@@ -73,7 +73,7 @@ runExp e = run e (Env { varEnv = []}) []
 run :: FreeEnv EffA V -> Env EffA V -> [(Address, V)] -> FilePath
   -> IO (Out, [(Address, MaybeEntity V')])
 run e env store file = unwrap
-    $ handle_ (dbWriteH file) (Elems {vars = empty, entities = empty, classes = empty} :: Elems V') 
+    $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
     $ handle_ heap' (makeEnv store)
     $ handle_ eHeapH []
     $ handle_ tempEHeapH []

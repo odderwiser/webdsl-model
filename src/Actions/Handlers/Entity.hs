@@ -22,7 +22,7 @@ import Data.Maybe (fromJust)
 import Definitions.GlobalVars.Syntax (getUuid, Uuid)
 import Definitions.GlobalVars.Effects
 import Actions.Modules.Eval.Syntax (VName)
-import Data.Aeson.KeyMap (KeyMap, insert, union, insertWith, unionWith)
+import qualified Data.Aeson.KeyMap as KM (KeyMap, insert, union, insertWith, unionWith, lookup, empty, elems)
 import Data.Aeson.Key (fromString)
 import GHC.Generics (Generic)
 import Data.Aeson ( ToJSON, FromJSON)
@@ -35,7 +35,6 @@ import qualified Data.Map as Map
 import Actions.Modules.Arith.Syntax (boxI)
 import System.Directory (doesFileExist)
 import qualified Data.Set as Set (Set, union, singleton)
-import Data.Map (Map)
 
 
 entityDefsH :: (Functor eff, Functor eff')
@@ -117,13 +116,15 @@ mockDbReadH = Handler
     -- technically, the other effects shouldn't occur
   }
 
-
+--this is the database
 data Elems v = Elems
-  { vars     :: KeyMap Uuid
-  , entities :: KeyMap (EntityDecl (Fix v))
-  , classes  :: KeyMap (Set.Set Uuid)
+  { vars     :: KM.KeyMap Uuid
+  , entities :: KM.KeyMap (EntityDecl (Fix v))
+  , classes  :: KM.KeyMap (Set.Set Uuid)
   }
   deriving Generic
+
+data WriteOps v = WriteGV VName Uuid | UpdateProperties Uuid (Map.Map PName (Fix v)) | AddEntity Uuid (EntityDecl (Fix v)) | AddClassMember EName Uuid
 
 instance (FromJSON (v (Fix v))) => FromJSON (Elems v)
 instance (ToJSON (v (Fix v))) => ToJSON (Elems v)
@@ -134,31 +135,60 @@ instance (FromJSON (v (Fix v))) => FromJSON (Fix v)
 
 dbWriteH :: forall remEff val v.
   (Functor remEff, Lit Uuid <: v,ToJSON (v (Fix v)), FromJSON (v (Fix v)))
-  => FilePath -> Handler_ (DbWrite (EntityDecl (Fix v))) val (Elems v) remEff (IO val)
+  => FilePath -> Handler_ (DbWrite (EntityDecl (Fix v)) (Fix v)) val [WriteOps v] remEff (IO val)
 dbWriteH dbEntry = Handler_
-  { ret_ = \ val elems -> pure $ do
+  { ret_ = \ val writeOps -> pure $ do
     fileExists <- doesFileExist dbEntry
     oldDbState <- if fileExists then readFile' dbEntry else return ""
     case oldDbState of
-      "" -> writeFile dbEntry $ encodeElems elems
+      "" -> writeFile dbEntry $ encodeElems $ makeDb (Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}) writeOps
       _  -> case decodeElems oldDbState of
-        Nothing -> writeFile dbEntry $ encodeElems elems
-        (Just (Elems vars' objects' classes' :: Elems v)) -> do
+        Nothing -> writeFile dbEntry $ encodeElems $ makeDb (Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}) writeOps
+        (Just (elems :: Elems v)) -> do
           writeFile dbEntry
             $ encodeElems
-            $ Elems
-              (update vars' (vars elems))
-              (update objects' (entities elems))
-              (unionWith Set.union classes' (classes elems))
+            $ updateDatabase elems writeOps
     return val
-  , hdlr_ = \eff db@(Elems vars decls classes) -> case eff of
+  , hdlr_ = \eff writeOps -> case eff of
     (SetVar (name, id) k) -> k
-      $ Elems (insert (fromString name) id vars) decls classes
-    (SetEntity e k) -> k
-      $ updateEntity e db
+      $  writeOps ++ [WriteGV name id] --Elems (insert (fromString name) id vars) decls classes
+    (SetEntity e k) ->
+      let uuid = getUuid e in
+      k $ writeOps ++ [AddClassMember (projEName e) uuid, AddEntity uuid e]  --updateEntity e db
+    (UpdateEntity uuid pName v k) -> k $ updateWriteOps writeOps (UpdateProperties uuid $ Map.singleton pName v)
   }
-update :: KeyMap a -> KeyMap a -> KeyMap a
-update oldMap newMap = union newMap oldMap
+
+updateWriteOps (AddEntity uuid e : tail) v@(UpdateProperties uuid' props)
+  | uuid == uuid' = AddEntity uuid (updateProps e props) : tail
+  | otherwise     = AddEntity uuid e : updateWriteOps tail v
+updateWriteOps [] v = [v]
+updateWriteOps (UpdateProperties uuid props : tail) v@(UpdateProperties uuid' props')
+  | uuid == uuid' = UpdateProperties uuid (Map.union props' props) : tail
+  | otherwise     = UpdateProperties uuid props : updateWriteOps tail v
+updateWriteOps (somethingElse : tail) v@(UpdateProperties uuid' props') = somethingElse : updateWriteOps tail v
+
+makeDb :: (Functor v) => Elems v -> [WriteOps v] -> Elems v
+makeDb = makeDatabase makeDb
+
+-- makeDatabase :: Elems v -> [WriteOps v] -> Elems v
+makeDatabase :: (Functor v) => (Elems v -> [WriteOps v] -> Elems v) ->  Elems v -> [WriteOps v] -> Elems v
+makeDatabase f elems (WriteGV name id : tail) = f elems { vars = KM.insert (fromString name) id (vars elems)} tail
+makeDatabase f elems (AddEntity name e : tail) = f elems {entities = KM.insert (fromString name) e (entities elems) } tail
+makeDatabase f elems (AddClassMember name id : tail) = f elems {classes = KM.insertWith Set.union (fromString name) (Set.singleton id) (classes elems) } tail
+makeDatabase f elems (UpdateProperties name props : tail) = let entity = fromJust $ KM.lookup (fromString name) (entities elems)
+  in f elems { entities = KM.insert (fromString name) (updateProps entity props) (entities elems)} tail
+makeDatabase f elems [] = elems
+
+updateDatabase :: (Functor v) => Elems v -> [WriteOps v] -> Elems v
+updateDatabase elems (UpdateProperties name props : tail) = let entity = fromJust $ KM.lookup (fromString name) (entities elems)
+  in updateDatabase elems { entities = KM.insert (fromString name) (updateProps entity props) (entities elems)} tail
+updateDatabase elems ops = makeDatabase updateDatabase elems ops 
+
+updateProps :: EntityDecl (Fix v) -> Map.Map PName (Fix v) -> EntityDecl (Fix v)
+updateProps (EDecl name props) props' = EDecl name $ Map.toList $ Map.union props' $ Map.fromList props
+
+update :: KM.KeyMap a -> KM.KeyMap a -> KM.KeyMap a
+update oldMap newMap = KM.union newMap oldMap
 
 encodeElems :: (ToJSON (v (Fix v))) => Elems v -> String
 encodeElems = S.decode . unpack . A.encode
@@ -168,20 +198,20 @@ decodeElems = A.decode . pack . S.encode
 
 mockDbWriteH :: forall remEff val v.
   (Functor remEff, Lit Uuid <: v)
-  => Handler_ (DbWrite (EntityDecl (Fix v))) val (Elems v) remEff (val, Elems v)
+  => Handler_ (DbWrite (EntityDecl (Fix v)) (Fix v)) val (Elems v) remEff (val, Elems v)
 mockDbWriteH = Handler_
   { ret_ = curry pure
   , hdlr_ = \eff db@(Elems vars decls classes ) -> case eff of
     (SetVar (name, id) k) -> k
-      $ Elems (insert (fromString name) id vars) decls classes
+      $ Elems (KM.insert (fromString name) id vars) decls classes
     (SetEntity e k) -> k
       $ updateEntity e db
   }
 
 updateEntity e (Elems vars decls classes ) = Elems vars
-  (insert (fromString $ getUuid e) e decls)
-  (insertWith Set.union 
-    (fromString $ projEName e) 
+  (KM.insert (fromString $ getUuid e) e decls)
+  (KM.insertWith Set.union
+    (fromString $ projEName e)
     (Set.singleton $ getUuid e) classes)
 
 type MaybeEntity v = Maybe (EntityDecl (Fix v))
@@ -192,5 +222,5 @@ tempEHeapH :: (Functor g) => Handler_ (TempEHeap v) val
 tempEHeapH = heap''
 
 tempEHeapH' :: (Functor g) => Handler_ (TempEHeap v) val
-  (Map Address (MaybeEntity v)) g val
+  (Map.Map Address (MaybeEntity v)) g val
 tempEHeapH' = heap'
