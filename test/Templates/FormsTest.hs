@@ -11,9 +11,10 @@ import Templates.Modules.Lift.Denotation (consT)
 import Syntax as S
 import Actions.Values
 import Actions.Str as S
-import Actions.Bool (true)
+import Actions.Bool (true, false)
 import Actions.Arith (int)
 import Actions.Modules.Eval.Syntax (var)
+import qualified Data.Set as Set (insert, notMember, empty)
 
 testEq :: ()
   => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
@@ -22,10 +23,10 @@ testEq id res syntax =  T.TestCase $
 
 testEqId :: ()
   => String -> [HtmlOutput] -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
-testEqId id res syntax = 
-  let 
+testEqId id res syntax =
+  let
     output = runProgram $ foldProgram syntax
-    (bool, res') = compareRes res "" output ""
+    (bool, res') = compareRes res "" output Set.empty ""
   in T.TestCase $ T.assertEqual id (output, True) (res', bool)
 
 --- Tests  
@@ -38,24 +39,27 @@ testFormsWithVars = testEqId "test vars"
   (formsOutput 0)
   formsWithVarsSyntax
 
-data HtmlOutput = Uuid String | Id Bool | Plain String
+type IsEqualToLast = Bool
+data HtmlOutput = Uuid String | Id IsEqualToLast | Plain String
 
--- compareRes :: [HtmlOutput] -> String -> Bool
-compareRes :: [HtmlOutput] -> [Char] -> [Char] -> [Char] -> (Bool, String)
-compareRes (Plain expected : tail) lastId output result = 
-  let (bool, res) = compareRes tail lastId (drop (length expected) output) (result++expected)
+compareRes (Plain expected : tail) lastId output idMap result =
+  let (bool, res) = compareRes tail lastId (drop (length expected) output) idMap (result++expected)
   in ((expected == take (length expected) output) && bool, res)
-compareRes (Uuid uuid      : tail) lastId output result = compareRes tail lastId (drop 36 output) (result++take 36 output)
-compareRes (Id False    : tail) lastId output result = compareRes tail (take 32 output) (drop 32 output) (result++ take 32 output)
-compareRes (Id True     : tail) lastId output result = 
-  let (bool, res) = compareRes tail "" (drop 32 output) (result ++ take 32 output)
+compareRes (Uuid uuid      : tail) lastId output idMap result = compareRes tail lastId (drop 36 output) idMap (result++take 36 output)
+compareRes (Id False    : tail) lastId output idMap result = 
+  let id = take 32 output 
+      (bool, res) = compareRes tail id (drop 32 output) (Set.insert id idMap) (result++ id)
+  in  (Set.notMember id idMap && bool, res)
+compareRes (Id True     : tail) lastId output idMap result = 
+  let id = take 32 output
+      (bool, res) = compareRes tail "" (drop 32 output) idMap (result ++ id)
   in  (take 32 output == lastId && bool, res)
-compareRes []                      lastId "" result = (True, result)
-compareRes []                      lastId oopsie result = (False, result++ "oopsie: "++ oopsie) 
+compareRes []                      lastId "" idMap result = (True, result)
+compareRes []                      lastId oopsie idMap result = (False, result++ "oopsie: "++ oopsie)
 
 
 
-formsOutput int = 
+formsOutput int =
   [ Plain "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
   , Id False, Plain "\">labelBool</label><input id=\""
   , Id True,  Plain  "\" type=\"checkbox\" class=\"inputBool\" value=\"true\"><label for=\""
@@ -88,7 +92,45 @@ formsWithVarsSyntax = Program
       ]
     ]
 
+testDoubleLabel = testEqId "test double label" doubleLabelOutput doubleLabelSyntax
+
+doubleLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
+doubleLabelSyntax = Program
+    [ pDef "root" []
+      [ Right $ form False $ label (S.str "unused") $ label (S.str "used") $ input (var "c") S.String
+      , Left $ VarInit "c" (S.str "a")
+      ]
+    ]
+
+doubleLabelOutput =
+  [ Plain "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
+  , Id False, Plain "\">unused</label><label for=\""
+  , Id False, Plain "\">used</label><input id=\""
+  , Id True,  Plain "\" type=\"text\" value=\"a\" class=\"inputString\"></form></body></html>" ]
+
+noLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
+noLabelSyntax = Program
+  [ pDef "root" []
+    [ Right $ form False $ consT (label (S.str "unused") $ label (S.str "used") $ input (var "c") S.String)
+      (input (var "a") Bool)
+    , Left $ VarInit "c" (S.str "a")
+    , Left $ VarInit "a" false
+    ]
+  ]
+
+testNoLabel = testEqId "test no label" noLabelOutput noLabelSyntax
+
+noLabelOutput =
+  [ Plain "<html><head></head><body id=\"root\"><form accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
+  , Id False, Plain "\">unused</label><label for=\""
+  , Id False, Plain "\">used</label><input id=\""
+  , Id True,  Plain $ "\" type=\"text\" value=\"a\" class=\"inputString\">"
+    ++ "<input type=\"checkbox\" class=\"inputBool\" value=\"false\">"
+  , Plain "</form></body></html>" ]
+
 formsTests = T.TestList
     [ testForms
     , testFormsWithVars
+    , testDoubleLabel
+    , testNoLabel
     ]

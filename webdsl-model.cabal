@@ -166,6 +166,7 @@ test-suite webdsl-tests
                         TemplatesTest
     build-depends:      base ^>=4.18.2.1, 
                         HUnit ^>=1.6,
+                        containers,
                         webdsl-model
     hs-source-dirs:     test
     default-language:   Haskell2010

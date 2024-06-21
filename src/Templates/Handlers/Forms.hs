@@ -8,12 +8,12 @@ import Data.UUID (toString)
 import Data.Char (isAlphaNum)
 
 singleAccessState :: (Functor remEff) =>
-  Handler_ (State a) val (Maybe a) remEff val
+  Handler_ (State (Maybe a)) val (Maybe a) remEff val
 singleAccessState = Handler_ {
   ret_ = \val rep -> pure val,
   hdlr_= \eff box -> case (eff, box) of
-    (GetS k, Just v) -> k v Nothing
-    (PutS v k, box) -> k (Just v) 
+    (GetS k, _) -> k box Nothing
+    (PutS v k, box) -> k v 
 }
 
 idH :: (Functor eff)
