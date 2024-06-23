@@ -116,6 +116,13 @@ mockDbReadH = Handler
     -- technically, the other effects shouldn't occur
   }
 
+-- inMemoryDbReadH :: (Functor remEff, Functor v)
+--   => Elems v -> Handler_ (DbRead (EntityDecl (Fix v))) val (Elems v) remEff (val, Elems v)
+-- inMemoryDbReadH database = Handler_ 
+--   { ret_ = _
+--   , hdlr_ = _
+--   }
+
 --this is the database
 data Elems v = Elems
   { vars     :: KM.KeyMap Uuid

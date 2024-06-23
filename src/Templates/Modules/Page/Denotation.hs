@@ -103,11 +103,10 @@ refName env name = do
 denoteP :: (Stream HtmlOut <: eff'
   , MLState Address v <: eff, Lift eff eff' v, Functor eff
   , MLState Address v <: eff', State Address <: eff'
-  , ReqParamsSt <: eff', v ~ Fix v', Null <: v') =>
+  , v ~ Fix v', Null <: v') =>
     PageCall (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
-denoteP (PCall name args params) env = do
-  mapM_ assign params
+denoteP (PCall name args _) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefH name pagesH env
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)

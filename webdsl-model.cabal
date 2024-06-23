@@ -90,6 +90,8 @@ library
         Templates.Modules.Lift.Denotation,
         Templates.Modules.Page.Syntax,
         Templates.Modules.Page.Denotation,
+        Templates.Modules.Phases.Syntax,
+        Templates.Modules.Phases.Denotation,
         Templates.Modules.Render.Syntax,
         Templates.Modules.Render.Denotation,
         Templates.Syntax,

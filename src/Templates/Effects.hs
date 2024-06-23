@@ -93,3 +93,9 @@ type LabelId = String
 
 encode ::  (Show e, Random Label v <: f) => e -> Free f v
 encode = random
+
+data Throw k = Throw String
+    deriving Functor
+
+throw :: (Throw <: f) => String -> Free f ()
+throw errorMsg = Op $ inj $ Throw errorMsg
