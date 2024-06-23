@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use if" #-}
 module Templates.GlobalVarTest where
 import Definitions.Program.Syntax
 import Definitions.GlobalVars.TemplatesFramework
@@ -15,14 +17,20 @@ import Actions.Syntax
 import Definitions.Entity.Syntax ( EntityDef(EDef), eDef' )
 import Definitions.GlobalVars.Syntax
 import Definitions.Templates.Syntax (tDef)
+import System.Directory (doesFileExist, removeFile)
+import Actions.Handlers.Entity( DbStatus(..) )
 
 testEqProgram :: ()
   => String -> Out' -> ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module))
   ->  IO Test
 testEqProgram id res syntax =  do
-    program <- runProgram (foldProgramVT syntax) ("./test/Templates/dbs/"++id++ ".txt")
-    return $ TestCase $
-        assertEqual id res program
+  let file = "./test/Actions/dbs/"++id++ ".txt"
+  removeFile file
+  (output, dbStatus) <- runObservableProgram (foldProgramVT syntax) file
+  (output', dbStatus') <- runObservableProgram (foldProgramVT syntax) file
+  return $ TestList
+        [ TestCase $ assertEqual (id++" db read") (res, Empty) (output, dbStatus)
+        , TestCase $ assertEqual (id++" db Write") (res, Success) (output', dbStatus') ]
 
 defsSyn :: [DefSyntax]
 defsSyn = [

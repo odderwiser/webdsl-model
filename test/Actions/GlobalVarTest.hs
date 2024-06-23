@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use if" #-}
 module Actions.GlobalVarTest where
 import Utils
 import Definitions.GlobalVars.ActionsFramework as G
@@ -12,6 +14,8 @@ import Actions.Arith
 import Actions.Syntax
 import Actions.Values
 import Definitions.Fun.Syntax (FDecl(FDecl))
+import System.Directory (doesFileExist, removeFile)
+import Actions.Handlers.Entity (DbStatus(..))
 
 -- testEq :: Denote m EffA V
 --   => String -> Out -> Fix m -> FilePath ->  IO Test
@@ -25,10 +29,13 @@ type ProgramA e f = ProgramV f e f
 testEqProgram :: ()
   => String -> Out -> ProgramA (Envs (Fix Sym)) (Fix Sym) ->  IO Test
 testEqProgram id res syntax =  do
-    (program, heap) <- runProgram (foldProgramV syntax) ("./test/Actions/dbs/"++id++ ".txt")
-    return $ TestCase $
-        assertEqual id res program
-
+  let file = "./test/Actions/dbs/"++id++ ".txt"
+  removeFile file
+  ((output, heap), dbStatus) <- runProgram (foldProgramV syntax) file
+  ((output', heap'), dbStatus') <- runProgram (foldProgramV syntax) file
+  return $ TestList
+    [ TestCase $ assertEqual (id++" db read") (res, Empty) (output, dbStatus)
+    , TestCase $ assertEqual (id++" db Write") (res, Success) (output', dbStatus') ]
 --- this seem to be working ??? 
 
 variableTest = testEqProgram "test1" (boxI 1) variableSyntax
@@ -71,8 +78,8 @@ objectFieldSyntax' = WithVars [VDef "test" (EDecl "obj" [("a", int 1), ("parent"
 twoObjectsTest = testEqProgram "test5" (boxI 17) twoObjectsSyntax
 
 twoObjectsSyntax :: ProgramA  (Envs (Fix Sym)) (Fix Sym)
-twoObjectsSyntax = WithVars 
-    [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")]) 
+twoObjectsSyntax = WithVars
+    [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")])
     , VDef "right" (EDecl "obj" [("a", int 5), ("other", var "left")])
     ]
     ( Fragment

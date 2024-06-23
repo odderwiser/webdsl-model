@@ -9,7 +9,7 @@ import Definitions.Fun.Denotation as F
 import Definitions.Fun.Syntax
 import Actions.Handlers.Env (FunctionEnv, defsH)
 import Definitions.Program.Syntax
-import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps)
+import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps, DbStatus)
 import Actions.Handlers.Return (funReturn)
 import Actions.Framework as A hiding (run)
 import Syntax
@@ -44,7 +44,7 @@ type Sym = VarList + Module
 
 runProgram :: DenoteDef   sym e EffP 
   => Program (sym e) (FreeEnv EffA V) 
-  -> FilePath -> IO (Out, [(Address, MaybeEntity V')])
+  -> FilePath -> IO ((Out, [(Address, MaybeEntity V')]), DbStatus)
 runProgram (Fragment defs exp) = case unwrap
   $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env EffA V )
   $ handle_ entityDefsH (Env { entityDefs =[]} :: Env EffA V ) 
@@ -67,11 +67,11 @@ instance DenoteDef EntityDef (FreeEnv EffA V) EffP where
 
   -- indexed family to model datatypes
   
-runExp :: FreeEnv EffA V -> FilePath -> IO (Out, [(Address, MaybeEntity V')])
+runExp :: FreeEnv EffA V -> FilePath -> IO ((Out, [(Address, MaybeEntity V')]), DbStatus)
 runExp e = run e (Env { varEnv = []}) []
 
 run :: FreeEnv EffA V -> Env EffA V -> [(Address, V)] -> FilePath
-  -> IO (Out, [(Address, MaybeEntity V')])
+  -> IO ((Out, [(Address, MaybeEntity V')]), DbStatus)
 run e env store file = unwrap
     $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
     $ handle_ heap' (makeEnv store)

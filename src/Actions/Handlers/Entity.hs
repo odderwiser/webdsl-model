@@ -133,22 +133,34 @@ instance (FromJSON v) => FromJSON (EntityDecl v)
 instance (ToJSON (v (Fix v))) => ToJSON (Fix v)
 instance (FromJSON (v (Fix v))) => FromJSON (Fix v)
 
+data DbStatus = Empty | Failure | Success
+  deriving (Eq, Show)
+
 dbWriteH :: forall remEff val v.
   (Functor remEff, Lit Uuid <: v,ToJSON (v (Fix v)), FromJSON (v (Fix v)))
-  => FilePath -> Handler_ (DbWrite (EntityDecl (Fix v)) (Fix v)) val [WriteOps v] remEff (IO val)
+  => FilePath -> Handler_ (DbWrite (EntityDecl (Fix v)) (Fix v)) val [WriteOps v] remEff (IO (val, DbStatus))
 dbWriteH dbEntry = Handler_
   { ret_ = \ val writeOps -> pure $ do
     fileExists <- doesFileExist dbEntry
     oldDbState <- if fileExists then readFile' dbEntry else return ""
-    case oldDbState of
-      "" -> writeFile dbEntry $ encodeElems $ makeDb (Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}) writeOps
+    (isReadSuccessful ::DbStatus) <- case oldDbState of
+      "" -> do 
+        writeFile dbEntry 
+          $ encodeElems 
+          $ makeDb (Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}) writeOps
+        return Empty
       _  -> case decodeElems oldDbState of
-        Nothing -> writeFile dbEntry $ encodeElems $ makeDb (Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}) writeOps
+        Nothing -> do
+          writeFile dbEntry 
+            $ encodeElems
+            $ makeDb (Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}) writeOps
+          return Failure        
         (Just (elems :: Elems v)) -> do
           writeFile dbEntry
             $ encodeElems
             $ updateDatabase elems writeOps
-    return val
+          return Success
+    return (val, isReadSuccessful)
   , hdlr_ = \eff writeOps -> case eff of
     (SetVar (name, id) k) -> k
       $  writeOps ++ [WriteGV name id] --Elems (insert (fromString name) id vars) decls classes

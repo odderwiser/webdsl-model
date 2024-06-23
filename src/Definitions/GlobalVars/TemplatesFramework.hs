@@ -30,7 +30,7 @@ import Templates.Handlers.Render
 import qualified Templates.Handlers.Render as R
 import Templates.Handlers.Layout
 import Actions.Handlers.Heap (heap, makeEnv)
-import Actions.Handlers.Entity (entityDefsH, Elems (..), dbWriteH, eHeapH, uuidH, mockDbReadH, tempEHeapH, tempEHeapH', TempEHeap)
+import Actions.Handlers.Entity (entityDefsH, Elems (..), dbWriteH, eHeapH, uuidH, mockDbReadH, tempEHeapH, tempEHeapH', TempEHeap, DbStatus)
 import qualified Templates.Syntax as S
 import Actions.Syntax
 import Data.Aeson.KeyMap (empty)
@@ -86,9 +86,26 @@ runProgram (Fragment defs pCall) = case unwrap
   ((((_, tEnv'), tEnv), env'), env) ->
     run $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
+runObservableProgram :: Program (Envs (PEnv EffA Eff' V) EnvTy) (PEnv EffA Eff' V) -> FilePath
+    -> IO (T.Out', DbStatus)
+runObservableProgram (Fragment defs pCall) = case unwrap
+  $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env EffA V )
+  $ handle_ entityDefsH (Env { entityDefs =[]} :: Env EffA V )
+  $ handle_ templatesH (TEnv { templates = []} :: TEnv EffA Eff' V )
+  $ handle_ pagesH (TEnv { pages = []} :: TEnv EffA Eff' V )
+  $ denoteDefList' defs of
+  ((((_, tEnv'), tEnv), env'), env) ->
+    runObservable $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
+
 run:: Free Eff' () -> FilePath -> IO T.Out'
 run e file = do
-  ((_, str), _) <- unwrap
+  (str,  _) <- runObservable e file -- potentially a completely different run function could be used, if the non-emitting Handlers
+    -- are faster
+  return str
+
+runObservable :: Free Eff' () -> FilePath -> IO (T.Out', DbStatus)
+runObservable e file = do
+  (((_, str), heap), writeStatus) <- unwrap
     $ handle_ (dbWriteH file) []
     $ handle_ heap (makeEnv [])
     $ handle_ eHeapH []
@@ -103,7 +120,7 @@ run e file = do
     $ handle_ singleAccessState Nothing
     $ handle idH
     $ e
-  return str
+  return (str, writeStatus)
 
 instance Lift EffA Eff' V where
   lift  = handleExp
