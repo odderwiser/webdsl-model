@@ -25,14 +25,13 @@ denoteR :: forall eff eff' v v'.
   => Forms (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
 denoteR (Form False body) env = do -- here action should be determined? 
-  seed :: Seed <- get
+  seed :: Seed     <- get
   formId :: String <- encode $ "form_" ++ show seed
   put formId
-  renderTag $ TagOpen "form" 
-    [ ("id", "form_"++formId), ("name", "form_"++formId)
-    , ("accept-charset", "UTF-8"), ("method", "POST")]
+  renderForm formId
   body env
-  renderTag $ TagClose "form"
+  renderTag 
+    $ TagClose "form"
   reset -- this breaks if there are nested forms. Why would there be nested forms? 
 
 denoteR (Label name contents) env = do -- attribute "for"
@@ -45,47 +44,6 @@ denoteR (Label name contents) env = do -- attribute "for"
   renderTag $ TagClose "label"
   contents env
 
-denoteR (Input exp Bool) env = do
-  exp'         <- lift $ exp $ actionEnv env
-  value        <- case (projF exp':: Maybe (LitBool v)) of
-    Just (V True)  -> return [("value", "true")]
-    Just (V False) -> return [("value", "false")]
-    Nothing        -> return []
-  label        <- get
-  seed :: Seed <- get
-  inputName    <- encode $ show label ++ show value ++  show seed
-  renderInput label
-    $  [("class", "inputBool"), ("type", "checkbox"), ("name", inputName)] 
-    ++ value
-
-denoteR (Input exp String) env = do
-  exp'         <- lift $ exp $ actionEnv env
-  value        <- case (projF exp':: Maybe (LitStr v)) of
-    Just (V str) -> return [("value", str)]
-    Nothing      -> return [] 
-  label        <- get
-  seed :: Seed <- get
-  inputName    <- encode $ show label ++ show value ++ show seed
-  renderInput label
-    $  [("class", "inputString"), ("name", inputName), ("type", "text")] 
-    ++ value
-
-
-denoteR (Input exp Int) env = do
-  exp'         <- lift $ exp $ actionEnv env
-  value        <- case (projF exp':: Maybe (LitInt v)) of
-    Just (V int) -> return int
-    Nothing      -> return 0 
-  label        <- get
-  seed :: Seed <- get
-  inputName    <- encode $ show label ++ show value ++ show seed
-  renderInput label
-    [ ("class", "inputInt")
-    , ("name", inputName)
-    , ("value", show value)
-    ]
--- I should have cases for entities but I can't figure out how they work
-
 denoteR (Submit action name) env = do
   name <- lift $ name $ actionEnv env
   formId :: String <- get 
@@ -95,6 +53,59 @@ denoteR (Submit action name) env = do
     , ("name", "withForms_ia" ++ show buttonCount ++ "_" ++ formId)]
   renderPlainText (unbox name) True
   renderTag $ TagClose "button"
+
+denoteRInput :: forall eff eff' v v' g.
+  ( E.Attribute <: eff', Stream HtmlOut <: eff'
+  , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
+  , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
+  , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
+  , Lift eff eff' v, Denote g eff (Fix v'))
+  => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denoteRInput (Input exp Bool) env = do
+  exp'         <- lift $ Utils.foldD exp $ actionEnv env
+  value        <- case (projF exp':: Maybe (LitBool v)) of
+    Just (V True)  -> return [("value", "true")]
+    Just (V False) -> return [("value", "false")]
+    Nothing        -> return []
+  label        <- get
+  seed :: Seed <- get
+  inputName    <- encode $ show label ++  show seed
+  renderInput label
+    $  [("class", "inputBool"), ("type", "checkbox"), ("name", inputName)] 
+    ++ value
+
+denoteRInput (Input exp String) env = do
+  exp'         <- lift $ Utils.foldD exp $ actionEnv env
+  value        <- case (projF exp':: Maybe (LitStr v)) of
+    Just (V str) -> return [("value", str)]
+    Nothing      -> return [] 
+  label        <- get
+  seed :: Seed <- get
+  inputName    <- encode $ show label ++ show seed
+  renderInput label
+    $  [("class", "inputString"), ("name", inputName), ("type", "text")] 
+    ++ value
+
+
+denoteRInput (Input exp Int) env = do
+  exp'         <- lift $ Utils.foldD exp $ actionEnv env
+  value        <- case (projF exp':: Maybe (LitInt v)) of
+    Just (V int) -> return int
+    Nothing      -> return 0 
+  label        <- get
+  seed :: Seed <- get
+  inputName    <- encode $ show label ++ show seed
+  renderInput label
+    [ ("class", "inputInt")
+    , ("name", inputName)
+    , ("value", show value)
+    ]
+-- I should have cases for entities but I can't figure out how they work
+
+renderForm formId = renderTag $ TagOpen "form" 
+    [ ("id", "form_"++formId), ("name", "form_"++formId)
+    , ("accept-charset", "UTF-8"), ("method", "POST")]
 
 renderInput :: (Stream HtmlOut <: f, State (Maybe LabelId) <: f) 
   => Maybe LabelId ->  [H.Attribute String] -> Free f ()

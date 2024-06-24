@@ -17,14 +17,15 @@ import Templates.Modules.Render.Denotation as X
 import Templates.Modules.Page.Denotation as P
 import Templates.Modules.Lift.Denotation as Lt
 import Templates.Modules.Lift.Syntax (LiftT)
-import Actions.Syntax (Stmt)
+import Actions.Syntax (Stmt, Eval)
 import Actions.Handlers.Entity (uuidH, eHeapH)
 import Templates.Modules.Forms.Denotation as F
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH)
+import Actions.Modules.Entity.Syntax (Entity)
 
 type Eff' = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
-type T = Forms +: Layout +: S.Render +: Page +: LiftT Stmt
+type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt
 --running syntax
 type Module' = BiFix T (Fix Module)   
 type Out' = String
@@ -91,3 +92,6 @@ instance DenoteT (LiftT Stmt) Eff Eff' V where
 
 instance DenoteT Forms Eff Eff' V where
   denoteT = F.denoteR
+
+instance DenoteT (Input (Fix Module)) Eff Eff' V where
+  denoteT = F.denoteRInput

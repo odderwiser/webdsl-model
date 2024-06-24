@@ -58,12 +58,12 @@ elementsH = mkRHandler U.elements
     in
       k key $ env {U.elements = (key, value) : U.elements env})
 
-paramsH :: (Functor eff) => Handler_ ReqParamsSt a (Map.Map String String) eff a
+paramsH :: (Functor eff) 
+  => Handler_ ReqParamsSt a (Map.Map String String) eff a
 paramsH = Handler_
   { ret_ = \v map -> pure v
   , hdlr_ = \op map -> case op of
-      (Assign v  k) -> k $ uncurry Map.insert v map
-      (Deref  v k) -> k (Map.findWithDefault "" v map) map
+      (Deref  v k) -> k (Map.lookup v map) map
   }
 
 mkParamsMap = Map.empty

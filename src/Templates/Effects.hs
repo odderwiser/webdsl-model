@@ -88,7 +88,7 @@ data Render v k
 render :: (Render v <: f) => Fix v -> Free f String
 render v = Op $ inj $ Render v Pure
 
-type ReqParamsSt = MLState String String
+type ReqParamsSt = MLState String (Maybe String)
 newtype Seed = Seed Int
     deriving (Eq, Num, Show)
 type Label = String
@@ -96,6 +96,9 @@ type LabelId = String
 newtype ButtonCount = Count Int
     deriving (Eq, Num)
 type FormId = String
+
+newtype TVarAddress = Address Int
+    deriving (Eq, Num)
 
 instance Show ButtonCount where
     show (Count i) = show i

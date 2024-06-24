@@ -133,7 +133,8 @@ doubleLabelOutput =
 noLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 noLabelSyntax = Program
   [ pDef "root" []
-    [ Right $ form False $ consT (label (S.str "unused") $ label (S.str "used") $ input (var "c") S.String)
+    [ Right $ form False $ consT (label (S.str "unused") 
+      $ label (S.str "used") $ input (var "c") S.String)
       (input (var "a") Bool)
     , Left $ VarInit "c" (S.str "a")
     , Left $ VarInit "a" false

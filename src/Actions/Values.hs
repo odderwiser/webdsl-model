@@ -4,7 +4,7 @@ import Data.Aeson (ToJSON, FromJSON)
 import Utils.Composition
 import Utils.Fix
 
-data Lit v e = V v | Box v
+data Lit v e = V v | Box v 
     deriving (Functor, Eq, Show, Generic)
 
 instance (ToJSON v) => ToJSON (Lit v (Fix v'))
@@ -34,4 +34,3 @@ instance ToJSON (Null e)
 instance FromJSON (Null e)
 null :: (Null <: v) => Fix v 
 null = injF Null
-
