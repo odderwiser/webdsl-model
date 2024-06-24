@@ -32,7 +32,6 @@ denoteR (Form False body) env = do -- here action should be determined?
   body env
   renderTag 
     $ TagClose "form"
-  reset -- this breaks if there are nested forms. Why would there be nested forms? 
 
 denoteR (Label name contents) env = do -- attribute "for"
   name'      <- lift $ name $ actionEnv env
@@ -56,7 +55,7 @@ denoteR (Submit action name) env = do
 
 denoteRInput :: forall eff eff' v v' g.
   ( E.Attribute <: eff', Stream HtmlOut <: eff'
-  , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
+  , State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
   , Lift eff eff' v, Denote g eff (Fix v'))
@@ -68,7 +67,7 @@ denoteRInput (Input exp Bool) env = do
     Just (V True)  -> return [("value", "true")]
     Just (V False) -> return [("value", "false")]
     Nothing        -> return []
-  label        <- get
+  label:: Maybe LabelId<- get
   seed :: Seed <- get
   inputName    <- encode $ show label ++  show seed
   renderInput label
@@ -80,7 +79,7 @@ denoteRInput (Input exp String) env = do
   value        <- case (projF exp':: Maybe (LitStr v)) of
     Just (V str) -> return [("value", str)]
     Nothing      -> return [] 
-  label        <- get
+  label:: Maybe LabelId<- get
   seed :: Seed <- get
   inputName    <- encode $ show label ++ show seed
   renderInput label
@@ -93,7 +92,7 @@ denoteRInput (Input exp Int) env = do
   value        <- case (projF exp':: Maybe (LitInt v)) of
     Just (V int) -> return int
     Nothing      -> return 0 
-  label        <- get
+  label:: Maybe LabelId<- get
   seed :: Seed <- get
   inputName    <- encode $ show label ++ show seed
   renderInput label

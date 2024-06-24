@@ -18,14 +18,17 @@ import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values as V
 
 getProperty name (EDecl _ params) = return
-    $ fromJust 
+    $ fromJust
     $ lookup name params
+
+setProperty name v (EDecl eName params) = return $ EDecl name
+  $ map (\(name', v') -> if name == name' then (name, v) else (name', v')) params
 
 getObj :: (EHeap v <: f, Lit Uuid <: v)
   => FreeEnv f (Fix v) -> Env f (Fix v) -> Free f (EntityDecl (Fix v))
 getObj object env = do
   id      <- object env
-  deref 
+  deref
     (unbox id :: Uuid)
 
 -- derefObj obj env = derefH (getAddress obj) heap'' (entities env)
@@ -38,16 +41,15 @@ denote :: forall e v eff.
   ) => Entity e -> e
 denote (PropAccess object propName) env = do
   obj       <- getObj object env
-  getProperty 
-    propName 
+  getProperty
+    propName
     obj
 
--- except that is not what really happens
--- there is some flushing semantics that need to happen fist
 denote (PropAssign object propName e)  env = do
   obj :: (EntityDecl (Fix v)) <- getObj object env
-  loc              <- getProperty propName  obj
-  e'               <- e env
+  e'                          <- e env
+  obj'                        <- setProperty propName e' obj
+  uuid :: Uuid                <- ref obj'
   return V.null
 
 denote (ECall obj fname vars) env = do
@@ -88,7 +90,7 @@ populateObjEnv objEnv defaultEnv = handle mutateH
 mapProperties (EDecl entity props) vals implProps =
   EDecl entity
   $ implProps
-  ++ zipWith 
+  ++ zipWith
     (curry (\((name, ty), v) -> (name, v)))
     props vals
 
@@ -100,7 +102,7 @@ denoteEDecl :: forall eff v.
   ) => EntityDecl (FreeEnv eff (Fix v))
     -> FreeEnv eff (Fix v)
 denoteEDecl decl@(EDecl entity props) env = do
-  def@(EDef 
+  def@(EDef
     name propsDefs iProps funs) <- derefH entity entityDefsH env
   values                        <- mapM ((\e -> e env) . snd) props
   implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
@@ -114,14 +116,14 @@ denoteEDecl' :: forall eff v.
   ) => EntityDecl (FreeEnv eff (Fix v))
     -> Env eff (Fix v) -> Free eff (Fix v)
 denoteEDecl' decl@(EDecl entity props) env = do
-  def@(EDef 
+  def@(EDef
     name propsDefs iProps funs) <- derefH entity entityDefsH env
   values                        <- mapM ((\e -> e env) . snd) props
   implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
   return $ injF $ mapProperties decl values implProps
 
 
-denoteImplicitProps :: forall f e v. 
+denoteImplicitProps :: forall f e v.
   (Show e,Random String String <: f, Lit Uuid <: v
   ) => e -> ImplicitProp -> Free f (PName, Fix v)
 denoteImplicitProps def Id = do
