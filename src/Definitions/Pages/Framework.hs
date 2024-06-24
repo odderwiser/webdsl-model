@@ -36,16 +36,16 @@ import qualified Templates.Modules.Render.Denotation as X
 import qualified Templates.Modules.Page.Denotation as P
 import qualified Templates.Modules.Lift.Denotation as Lt
 import qualified Templates.Modules.Forms.Denotation as F
-import Templates.Framework (Module')
+import Templates.Framework as T (Module')
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState)
 
 type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
-type Eff'' = PageDefs Eff Eff' V + TDefs Eff Eff' V + EntityDefsEnv Eff V + FunctionEnv Eff V + End
+type Eff'' = PageDefs Eff T.Eff' V + TDefs Eff T.Eff' V + EntityDefsEnv Eff V + FunctionEnv Eff V + End
 type EnvTy = FreeEnv Eff V
 type DefSyntax = Envs Module' (Fix Module)
 type Program' = Program DefSyntax (PageCall T.Module' (Fix Module))
-type Eff' = State E.Seed + Random Label LabelId + State (Maybe LabelId) + ReqParamsSt + Attribute + Stream HtmlOut
-  + State AttList + E.Render V' + MLState Address V + State Address + End
+-- type Eff' = State E.Seed + Random Label LabelId + State (Maybe LabelId) + ReqParamsSt + Attribute + Stream HtmlOut
+--   + State AttList + E.Render V' + MLState Address V + State Address + End
 
 
 
@@ -58,17 +58,17 @@ foldProgram (Fragment defs pg@(PCall name args params))
 foldProgram (Program defs)
     = Fragment (fmap T.foldTDefs defs) (PCall "root" [] []) -- can root have arguments? 
 
-runProgram :: Program (Envs (PEnv Eff Eff' V) EnvTy) (PageCall (PEnv Eff Eff' V) (FreeEnv Eff V)) -> T.Out'
+runProgram :: Program (Envs (PEnv Eff T.Eff' V) EnvTy) (PageCall (PEnv Eff T.Eff' V) (FreeEnv Eff V)) -> T.Out'
 runProgram (Fragment defs pCall) = case unwrap
   $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env Eff V )
   $ handle_ entityDefsH (Env { entityDefs =[]} :: Env Eff V )
-  $ handle_ templatesH (TEnv { templates = []} :: TEnv Eff Eff' V )
-  $ handle_ pagesH (TEnv { pages = []} :: TEnv Eff Eff' V )
+  $ handle_ templatesH (TEnv { templates = []} :: TEnv Eff T.Eff' V )
+  $ handle_ pagesH (TEnv { pages = []} :: TEnv Eff T.Eff' V )
   $ denoteDefList' defs of
   ((((_, tEnv'), tEnv), env'), env) ->
-    runApplied
+    T.runApplied
     $ denoteP pCall
-    $ ((makeTEnv env' env tEnv) :: TEnv Eff Eff' V) { U.pages = pages tEnv'}
+    $ ((makeTEnv env' env tEnv) :: TEnv Eff T.Eff' V) { U.pages = pages tEnv'}
 
 makeTEnv :: Env eff v -> Env eff v -> TEnv eff eff' v -> TEnv eff eff' v
 makeTEnv eEnv fEnv tEnv = TEnv
@@ -82,26 +82,26 @@ makeTEnv eEnv fEnv tEnv = TEnv
     , U.elements = []
     }
 
-runApplied :: Free Eff' () -> T.Out'
-runApplied e = case unwrap
-    $ handle_ stateElH Nothing
-    $ handle_ heap (makeEnv [])
-    $ handle renderH
-    $ handle_ stateH []
-    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
-    $ handle_ attributeH ("section", 1)
-    $ handle_ paramsH mkParamsMap
-    $ handle_ singleAccessState Nothing
-    $ handle idH
-    $ handle_ autoIncrementState (E.Seed 0)
-    $ e
-  of
-    ((_, str), heap)    -> str
+-- runApplied :: Free Eff' () -> T.Out'
+-- runApplied e = case unwrap
+--     $ handle_ stateElH Nothing
+--     $ handle_ heap (makeEnv [])
+--     $ handle renderH
+--     $ handle_ stateH []
+--     $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
+--     $ handle_ attributeH ("section", 1)
+--     $ handle_ paramsH mkParamsMap
+--     $ handle_ singleAccessState Nothing
+--     $ handle idH
+--     $ handle_ autoIncrementState (E.Seed 0)
+--     $ e
+--   of
+--     ((_, str), heap)    -> str
 
 test exp env env' tEnv tEnv' = denoteP exp
   $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
-instance DenoteDef' PageDef (PEnv Eff Eff' V) EnvTy Eff'' where
+instance DenoteDef' PageDef (PEnv Eff T.Eff' V) EnvTy Eff'' where
   denoteDef' = D.denoteDef
 
 instance DenoteDef FDecl EnvTy Eff'' where --- Maybe?? This works???
@@ -110,43 +110,43 @@ instance DenoteDef FDecl EnvTy Eff'' where --- Maybe?? This works???
 instance DenoteDef EntityDef EnvTy Eff'' where
   denoteDef = E.denoteDef
 
-instance DenoteDef' TemplateDef (PEnv Eff Eff' V) EnvTy Eff'' where
+instance DenoteDef' TemplateDef (PEnv Eff T.Eff' V) EnvTy Eff'' where
   denoteDef'= T.denoteDefT
 
 
-handleExp :: () => Free Eff V -> Free Eff' V
-handleExp e = bubbleDown
-  $ handle_ eHeapH [] -- probably wrong?
-  $ handle uuidH
-  $ handle funReturn
-  $ handle condition
-  e
+-- handleExp :: () => Free Eff V -> Free Eff' V
+-- handleExp e = bubbleDown
+--   $ handle_ eHeapH [] -- probably wrong?
+--   $ handle uuidH
+--   $ handle funReturn
+--   $ handle condition
+--   e
 
 
--- probably a beeter way to implement this??
-bubbleDown ::
-    (eff <<: eff')
-    => Free eff v -> Free eff' v
-bubbleDown = fold Pure (Op . cmap)
+-- -- probably a beeter way to implement this??
+-- bubbleDown ::
+--     (eff <<: eff')
+--     => Free eff v -> Free eff' v
+-- bubbleDown = fold Pure (Op . cmap)
 
-instance Lift Eff Eff' V where
-  lift = handleExp
+-- instance Lift Eff T.Eff' V where
+--   lift = T.handleExp
 
-instance DenoteT Layout Eff Eff' V where
-  denoteT :: Layout (PEnv Eff Eff' V) (FreeEnv Eff V)  -> PEnv Eff Eff' V
-  denoteT = L.denote
+-- instance DenoteT Layout Eff T.Eff' V where
+--   denoteT :: Layout (PEnv Eff T.Eff' V) (FreeEnv Eff V)  -> PEnv Eff T.Eff' V
+--   denoteT = L.denote
 
-instance DenoteT S.Render Eff Eff' V where
-  denoteT :: S.Render (PEnv Eff Eff' V) (FreeEnv Eff V)  -> PEnv Eff Eff' V
-  denoteT = X.denote
+-- instance DenoteT S.Render Eff T.Eff' V where
+--   denoteT :: S.Render (PEnv Eff T.Eff' V) (FreeEnv Eff V)  -> PEnv Eff T.Eff' V
+--   denoteT = X.denote
 
-instance DenoteT Page Eff Eff' V where
-  denoteT = P.denote
+-- instance DenoteT Page Eff T.Eff' V where
+--   denoteT = P.denote
 
-instance DenoteT (LiftT Stmt) Eff Eff' V where
-  denoteT = Lt.denote
+-- instance DenoteT (LiftT Stmt) Eff T.Eff' V where
+--   denoteT = Lt.denote
 
-instance DenoteT Forms Eff Eff' V where
-  denoteT = F.denoteR
+-- instance DenoteT Forms Eff T.Eff' V where
+--   denoteT = F.denoteR
 
 pDefEnv a b c = Right $ pDef a b c

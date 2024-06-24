@@ -19,15 +19,21 @@ import Actions.Arith (LitInt)
 denoteR :: forall eff eff' v v'.
   ( E.Attribute <: eff', Stream HtmlOut <: eff'
   , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
-  , State Seed <: eff'
+  , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
   , Lift eff eff' v)
   => Forms (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
-denoteR (Form False body) env = do -- here name and id is generated, and action should be determined? 
-  renderTag $ TagOpen "form" [("accept-charset", "UTF-8"), ("method", "POST")]
+denoteR (Form False body) env = do -- here action should be determined? 
+  seed :: Seed <- get
+  formId :: String <- encode $ "form_" ++ show seed
+  put formId
+  renderTag $ TagOpen "form" 
+    [ ("id", "form_"++formId), ("name", "form_"++formId)
+    , ("accept-charset", "UTF-8"), ("method", "POST")]
   body env
   renderTag $ TagClose "form"
+  reset -- this breaks if there are nested forms. Why would there be nested forms? 
 
 denoteR (Label name contents) env = do -- attribute "for"
   name'      <- lift $ name $ actionEnv env
@@ -82,8 +88,11 @@ denoteR (Input exp Int) env = do
 
 denoteR (Submit action name) env = do
   name <- lift $ name $ actionEnv env
+  formId :: String <- get 
+  buttonCount :: ButtonCount <- get
   renderTag $ TagOpen "button"
-      [ ("class", "button")] --name tba 
+    [ ("class", "button")
+    , ("name", "withForms_ia" ++ show buttonCount ++ "_" ++ formId)]
   renderPlainText (unbox name) True
   renderTag $ TagClose "button"
 

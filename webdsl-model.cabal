@@ -84,6 +84,7 @@ library
         Templates.Modules.Attributes.Denotation,
         Templates.Modules.Forms.Syntax,
         Templates.Modules.Forms.Denotation,
+        Templates.Modules.Forms.PhasesDenotation,
         Templates.Modules.Layout.Syntax,
         Templates.Modules.Layout.Denotation,
         Templates.Modules.Lift.Syntax,

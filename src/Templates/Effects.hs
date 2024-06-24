@@ -77,6 +77,9 @@ get = Op $ inj $ GetS Pure
 
 put v = Op $ inj $ PutS v $ Pure ()
 
+reset :: (State ButtonCount <: f) => Free f ()
+reset = Op $ inj $ PutS (Count 0)  $ Pure ()
+
 data Render v k 
     = Render (Fix v) (String -> k)
     deriving Functor
@@ -90,6 +93,12 @@ newtype Seed = Seed Int
     deriving (Eq, Num, Show)
 type Label = String
 type LabelId = String
+newtype ButtonCount = Count Int
+    deriving (Eq, Num)
+type FormId = String
+
+instance Show ButtonCount where
+    show (Count i) = show i
 
 encode ::  (Show e, Random Label v <: f) => e -> Free f v
 encode = random

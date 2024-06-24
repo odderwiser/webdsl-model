@@ -35,3 +35,11 @@ idH = Handler
         $ generateNamed namespaceOID 
         $ S.encode obj
   }
+
+simpleStateH :: (Functor remEff) => Handler_ (State v) val v remEff val
+simpleStateH = Handler_ 
+  { ret_ = \v val -> pure v
+  , hdlr_ = \eff val -> case eff of 
+      (GetS k) -> k val val
+      (PutS v k) -> k v
+  }
