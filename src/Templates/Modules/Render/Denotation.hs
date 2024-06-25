@@ -37,3 +37,8 @@ denoteXml (Xml xml (Just (exp, xml'))) env= do
     exp <- lift $ exp (actionEnv env)
     renderAttributeValue $ (unbox exp :: String)
     denoteXml xml' env 
+
+denoteProcess :: Functor eff' 
+  => S.Render (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denoteProcess _ env = return ()

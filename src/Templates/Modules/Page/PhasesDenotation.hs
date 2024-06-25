@@ -3,15 +3,19 @@ import Definitions.GlobalVars.Denotation (Heap)
 import Utils
 import Actions.Values
 import Definitions.Templates.Syntax
-import Templates.Modules.Page.Denotation (refNames)
+import Templates.Modules.Page.Denotation (refNames, populateTCall, refElements, derefElements, derefPDef)
 import Templates.Modules.Forms.Syntax (EvalT(..))
 import Data.Either (lefts, rights)
 import Control.Monad (foldM)
 import Actions.Effects (MLState, ref, assign, Random)
-import Templates.Effects (TVarAddress (Address), encode, State, TVarSeed (VSeed), get)
+import Templates.Effects (TVarAddress (Address), encode, State, TVarSeed (VSeed), get, put)
 import qualified Actions.Values as V
 import Syntax (Address)
 import Actions.Modules.Eval.Denotation (derefEnv')
+import Templates.Modules.Page.Syntax (Page (..))
+import Actions.Handlers.Env (refH)
+import Definitions.Pages.Syntax
+import Actions.Modules.Fun.Denotation (populateEnv)
 
 denoteBodyDb :: (Heap v' <: eff', Null <: v', Lit TVarAddress <: v'
   , Lift eff eff' v, v~Fix v', MLState TVarAddress v <: eff'
@@ -23,7 +27,7 @@ denoteBodyDb (Body list) env = do
   mapM_ (refValuesDb  env') (lefts list)
   mapM_ (\e -> e env')    (rights list)
 
-refValuesDb :: forall eff eff' v v'. 
+refValuesDb :: forall eff eff' v v'.
   ( Heap v' <: eff', Lift eff eff' v, State TVarSeed <: eff'
   , MLState TVarAddress v <: eff', v ~ Fix v'
   , Lit TVarAddress <: v', Null <: v', Random String String <: eff')
@@ -56,7 +60,7 @@ denoteBodyProcess (Body list) env = do
   mapM_ (refValuesProcess env') (lefts list)
   mapM_ (\e -> e env')    (rights list)
 
-refValuesProcess :: forall eff eff' v v'. 
+refValuesProcess :: forall eff eff' v v'.
   ( Heap v' <: eff', State TVarSeed <: eff'
   , Random String String <: eff'
   , MLState TVarAddress v <: eff', v ~ Fix v'
@@ -75,3 +79,75 @@ refValuesProcess env (VarInit  name exp) = do
   (loc :: String)   <- encode $ name ++show seed
   (loc' :: Address) <- derefEnv' name (actionEnv env)
   assign (loc', box $ Address loc :: v)
+
+denoteDb ::forall eff eff' v v'.
+  ( Heap v' <: eff', Heap v' <: eff, Null <: v', Lit TVarAddress <: v'
+  , Lift eff eff' v, v~Fix v', MLState TVarAddress v <: eff'
+  , State TVarSeed <: eff',Random String String <: eff', State Address <: eff'
+  ) => Page (PEnv eff eff' v) (FreeEnv eff v)
+    -> PEnv eff eff' v
+-- this should do something with vars. DOesnt yet.
+denoteDb (PNavigate {}) pEnv = return ()
+
+denoteDb (TCall name atts args Nothing) env = do
+  (body, env') <- populateTCall name args env
+  denoteBodyDb body env { actionEnv = env'}
+
+denoteDb (TCall name atts args (Just elems)) env = do
+  (loc, env')   <- refElements env elems
+  (body, env'') <- populateTCall name args env
+  put loc
+  denoteBodyDb body env' { actionEnv = env''}
+
+denoteDb Elements env = do
+  loc <- get
+  (env', elems) <- derefElements env loc
+  elems env'
+
+denoteProcess ::forall eff eff' v v'.
+  ( Heap v' <: eff', Heap v' <: eff, Null <: v', Lit TVarAddress <: v'
+  , Lift eff eff' v, v~Fix v', MLState TVarAddress v <: eff'
+  , State TVarSeed <: eff',Random String String <: eff', State Address <: eff'
+  ) => Page (PEnv eff eff' v) (FreeEnv eff v)
+    -> PEnv eff eff' v
+-- this should do something with vars. DOesnt yet.
+denoteProcess (PNavigate {}) pEnv = return ()
+
+denoteProcess (TCall name atts args Nothing) env = do
+  (body, env') <- populateTCall name args env
+  denoteBodyDb body env { actionEnv = env'}
+
+denoteProcess (TCall name atts args (Just elems)) env = do
+  (loc, env')   <- refElements env elems
+  (body, env'') <- populateTCall name args env
+  put loc
+  denoteBodyProcess body env' { actionEnv = env''}
+
+denoteProcess Elements env = do
+  loc <- get
+  (env', elems) <- derefElements env loc
+  elems env'
+
+denotePDb :: ( MLState Address v <: eff, Lift eff eff' v, Functor eff
+  , MLState Address v <: eff', State Address <: eff'
+  , MLState TVarAddress v <: eff', Random String String <: eff'
+  , v ~ Fix v', Null <: v', Lit TVarAddress <: v', State TVarSeed <: eff') =>
+    PageCall (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denotePDb (PCall name args _) env = do
+  (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
+    <- derefPDef name env
+  env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
+  denoteBodyDb body env {actionEnv = env'}
+
+denotePProcess :: ( MLState Address v <: eff, Lift eff eff' v, Functor eff
+  , MLState Address v <: eff', State Address <: eff'
+  , MLState TVarAddress v <: eff', Random String String <: eff'
+  , v ~ Fix v', Null <: v', Lit TVarAddress <: v', State TVarSeed <: eff') =>
+    PageCall (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denotePProcess (PCall name args _) env = do
+  (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
+    <- derefPDef name env
+  env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
+  denoteBodyProcess body env {actionEnv = env'}

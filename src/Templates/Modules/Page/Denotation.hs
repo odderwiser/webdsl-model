@@ -21,7 +21,7 @@ import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Syntax (VName)
 import Actions.Modules.Eval.Denotation (derefEnv')
 
-denote ::forall eff eff' v v'. 
+denote ::forall eff eff' v v'.
   ( Stream HtmlOut <: eff' , MLState Address v <: eff
   , Lift eff eff' v, MLState Address v <: eff'
   , State Address <: eff', v ~ Fix v', Null <: v'
@@ -38,17 +38,18 @@ denote (TCall name atts args Nothing) env = do
   denoteBody body env { actionEnv = env'}
 
 denote (TCall name atts args (Just elems)) env = do
-  (loc, env')   <- refH (env, elems) elementsH env
+  (loc, env')   <- refElements env elems
   (body, env'') <- populateTCall name args env
   put loc
   denoteBody body env' { actionEnv = env''}
 
 denote Elements env = do
   loc <- get
-  (env', elems) <- derefH loc elementsH env
+  (env', elems) <- derefElements env loc
   elems env'
 
-
+refElements env elems = refH (env, elems) elementsH env
+derefElements env loc = derefH loc elementsH env
 populateTCall :: forall f eff' v.
   (MLState Address v <: eff', MLState Address v <: f
   , Lift f eff' v)
@@ -108,10 +109,12 @@ denoteP :: (Stream HtmlOut <: eff'
   -> PEnv eff eff' v
 denoteP (PCall name args _) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
-    <- derefH name pagesH env
+    <- derefPDef name env
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
   renderTag $ TagOpen "body" [("id", name)]
   isPageCall
   denoteBody body env {actionEnv = env'}
   renderTag $ TagClose "body"
+
+derefPDef name = derefH name pagesH
 

@@ -67,3 +67,18 @@ renderSectionBody e env = do
 renderBlockRmdr e env  = do
     e env
     renderTag $ TagClose "block"
+
+denoteProcess :: forall eff eff' v. 
+    (Functor eff')
+  => Layout (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denoteProcess (Header _ e) env = do
+  e env
+
+denoteProcess (Section _ e) env = do
+  e env
+
+denoteProcess (Block _ _ e) env = do
+    e env
+
+denoteProcess _ env = return ()
