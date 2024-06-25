@@ -48,7 +48,6 @@ type Program' = Program DefSyntax (PageCall T.Module' (Fix Module))
 --   + State AttList + E.Render V' + MLState Address V + State Address + End
 
 
-
 foldProgram :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
     => Program ((g (BiFix f (Fix h)))  (Fix h)) (PageCall (BiFix f (Fix h)) (Fix h))
     -> Program ((g ( PEnv eff eff' v)) (FreeEnv eff v)) (PageCall ( PEnv eff eff' v) (FreeEnv eff v))
@@ -82,21 +81,6 @@ makeTEnv eEnv fEnv tEnv = TEnv
     , U.elements = []
     }
 
--- runApplied :: Free Eff' () -> T.Out'
--- runApplied e = case unwrap
---     $ handle_ stateElH Nothing
---     $ handle_ heap (makeEnv [])
---     $ handle renderH
---     $ handle_ stateH []
---     $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
---     $ handle_ attributeH ("section", 1)
---     $ handle_ paramsH mkParamsMap
---     $ handle_ singleAccessState Nothing
---     $ handle idH
---     $ handle_ autoIncrementState (E.Seed 0)
---     $ e
---   of
---     ((_, str), heap)    -> str
 
 test exp env env' tEnv tEnv' = denoteP exp
   $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
@@ -112,41 +96,5 @@ instance DenoteDef EntityDef EnvTy Eff'' where
 
 instance DenoteDef' TemplateDef (PEnv Eff T.Eff' V) EnvTy Eff'' where
   denoteDef'= T.denoteDefT
-
-
--- handleExp :: () => Free Eff V -> Free Eff' V
--- handleExp e = bubbleDown
---   $ handle_ eHeapH [] -- probably wrong?
---   $ handle uuidH
---   $ handle funReturn
---   $ handle condition
---   e
-
-
--- -- probably a beeter way to implement this??
--- bubbleDown ::
---     (eff <<: eff')
---     => Free eff v -> Free eff' v
--- bubbleDown = fold Pure (Op . cmap)
-
--- instance Lift Eff T.Eff' V where
---   lift = T.handleExp
-
--- instance DenoteT Layout Eff T.Eff' V where
---   denoteT :: Layout (PEnv Eff T.Eff' V) (FreeEnv Eff V)  -> PEnv Eff T.Eff' V
---   denoteT = L.denote
-
--- instance DenoteT S.Render Eff T.Eff' V where
---   denoteT :: S.Render (PEnv Eff T.Eff' V) (FreeEnv Eff V)  -> PEnv Eff T.Eff' V
---   denoteT = X.denote
-
--- instance DenoteT Page Eff T.Eff' V where
---   denoteT = P.denote
-
--- instance DenoteT (LiftT Stmt) Eff T.Eff' V where
---   denoteT = Lt.denote
-
--- instance DenoteT Forms Eff T.Eff' V where
---   denoteT = F.denoteR
 
 pDefEnv a b c = Right $ pDef a b c

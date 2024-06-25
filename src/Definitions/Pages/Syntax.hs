@@ -21,15 +21,12 @@ instance Bifunctor PageCall where
 type RequestParams = [(String, String)] -- parsable to headers
 
 data PageDef t a
-    = PDef PgName [(PName, Type)] (TBody t a)
-
-instance Functor (PageDef e) where
-  fmap :: (a -> b) -> PageDef e a -> PageDef e b
-  fmap f (PDef name args elems) = PDef name args $ fmap f elems
+    = PDef PgName [(PName, Type)] t
+    deriving Functor
 
 instance Bifunctor PageDef where
-  bimap g f (PDef name args elems) = PDef name args $ bimap g f elems
+  bimap g f (PDef name args elems) = PDef name args $ g elems
 
-pDef :: (PageDef <:: f) => PgName -> [(PName, Type)] -> [EvalT g h \/ g] -> f g h
-pDef name args body = inj' $ PDef name args $ Body body
+pDef :: (PageDef <:: f) => PgName -> [(PName, Type)] -> g -> f g h
+pDef name args body = inj' $ PDef name args $ body
 

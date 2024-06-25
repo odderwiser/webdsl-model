@@ -53,3 +53,4 @@ varInitT :: (EvalT <:: f) => VName -> Fix g -> BiFix f (Fix g)
 varInitT name v = injBf $ VarInit name v 
 
 data PropRef e = PropRef (Uuid, PName)
+    deriving Functor

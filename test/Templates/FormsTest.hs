@@ -90,7 +90,7 @@ formsOutput int =
 
 formsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 formsSyntax = Program
-    [ pDef "root" [] [Right $ form False $ consT
+    [ pDef "root" [] $ injBf $ Body $ [Right $ form False $ consT
         (label (S.str "labelBool") $ input true Bool)
         $ consT (label (S.str "labelInt") $ input (int 1) Int)
         $ consT (label (S.str "labelStr") $ input (S.str "a") S.String)

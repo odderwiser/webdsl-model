@@ -4,10 +4,13 @@ import Utils.Fix
 import Utils.Environment
 import Definitions.GlobalVars.Syntax (GlobalVar, DatabaseEntry)
 import Network.HTTP.Types (Status, Method)
+import Definitions.Pages.Syntax (RequestParams)
 
 data Program e f
     = Program [e]  -- real program will have an entry point 
     | Fragment [e] f -- no entrypoint: just a
+    | Sequence [e] [(f, RequestParams)]
+    | Request [e] (f, RequestParams)
     deriving Functor
 
 data ProgramV g e f = WithVars [GlobalVar g] (Program e f) 

@@ -10,7 +10,7 @@ import Data.Bifunctor
 
 type TName = String
 
-data TemplateDef t a = TDef TName [(PName, Type)] (TBody t a)
+data TemplateDef t a = TDef TName [(PName, Type)] t
   deriving Functor
 
 data TBody t a = Body [EvalT t a \/ t]
@@ -28,7 +28,7 @@ instance Bifunctor TBody where
 
 instance Bifunctor TemplateDef where
   bimap g f (TDef name args elems) = TDef name args
-    $ bimap g f elems
+    $ g elems
 
-tDef :: (TemplateDef <:: f) => TName -> [(PName, Type)] -> [EvalT t a \/ t] -> f t a
-tDef name args body = inj' $ TDef name args $ Body body
+tDef :: (TemplateDef <:: f) => TName -> [(PName, Type)] -> t -> f t a
+tDef name args body = inj' $ TDef name args body

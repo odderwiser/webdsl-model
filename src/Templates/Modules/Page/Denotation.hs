@@ -35,13 +35,13 @@ denote (PNavigate name vars text) pEnv = do
 
 denote (TCall name atts args Nothing) env = do
   (body, env') <- populateTCall name args env
-  denoteBody body env { actionEnv = env'}
+  body env { actionEnv = env'}
 
 denote (TCall name atts args (Just elems)) env = do
   (loc, env')   <- refElements env elems
   (body, env'') <- populateTCall name args env
   put loc
-  denoteBody body env' { actionEnv = env''}
+  body env' { actionEnv = env''}
 
 denote Elements env = do
   loc <- get
@@ -55,7 +55,7 @@ populateTCall :: forall f eff' v.
   , Lift f eff' v)
   => TName
   -> [(FreeEnv f v, Type)] -> TEnv f eff' v
-  -> Free eff' (TBody (PEnv f eff' v) (FreeEnv f v), Env f v)
+  -> Free eff' ((PEnv f eff' v), Env f v)
 populateTCall name args env = do
   (TDef tName params body) :: TemplateDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefH (name, map snd args) templatesH env
@@ -113,7 +113,7 @@ denoteP (PCall name args _) env = do
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
   renderTag $ TagOpen "body" [("id", name)]
   isPageCall
-  denoteBody body env {actionEnv = env'}
+  body env {actionEnv = env'}
   renderTag $ TagClose "body"
 
 derefPDef name = derefH name pagesH

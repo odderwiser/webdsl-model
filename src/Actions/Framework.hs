@@ -27,7 +27,8 @@ import Actions.Handlers.Entity (uuidH, eHeapH)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 
-type Eff     =  Cond + Abort V + Random String String + EHeap V' + MLState Address V + End
+type Eff = EffV V'
+type EffV v    =  Cond + Abort (Fix v) + Random String String + EHeap v + MLState Address (Fix v) + End
 type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str

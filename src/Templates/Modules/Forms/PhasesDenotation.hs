@@ -46,7 +46,7 @@ denoteDb :: forall eff eff' eff'' v v' g.
   , Heap v' <: eff', EHeap v' <: eff', Throw <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
   , Lit TVarAddress <: v', PropRef <: v'
-  , Lift eff'' eff' v, Denote g eff'' (Fix v'))
+  , Lift eff'' eff' v, Denote g eff'' (Fix v'), eff''~Heap v' + End)
   => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
 denoteDb (Input exp Bool) env = do --exp is a reference to param or template variable
