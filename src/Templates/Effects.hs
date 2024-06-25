@@ -97,9 +97,10 @@ newtype ButtonCount = Count Int
     deriving (Eq, Num)
 type FormId = String
 
-newtype TVarAddress = Address Int
-    deriving (Eq, Num)
-
+newtype TVarAddress = Address String
+    deriving (Eq)
+newtype TVarSeed = VSeed Int
+    deriving (Eq, Num, Show)
 instance Show ButtonCount where
     show (Count i) = show i
 
