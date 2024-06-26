@@ -11,7 +11,7 @@ import Actions.Handlers.Env (FunctionEnv, defsH)
 import Definitions.Program.Syntax
 import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps, DbStatus)
 import Actions.Handlers.Return (funReturn)
-import Actions.Framework as A hiding (run)
+import Actions.FrameworkIO as A hiding (run)
 import Syntax
 import Actions.Arith as A
 import Actions.Bool as B
@@ -39,7 +39,7 @@ import Actions.Effects
 type Envs = EntityDef + FDecl
 type EffP = EntityDefsEnv EffA V + FunctionEnv EffA V + End
 type EffA = Abort V +  DbRead (EntityDecl V) 
-    + Cond + Random String String + TempEHeap V' + EHeap V' + MLState Address V +  DbWrite (EntityDecl V) V +  End 
+    + Cond + Random String String + TempEHeap V' + EHeap V' + MLState Address V +  DbWrite V +  End 
 type Sym = VarList + Module
 
 runProgram :: DenoteDef   sym e EffP 

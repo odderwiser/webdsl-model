@@ -102,10 +102,10 @@ eHeapH :: (Functor eff, Lit Uuid <: v)
 eHeapH = Handler_
   { ret_  = \x env -> pure x
   , hdlr_ = \x env -> case x of
-      (Deref key k)     -> k (fromJust $ Prelude.lookup key env) env
-      (Ref value k)     -> let id = getUuid value
+      (Deref key k)     -> k (Prelude.lookup key env) env
+      (Ref (Just value) k)     -> let id = getUuid value
         in k id ((id, value) : env)
-      (Assign record k) -> k (record : env)
+      (Assign (name, Just (value)) k) -> k ((name, value) : env)
   }
 
 mockDbReadH :: (Functor remEff)
@@ -145,7 +145,7 @@ data DbStatus = Empty | Failure | Success
 
 dbWriteH :: forall remEff val v.
   (Functor remEff, Lit Uuid <: v,ToJSON (v (Fix v)), FromJSON (v (Fix v)))
-  => FilePath -> Handler_ (DbWrite (EntityDecl (Fix v)) (Fix v)) val [WriteOps v] remEff (IO (val, DbStatus))
+  => FilePath -> Handler_ (DbWrite (Fix v)) val [WriteOps v] remEff (IO (val, DbStatus))
 dbWriteH dbEntry = Handler_
   { ret_ = \ val writeOps -> pure $ do
     fileExists <- doesFileExist dbEntry
@@ -217,7 +217,7 @@ decodeElems = A.decode . pack . S.encode
 
 mockDbWriteH :: forall remEff val v.
   (Functor remEff, Lit Uuid <: v)
-  => Handler_ (DbWrite (EntityDecl (Fix v)) (Fix v)) val (Elems v) remEff (val, Elems v)
+  => Handler_ (DbWrite (Fix v)) val (Elems v) remEff (val, Elems v)
 mockDbWriteH = Handler_
   { ret_ = curry pure
   , hdlr_ = \eff db@(Elems vars decls classes ) -> case eff of

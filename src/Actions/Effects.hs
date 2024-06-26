@@ -110,4 +110,4 @@ random :: (Show e, Random String v <: f) => e -> Free f v
 random seed = Op $ inj $ Random (show seed) Pure
 
 type DbKey = Uuid
-type EHeap v = MLState DbKey (EntityDecl (Fix v))
+type EHeap v = MLState DbKey (Maybe (EntityDecl (Fix v)))

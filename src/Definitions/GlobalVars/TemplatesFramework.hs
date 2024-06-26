@@ -45,7 +45,7 @@ import Templates.Handlers.Forms (singleAccessState, idH)
 
 type Eff' = Random Label LabelId + State (Maybe LabelId) 
   + ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address
-  + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite (EntityDecl V) V + End
+  + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite V + End
 type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
 type Eff'' = PageDefs EffA Eff' V + TDefs EffA Eff' V + EntityDefsEnv EffA V
     + FunctionEnv EffA V + End

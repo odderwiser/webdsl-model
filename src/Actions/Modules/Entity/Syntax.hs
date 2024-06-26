@@ -17,14 +17,12 @@ eDecl eName params = injF $ EDecl eName params
 -- data LitV v e = Box v
 --     deriving (Functor, Eq, Show)
 
-
-
-
 data Entity e 
     = PropAccess e PName
     | ECall e FunName [e]
     | PropAssign e PName e
     | PVar PName
+    | Save e 
     deriving Functor 
 
 pAccess :: (Entity <: f) => Fix f -> PName -> Fix f 
@@ -35,6 +33,9 @@ eCall entity fName args = injF $ ECall entity fName args
 
 pVar :: (Entity <: f) => PName -> Fix f
 pVar = injF . PVar
+
+save :: (Entity <: f) => Fix f -> Fix f
+save = injF . Save
 
 projParams :: (Lit Address <: g) => Maybe (EntityDecl (Fix g)) -> [(PName, Fix g)]
 projParams entity = case entity of

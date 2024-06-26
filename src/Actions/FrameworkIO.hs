@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -Wno-missing-fields #-}
-module Actions.Framework where
+module Actions.FrameworkIO where
 
 import Actions.Effects
 import Syntax
@@ -23,29 +22,37 @@ import Actions.Modules.Stmt.Denotation as S
 
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
-import Actions.Handlers.Entity (uuidH, eHeapH)
+import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
+import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 
 type Eff = EffV V'
-type EffV v   =  Cond + Abort (Fix v)
-  + MLState Address (Fix v) + End
-type V'      =  [] + LitBool + LitInt + LitStr + Null
+type EffV v    =  Cond + Abort (Fix v) + Random String String 
+  + EHeap v + MLState Address (Fix v) + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
+type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
-type Module  = Loop + Stmt + Fun + Eval + Expr + ModuleV
+type Module  = EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
 type Out     = V --todo: make different!
 
-runExp :: FreeEnv Eff V -> Out
-runExp e = run e (Env { varEnv = []}) []
+runExp :: FreeEnv Eff V -> IO Out
+runExp e = run e (Env { varEnv = []}) [] ""
 
-run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)]
-  -> Out
-run e env store = unwrap
+run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)] -> String
+  -> IO Out
+run e env store file = do 
+  (out, readstatus) <-  unwrap
+    $ handle mockDbReadH
+    $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
     $ handle_ heap' (makeEnv store)
+    $ handle_ eHeapH []
+    $ handle uuidH
     $ handle funReturn
     $ handle condition
-    $ e env
+    $ e env 
+  return out
+  
 
 
 instance (Lit Int <: v) => Denote Arith (EffV v) (Fix v) where
@@ -78,3 +85,11 @@ instance (Null <: v, [] <: v, Lit Bool <: v, Lit Int <: v)
 
 instance (Null <: v) => Denote Fun (EffV v) (Fix v) where
   denote = F.denote
+
+instance (Null <: v, Lit Uuid <: v) 
+  => Denote Entity (EffV v) (Fix v) where
+  denote = En.denote
+
+instance (Lit Address <: v, Lit Uuid <: v, Null <: v, Show  (v(Fix v))) 
+  => Denote EntityDecl (EffV v) (Fix v) where
+  denote = En.denoteEDecl

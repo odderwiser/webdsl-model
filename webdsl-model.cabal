@@ -25,6 +25,7 @@ library
     exposed-modules:
         Actions.Effects,
         Actions.Framework,
+        Actions.FrameworkIO,
         Actions.Arith,
         Actions.Bool,
         Actions.Str,
@@ -78,6 +79,7 @@ library
         PhasesFramework.Framework,
         PhasesFramework.Databind,
         Templates.Framework,
+        Templates.FrameworkIO,
         Templates.Effects,
         Templates.Handlers.Env,
         Templates.Handlers.Forms,

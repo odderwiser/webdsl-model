@@ -12,10 +12,11 @@ import Syntax (Type(..), Address)
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Modules.Eval.Syntax (Eval (Var))
 import Actions.Modules.Eval.Denotation (derefEnv)
-import Actions.Modules.Entity.Syntax (Entity (PropAccess))
+import Actions.Modules.Entity.Syntax (Entity (PropAccess), projEntity, EntityDecl)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Text.Read (readMaybe)
-import Actions.Modules.Entity.Denotation (setProperty)
+import Actions.Modules.Entity.Denotation (setProperty, getObj')
+import Definitions.GlobalVars.Effects (DbRead)
 
 
 denoteProcess :: forall eff eff' v v'.
@@ -45,7 +46,7 @@ denoteDb :: forall eff eff' v v' g.
   , MLState TVarAddress v <: eff'
   , Heap v' <: eff', EHeap v' <: eff', Throw <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
-  , Lit TVarAddress <: v', PropRef <: v'
+  , Lit TVarAddress <: v', PropRef <: v', DbRead (EntityDecl (Fix v')) <: eff', EntityDecl <: v'
   , Lift eff eff' v, Heap v' <: eff, Eval <: g, Entity <: g, Denote g eff v)
   => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
@@ -140,17 +141,18 @@ denoteAction (Submit action name) env = do
 
 denoteAction other env = denoteProcess other env
 
-
 bindValue :: (MLState TVarAddress v <: f,
-  Heap v' <: f, EHeap v' <: f,
-  Lit TVarAddress <: v', PropRef <: v', v~Fix v' )
+  Heap v' <: f, EHeap v' <: f, DbRead (EntityDecl v) <: f,
+  Lit TVarAddress <: v', PropRef <: v', EntityDecl <: v', v~Fix v' )
   => v -> v -> Free f ()
 bindValue valueRef value = case projF valueRef of
-    Just (PropRef (uuid, name))  -> do
-      entity <- deref uuid
-      entity' <- setProperty name value entity
-      uuid :: Uuid <- ref entity'
-      return ()
+  Just (PropRef (uuid, name))  -> do
+    entity <- getObj' uuid 
+    entity' <- setProperty name value $ projEntity entity
+    uuid :: Uuid <- ref $ Just entity'
+    return ()
+  Nothing -> case projF valueRef of
+    Just (Box (Address address)) -> assign (Address address, value)
 
 liftEnv :: Env eff v -> Env eff'' v
 liftEnv env = Env {varEnv=varEnv env, globalVars= globalVars env }

@@ -3,7 +3,7 @@ import Templates.Effects
 import Actions.Effects
 import Utils
 import Definitions.GlobalVars.Denotation (Heap)
-import Actions.Framework
+import Actions.FrameworkIO
 import Templates.Framework
 import Templates.Syntax as S
 import Actions.Syntax
@@ -18,10 +18,11 @@ import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Entity (uuidH, eHeapH)
+import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 
 type DbEff' v = State (Maybe LabelId) + Random Label LabelId +
   State Seed + State FormId + ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Throw + EHeap v + Heap v + End
+  + MLState TVarAddress (Fix v) + Throw + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End
 
 type Vt = Lit TVarAddress + PropRef + V'
 type Vt' = Fix Vt

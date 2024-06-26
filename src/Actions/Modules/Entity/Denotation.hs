@@ -16,6 +16,7 @@ import Actions.Modules.Entity.Syntax
 import Actions.Modules.Str.Syntax as Str
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values as V
+import Definitions.GlobalVars.Effects (setEntity, DbWrite, getEntity, DbRead)
 
 getProperty name (EDecl _ params) = return
     $ fromJust
@@ -24,20 +25,29 @@ getProperty name (EDecl _ params) = return
 setProperty name v (EDecl eName params) = return $ EDecl name
   $ map (\(name', v') -> if name == name' then (name, v) else (name', v')) params
 
-getObj :: (EHeap v <: f, Lit Uuid <: v)
+getObj :: (EHeap v <: f, DbRead (EntityDecl (Fix v)) <: f, Lit Uuid <: v)
   => FreeEnv f (Fix v) -> Env f (Fix v) -> Free f (EntityDecl (Fix v))
 getObj object env = do
   id      <- object env
-  deref
-    (unbox id :: Uuid)
+  entity  <- deref (unbox id :: Uuid)
+  case entity of 
+    (Just (e :: EntityDecl (Fix v))) -> return e 
+    Nothing                          -> getEntity (unbox id :: Uuid)
 
+getObj' id = do
+  entity  <- deref id
+  entity' <- case entity of 
+    (Just (e :: EntityDecl (Fix v))) -> return e 
+    Nothing                          -> getEntity id
+  return $ injF $ entity'
 -- derefObj obj env = derefH (getAddress obj) heap'' (entities env)
 liftDefs defs = Env {U.defs = defs}
 
 denote :: forall e v eff.
   (e ~ FreeEnv eff (Fix v)
   , MLState Address (Fix v) <: eff, EHeap v <: eff
-  , Null <: v, Lit Uuid <: v
+  , DbWrite (Fix v) <: eff
+  , Null <: v, Lit Uuid <: v, DbRead (EntityDecl (Fix v)) <: eff
   ) => Entity e -> e
 denote (PropAccess object propName) env = do
   obj       <- getObj object env
@@ -49,7 +59,7 @@ denote (PropAssign object propName e)  env = do
   obj :: (EntityDecl (Fix v)) <- getObj object env
   e'                          <- e env
   obj'                        <- setProperty propName e' obj
-  uuid :: Uuid                <- ref obj'
+  uuid :: Uuid                <- ref $ Just obj'
   return V.null
 
 denote (ECall obj fname vars) env = do
@@ -65,6 +75,11 @@ denote (ECall obj fname vars) env = do
 denote (PVar pname) env = do
   loc     <- derefLocalProperty pname env
   deref loc
+
+denote (Save obj) env =  do
+  obj <-  getObj obj env
+  setEntity obj
+  return $ V.null 
 
 derefLocalProperty pname = derefH pname propertyVarEnvH
 
@@ -106,7 +121,7 @@ denoteEDecl decl@(EDecl entity props) env = do
     name propsDefs iProps funs) <- derefH entity entityDefsH env
   values                        <- mapM ((\e -> e env) . snd) props
   implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
-  id :: Uuid                    <- ref $ mapProperties decl values implProps
+  id :: Uuid                    <- ref . Just $ mapProperties decl values implProps
   return $ box id
 
 denoteEDecl' :: forall eff v.
