@@ -7,7 +7,7 @@ import Definitions.Pages.Framework
 import Definitions.Pages.Syntax
 import Actions.Framework
 import Templates.Syntax
-import Templates.Modules.Lift.Denotation (consT)
+import Templates.Modules.Lift.Denotation (consT, consTList)
 import Syntax as S
 import Actions.Values
 import Actions.Str as S
@@ -15,6 +15,8 @@ import Actions.Bool (true, false)
 import Actions.Arith (int)
 import Actions.Modules.Eval.Syntax (var)
 import qualified Data.Set as Set (insert, notMember, empty, member)
+import Definitions.Templates.Syntax (StatementType(Definition), TBody(Body), body)
+import Definitions.Templates.Syntax (StatementType(..))
 
 testEq :: ()
   => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
@@ -90,36 +92,38 @@ formsOutput int =
 
 formsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 formsSyntax = Program
-    [ pDef "root" [] $ injBf $ Body $ [Right $ form False $ consT
-        (label (S.str "labelBool") $ input true Bool)
-        $ consT (label (S.str "labelInt") $ input (int 1) Int)
-        $ consT (label (S.str "labelStr") $ input (S.str "a") S.String)
-        $ submit (int 1) (S.str "submit") ]
+  [ pDef "root" [] $ form False $ consTList
+    [ label (S.str "labelBool") $ input true Bool
+    , label (S.str "labelInt") $ input (int 1) Int
+    , label (S.str "labelStr") $ input (S.str "a") S.String
+    , submit (int 1) (S.str "submit")
     ]
+  ]
 
 formsWithVarsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 formsWithVarsSyntax = Program
-    [ pDef "root" []
-      [ Right $ form False $ consT
-        (label (S.str "labelBool") $ input (var "b") Bool)
-        $ consT (label (S.str "labelInt") $ input (var "a") Int)
-        $ consT (label (S.str "labelStr") $ input (var "c") S.String)
-        $ submit (int 1) (S.str "submit")
-      , Left $ VarDeclT "a"
-      , Left $ VarInit "b" true
-      , Left $ VarInit "c" (S.str "a")
+  [ pDef "root" [] $ body ["a", "b", "c"]
+    (consTList [vDeclT "a"
+    , varInitT "b" true
+    , varInitT "c" (S.str "a")])
+    $ form False $ consTList
+      [ label (S.str "labelBool") $ input (var "b") Bool
+      , label (S.str "labelInt") $ input (var "a") Int
+      , label (S.str "labelStr") $ input (var "c") S.String
+      , submit (int 1) (S.str "submit")
       ]
-    ]
+  ]
 
 testDoubleLabel = testEqId "test double label" doubleLabelOutput doubleLabelSyntax
 
 doubleLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 doubleLabelSyntax = Program
-    [ pDef "root" []
-      [ Right $ form False $ label (S.str "unused") $ label (S.str "used") $ input (var "c") S.String
-      , Left $ VarInit "c" (S.str "a")
-      ]
-    ]
+  [ pDef "root" [] $ body ["c"] (varInitT "c" (S.str "a"))
+    (form False
+      $ label (S.str "unused")
+      $ label (S.str "used")
+      $ input (var "c") S.String)
+  ]
 
 doubleLabelOutput =
   [ Plain "<html><head></head><body id=\"root\"><form id=\""
@@ -132,13 +136,13 @@ doubleLabelOutput =
 
 noLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
 noLabelSyntax = Program
-  [ pDef "root" []
-    [ Right $ form False $ consT (label (S.str "unused") 
-      $ label (S.str "used") $ input (var "c") S.String)
-      (input (var "a") Bool)
-    , Left $ VarInit "c" (S.str "a")
-    , Left $ VarInit "a" false
-    ]
+  [ pDef "root" [] $ body ["c", "a"]
+    (consTList [ varInitT "c" (S.str "a")
+    , varInitT "a" false
+    ])
+    (form False $ consTList
+      [ label (S.str "unused") $ label (S.str "used") $ input (var "c") S.String
+      , input (var "a") Bool])
   ]
 
 testNoLabel = testEqId "test no label" noLabelOutput noLabelSyntax

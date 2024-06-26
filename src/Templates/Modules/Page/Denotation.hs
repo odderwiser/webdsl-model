@@ -8,7 +8,7 @@ import Templates.Effects
 import Text.HTML.TagSoup (Tag(TagClose, TagOpen))
 import Actions.Handlers.Env (derefH, refH)
 import Templates.Handlers.Env (templatesH, elementsH, pagesH)
-import Definitions.Templates.Syntax (TemplateDef(TDef), TName, TBody (Body))
+import Definitions.Templates.Syntax (TemplateDef(TDef), TName, TBody (Body), StatementType (..))
 import Actions.Modules.Fun.Denotation (dropEnv, refVars, populateEnv, refVar)
 import Definitions.Pages.Syntax
 import Templates.Modules.Lift.Syntax (Weaken (Weaken))
@@ -20,6 +20,7 @@ import Actions.Handlers.Heap (environment)
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Syntax (VName)
 import Actions.Modules.Eval.Denotation (derefEnv')
+import Data.Bifunctor (second)
 
 denote ::forall eff eff' v v'.
   ( Stream HtmlOut <: eff' , MLState Address v <: eff
@@ -55,7 +56,7 @@ populateTCall :: forall f eff' v.
   , Lift f eff' v)
   => TName
   -> [(FreeEnv f v, Type)] -> TEnv f eff' v
-  -> Free eff' ((PEnv f eff' v), Env f v)
+  -> Free eff' (PEnv f eff' v, Env f v)
 populateTCall name args env = do
   (TDef tName params body) :: TemplateDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefH (name, map snd args) templatesH env
@@ -66,30 +67,21 @@ denoteBody :: (Heap v <: eff', Null <: v
   , Lift eff eff' (Fix v)
   ) => TBody (PEnv eff eff' (Fix v)) (FreeEnv eff (Fix v))
   -> PEnv eff eff' (Fix v)
-denoteBody (Body list) env = do
-  env'  <- foldM refNames env (lefts list)
-  mapM_ (refValues  env') (lefts list)
-  mapM_ (\e -> e env')    (rights list)
+denoteBody (Body names defs stmts) env = do
+  env'  <- foldM refName env names
+  defs env'
+  stmts env'
 
-refValues :: (Heap v <: eff', Functor eff
+denoteE :: (Heap v <: eff', Functor eff
   , Lift eff eff' (Fix v))
-  => TEnv eff eff' (Fix v)
-  -> EvalT (PEnv eff eff' (Fix v)) (FreeEnv eff (Fix v))
-  -> Free eff' ()
-refValues env (VarDeclT name)     = return ()
-refValues env (VarInit  name exp) = do
+  => EvalT (PEnv eff eff' (Fix v)) (FreeEnv eff (Fix v))
+  -> PEnv eff eff' (Fix v)
+denoteE (VarDeclT name) env   = return ()
+denoteE (VarInit  name exp) env = do
   loc     <- derefEnv' name (actionEnv env)
   exp'    <- lift $ exp (actionEnv env)
   assign
     (loc, exp')
-
-refNames :: forall eff eff' v. (Heap v <: eff',
-  Null <: v, Functor eff) =>
-  TEnv eff eff' (Fix v)
-  -> EvalT (PEnv eff eff' (Fix v)) (FreeEnv eff (Fix v))
-    -> Free eff' (TEnv eff eff' (Fix v))
-refNames env (VarDeclT name)       = refName env name
-refNames env (VarInit  name value) = refName env name
 
 refName :: forall eff eff' v.
   (Heap v <: eff', Null <: v, Functor eff)

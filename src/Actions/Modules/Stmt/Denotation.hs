@@ -12,8 +12,7 @@ import Data.List (sort, sortOn)
 import Actions.Modules.Col.Syntax (projC)
 import Actions.Values
 
-denote :: forall v eff. (Null <: v, [] <: v, LitBool <: v, LitInt <: v,
-  Cond <: eff, MLState Address (Fix v) <: eff)
+denote :: forall v eff. (Functor eff)
   => Stmt (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
 

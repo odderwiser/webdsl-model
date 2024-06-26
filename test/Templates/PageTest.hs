@@ -13,7 +13,8 @@ import Actions.Arith as A
 import Actions.Syntax
 import Definitions.Templates.Framework (tDefEnv)
 import Definitions.Pages.Syntax
-import Definitions.Templates.Syntax (tDef)
+import Definitions.Templates.Syntax
+    ( tDef, StatementType(..), body )
 
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
@@ -27,11 +28,9 @@ testEqProgram id res syntax =  TestCase $
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    pDef "root" [] 
-      [ Right $ tCall "inside" [(A.add (int 2) (int 1), Int)]],
-    tDef "inside" [("a", Int)] 
-      [Right $ output $ var "a"] 
-    ]
+  pDef "root" [] $ tCall "inside" [(A.add (int 2) (int 1), Int)],
+  tDef "inside" [("a", Int)] $ output $ var "a"
+  ]
 
 pCallSyntax :: Program'
 pCallSyntax = Fragment defsSyn pCallRoot
@@ -43,12 +42,12 @@ testPCall = testEqProgram "page Call"
 
 properProgramSyntax = Program defsSyn
 
-testProperProgram = testEqProgram "root page" 
+testProperProgram = testEqProgram "root page"
     (   "<html><head></head><body id=\"root\">"
      ++ "3</body></html>")
      properProgramSyntax
 
-pageTests = T.TestList 
+pageTests = T.TestList
   [ testPCall
   , testProperProgram
   ]

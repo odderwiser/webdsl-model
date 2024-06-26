@@ -114,7 +114,7 @@ runObservable e file = do
     $ handle_ stateElH Nothing
     $ handle renderH
     $ handle_ stateH []
-    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = ""})
+    $ handle_ renderHtmlH (PageR { R.title = Nothing, Templates.Handlers.Render.body = ""})
     $ handle_ attributeH ("section", 1)
     $ handle_ paramsH mkParamsMap
     $ handle_ singleAccessState Nothing

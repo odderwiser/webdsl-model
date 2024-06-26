@@ -22,10 +22,14 @@ import Actions.Handlers.Entity (uuidH, eHeapH)
 import Templates.Modules.Forms.Denotation as F
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH)
 import Actions.Modules.Entity.Syntax (Entity)
+import Definitions.Templates.Syntax (TBody)
+import Actions.Values (Lit)
+import Definitions.GlobalVars.Syntax (Uuid)
 
-type Eff' = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
-  + Attribute + Stream HtmlOut + State AttList + E.Render V' + MLState Address V + State Address + End
-type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt
+type Eff' = Eff'V V'  
+type Eff'V v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
+  + Attribute + Stream HtmlOut + State AttList + E.Render v + MLState Address (Fix v) + State Address + End
+type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
 type Module' = BiFix T (Fix Module)   
 type Out' = String
@@ -56,12 +60,12 @@ runApplied e = case unwrap
   of
     ((_, str), heap)    -> str
 
-instance Lift Eff Eff' V where
+instance (Lit Uuid <: v) => Lift (EffV v) (Eff'V v) (Fix v) where
   lift  = handleExp
 
 
 
-handleExp :: () => Free Eff V -> Free Eff' V
+handleExp :: (Lit Uuid <: v) => Free (EffV v) (Fix v) -> Free (Eff'V v) (Fix v)
 handleExp e = bubbleDown
   $ handle_ eHeapH [] -- probably wrong?
   $ handle uuidH
@@ -95,3 +99,9 @@ instance DenoteT Forms Eff Eff' V where
 
 instance DenoteT (Input (Fix Module)) Eff Eff' V where
   denoteT = F.denoteRInput
+
+instance DenoteT TBody Eff Eff' V where
+  denoteT = P.denoteBody
+
+instance DenoteT EvalT Eff Eff' V where
+  denoteT = P.denoteE

@@ -25,10 +25,9 @@ testEqProgram id res syntax =  TestCase $
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    tDef "nestedVars" [("a", Int), ("b", S.String)] 
-      [Right $ tCall "inside" [(A.add (var "a") (int 1), Int)]],
-    tDef "inside" [("a", Int)] 
-      [ Right $ output $ var "a" ] 
+    tDef "nestedVars" [("a", Int), ("b", S.String)] $
+      tCall "inside" [(A.add (var "a") (int 1), Int)],
+    tDef "inside" [("a", Int)] $ output $ var "a"
     ]
 
 tCallSyntax :: Program DefSyntax Module'
@@ -43,8 +42,8 @@ testTCall = testEqProgram "test TCall"
 
 elementsSyntax :: Program DefSyntax Module'
 elementsSyntax = Fragment 
-  [ tDef "withElems" [] [Right Ts.elements]
-  , tDef "callElems" [("a", Int)] [Right $ tCallElems "withElems" [] $ output $ var "a" ] 
+  [ tDef "withElems" [] $ Ts.elements
+  , tDef "callElems" [("a", Int)] $ tCallElems "withElems" [] $ output $ var "a"
   ] $ tCall "callElems" [(int 1, Int)]
 
 testElems = testEqProgram "test Elems"
@@ -54,8 +53,8 @@ testElems = testEqProgram "test Elems"
 
 elementsSyntaxCons :: Program DefSyntax Module'
 elementsSyntaxCons = Fragment 
-  [ tDef "withElems" [] [ Right Ts.elements ]
-  , tDef "callElems" [("a", Int)] [ Right $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a") ]
+  [ tDef "withElems" [] Ts.elements
+  , tDef "callElems" [("a", Int)] $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a")
   ] $ tCall "callElems" [(int 1, Int)]
 
 testElemsCons = testEqProgram "test Elems"

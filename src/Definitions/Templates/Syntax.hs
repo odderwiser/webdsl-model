@@ -4,7 +4,7 @@ module Definitions.Templates.Syntax where
 import Definitions.Entity.Syntax (PName)
 import Syntax (Type)
 import Utils.Composition
-import Utils.Fix (BiFix)
+import Utils.Fix (BiFix, Fix, injBf)
 import Templates.Modules.Forms.Syntax (EvalT)
 import Data.Bifunctor
 
@@ -13,18 +13,17 @@ type TName = String
 data TemplateDef t a = TDef TName [(PName, Type)] t
   deriving Functor
 
-data TBody t a = Body [EvalT t a \/ t]
+data StatementType = Definition | Expression
+  deriving Eq
 
-instance Functor (TBody t) where
-  fmap f (Body elems) = Body $ map (\e -> case e of
-    (Left evalT) -> Left $ fmap f evalT
-    (Right x) -> Right $ x) elems
+data TBody t a = Body [String] t t -- body contains list of names in scope, list of definitions and list of remaining statements
+  deriving Functor
+
+body :: (TBody <:: f) => [String] -> BiFix f (Fix g) -> BiFix f (Fix g) -> BiFix f (Fix g)
+body names defs stmts = injBf $ Body names defs stmts
 
 instance Bifunctor TBody where
-  bimap g f (Body elems) = Body
-    $ map (\e -> case e of
-      (Left eval) -> Left $ bimap g f eval
-      (Right x) -> Right $ g x) elems  
+  bimap g f (Body names defs elems) = Body names (g defs) (g elems)
 
 instance Bifunctor TemplateDef where
   bimap g f (TDef name args elems) = TDef name args

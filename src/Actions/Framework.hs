@@ -28,7 +28,8 @@ import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 
 type Eff = EffV V'
-type EffV v    =  Cond + Abort (Fix v) + Random String String + EHeap v + MLState Address (Fix v) + End
+type EffV v    =  Cond + Abort (Fix v) + Random String String 
+  + EHeap v + MLState Address (Fix v) + End
 type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
@@ -49,36 +50,41 @@ run e env store = unwrap
     $ e env
 
 
-instance Denote Arith Eff V where
+instance (Lit Int <: v) => Denote Arith (EffV v) (Fix v) where
   denote = A.denote
 
-instance Denote Boolean Eff V where
+instance (Lit Bool <: v) => Denote Boolean (EffV v) (Fix v) where
   denote = B.denote
 
 
-instance Denote Eval Eff V where
+instance (Null <: v) => Denote Eval (EffV v) (Fix v) where
   denote = Ev.denote
 
-instance Denote Stmt Eff V where
+instance Denote Stmt (EffV v) (Fix v) where
   denote = S.denote
 
-instance Denote Col Eff V where
+instance (Lit Bool <: v, [] <: v, Lit Int <: v, Null <: v, Eq (v (Fix v))) 
+  => Denote Col (EffV v) (Fix v) where
   denote = C.denote
 
-instance Denote Expr Eff V where
+instance (Lit Int <: v, Lit Bool <: v, Eq (v (Fix v))) 
+  => Denote Expr (EffV v) (Fix v) where
   denote = Ex.denote
 
-instance Denote Str Eff V where
+instance (LitStr <: v) => Denote Str (EffV v) (Fix v) where
   denote = Str.denote
 
-instance Denote Loop Eff V where
+instance (Null <: v, [] <: v, Lit Bool <: v, Lit Int <: v) 
+  => Denote Loop (EffV v) (Fix v) where
   denote = St.denoteLoop
 
-instance Denote Fun Eff V where
+instance (Null <: v) => Denote Fun (EffV v) (Fix v) where
   denote = F.denote
 
-instance Denote Entity Eff V where
+instance (Null <: v, Lit Uuid <: v) 
+  => Denote Entity (EffV v) (Fix v) where
   denote = En.denote
 
-instance Denote EntityDecl Eff V where
+instance (Lit Address <: v, Lit Uuid <: v, Null <: v, Show  (v(Fix v))) 
+  => Denote EntityDecl (EffV v) (Fix v) where
   denote = En.denoteEDecl

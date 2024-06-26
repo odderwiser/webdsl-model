@@ -34,10 +34,9 @@ testEqProgram id res syntax =  do
 
 defsSyn :: [DefSyntax]
 defsSyn = [
-    pDef "root" []
-      [ Right $ output $ pAccess (var "left") "a"],
+    pDef "root" [] $  output $ pAccess (var "left") "a",
     tDef "inside" [("a", Int)]
-      [ Right $ output $ pAccess (var "left") "a"],
+      $ output $ pAccess (var "left") "a",
     eDef' "obj" [("a", Int)] []
     ]
 

@@ -39,14 +39,14 @@ denoteProcess (Label name contents) env = do -- attribute "for"
 
 denoteProcess (Submit _ _) env = return ()
 
-denoteDb :: forall eff eff' eff'' v v' g.
+denoteDb :: forall eff eff' v v' g.
   ( State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff',  ReqParamsSt <: eff'
   , MLState TVarAddress v <: eff'
   , Heap v' <: eff', EHeap v' <: eff', Throw <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
   , Lit TVarAddress <: v', PropRef <: v'
-  , Lift eff'' eff' v, Denote g eff'' (Fix v'), eff''~Heap v' + End)
+  , Lift eff eff' v, Heap v' <: eff, Eval <: g, Entity <: g, Denote g eff v)
   => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
 denoteDb (Input exp Bool) env = do --exp is a reference to param or template variable
@@ -57,7 +57,7 @@ denoteDb (Input exp Bool) env = do --exp is a reference to param or template var
   isActiveForm :: Maybe String <- deref $ "form_"++formId
   case isActiveForm of
     (Just "1") -> do
-      valueRef <- lift (Utils.foldD exp $ liftEnv (actionEnv env) :: Free eff'' v)
+      valueRef <- lift $ denoteRef exp $ actionEnv env
       boundParam :: Maybe String <- deref inputName
       case boundParam of
         Just "true"  -> bindValue valueRef (injF $ V True :: v)
@@ -73,7 +73,7 @@ denoteDb (Input exp String) env = do --exp is a reference to param or template v
   isActiveForm :: Maybe String <- deref $ "form_"++formId
   case isActiveForm of
     (Just "1") -> do
-      valueRef <- lift (Utils.foldD exp $ liftEnv (actionEnv env) :: Free eff'' v)
+      valueRef <- lift $ denoteRef exp $ actionEnv env
       boundParam :: Maybe String <- deref inputName
       case boundParam of
         Just str  -> bindValue valueRef (injF $ V str :: v) -- look out for scripts? idk 
@@ -88,7 +88,7 @@ denoteDb (Input exp Int) env = do --exp is a reference to param or template vari
   isActiveForm :: Maybe String <- deref $ "form_"++formId
   case isActiveForm of
     (Just "1") -> do
-      valueRef <- lift (Utils.foldD exp $ liftEnv (actionEnv env) :: Free eff'' v)
+      valueRef <- lift $ denoteRef exp $ actionEnv env
       boundParam :: Maybe String <- deref inputName
       case boundParam of
         Just int  -> case readMaybe int of
@@ -96,6 +96,14 @@ denoteDb (Input exp Int) env = do --exp is a reference to param or template vari
           Nothing -> throw "not a well-formed Int value"
         _ -> throw "not a well-formed String value"
     Nothing -> return ()
+
+denoteRef :: forall g v' eff.
+  (Eval <: g, Entity <: g, Heap v' <: eff, Lit Uuid <: v', PropRef <: v', Denote g eff (Fix v'))
+  => Fix g -> Env eff (Fix v') -> Free eff (Fix v')
+denoteRef (In syntax) = case proj syntax of
+  (Just (e :: Eval (Fix g))) -> denoteRefEval e
+  Nothing -> case proj syntax of
+    (Just (e :: Entity (Fix g))) -> denoteRefEntity e
 
 denoteV :: (State FormId <: eff', State (Maybe LabelId) <: eff'
   , State Seed <: eff', Random Label LabelId <: eff'
@@ -138,8 +146,6 @@ bindValue :: (MLState TVarAddress v <: f,
   Lit TVarAddress <: v', PropRef <: v', v~Fix v' )
   => v -> v -> Free f ()
 bindValue valueRef value = case projF valueRef of
-  Just (Box a@(Address address)) -> assign (a, value)
-  Nothing -> case projF valueRef of
     Just (PropRef (uuid, name))  -> do
       entity <- deref uuid
       entity' <- setProperty name value entity
@@ -151,14 +157,14 @@ liftEnv env = Env {varEnv=varEnv env, globalVars= globalVars env }
 
 --this is a minimum implementation of the alternative denotation
 denoteRefEval :: (Heap v' <: eff, v~ Fix v')
-  => Eval (FreeEnv eff v) -> FreeEnv eff v
+  => Eval (Fix g) -> FreeEnv eff v
 denoteRefEval (Var name) env = do
   loc <- derefEnv name env
   deref loc
 
 denoteRefEntity :: (Heap v' <: eff, v~ Fix v'
-  , PropRef <: v', Lit Uuid <: v')
-  => Entity (FreeEnv eff v) -> FreeEnv eff v
+  , PropRef <: v', Lit Uuid <: v', Denote g eff (Fix v'))
+  => Entity (Fix g) -> FreeEnv eff v
 denoteRefEntity (PropAccess obj pName) env = do
-  uuid <- obj env
+  uuid <- Utils.foldD obj env
   return $ injF $ PropRef (unbox uuid, pName)
