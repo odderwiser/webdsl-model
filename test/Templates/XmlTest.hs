@@ -10,7 +10,7 @@ import Actions.Str as Str
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
 testEq id res syntax =  T.TestCase $
-  T.assertEqual id res $ Tp.run $ foldDT syntax
+  T.assertEqual id res $ Tp.run $ (foldDT syntax :: PEnv (EffV V') (Eff' V') V)
 
 litXmlTest = testEq
     "test if simple xml works"

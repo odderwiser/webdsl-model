@@ -8,10 +8,9 @@ import Utils as U
 import Definitions.Program.Syntax
 
 type Envs = FDecl
-type Eff' = FunctionEnv Eff V + End
+type Eff' v = FunctionEnv (EffV v) (Fix v) + End
 
-instance DenoteDef FDecl (FreeEnv Eff V) Eff' where
-  denoteDef :: FDecl (FreeEnv Eff V) -> Free Eff' ()
+instance DenoteDef FDecl (FreeEnv (EffV v)  (Fix v)) (Eff' v) where
   denoteDef = F.denoteDef
 
 runProgram :: Program (Envs (FreeEnv Eff V)) (FreeEnv Eff V)

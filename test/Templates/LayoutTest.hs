@@ -9,7 +9,7 @@ import Templates.Syntax as S
 testEq :: ()
   => String -> Out' -> Module' -> T.Test
 testEq id res syntax =  T.TestCase $
-  T.assertEqual id res $ Tp.run $ foldDT syntax
+  T.assertEqual id res $ Tp.run (foldDT syntax :: PEnv (EffV V') (Eff' V') V)
 
 testSyntax = testEq
     "test if templates work"

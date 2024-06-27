@@ -23,11 +23,13 @@ import Templates.Modules.Forms.Denotation as F
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH)
 import Actions.Modules.Entity.Syntax (Entity)
 import Definitions.Templates.Syntax (TBody)
-import Actions.Values (Lit)
+import Actions.Values (Lit, Null)
 import Definitions.GlobalVars.Syntax (Uuid)
-
-type Eff' = Eff'V V'  
-type Eff'V v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
+import Actions.Str (LitStr)
+import Actions.Arith (LitInt)
+import Actions.Modules.Bool.Syntax (LitBool)
+ 
+type Eff' v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList + E.Render v + MLState Address (Fix v) + State Address + End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
@@ -35,15 +37,18 @@ type Module' = BiFix T (Fix Module)
 type Out' = String
 
 
-run :: PEnv Eff Eff' V
+run :: (LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  => PEnv (EffV v) (Eff' v) (Fix v)
   -> Out'
 run e = runEnv e (TEnv { actionEnv = Env {}})
 
-runEnv :: PEnv Eff Eff' V -> TEnv Eff Eff' V
+runEnv ::(LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  => PEnv (EffV v) (Eff' v) (Fix v) -> TEnv (EffV v) (Eff' v) (Fix v)
   -> Out'
 runEnv e env = runApplied $ e env
 
-runApplied :: Free Eff' () -> Out'
+runApplied :: (LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  => Free (Eff' v) () -> Out'
 runApplied e = case unwrap
     $ handle_ stateElH Nothing
     $ handle_ heap (makeEnv [])
@@ -60,12 +65,12 @@ runApplied e = case unwrap
   of
     ((_, str), heap)    -> str
 
-instance (Lit Uuid <: v) => Lift (EffV v) (Eff'V v) (Fix v) where
+instance (Lit Uuid <: v) => Lift (EffV v) (Eff' v) (Fix v) where
   lift  = handleExp
 
 
 
-handleExp :: Free (EffV v) (Fix v) -> Free (Eff'V v) (Fix v)
+handleExp :: Free (EffV v) (Fix v) -> Free (Eff' v) (Fix v)
 handleExp e = bubbleDown
   $ handle funReturn
   $ handle condition
@@ -78,28 +83,32 @@ bubbleDown ::
     => Free eff v -> Free eff' v
 bubbleDown = fold Pure (Op . cmap)
 
-instance DenoteT Layout Eff Eff' V where
-  denoteT :: Layout (PEnv Eff Eff' V) (FreeEnv Eff V) -> PEnv Eff Eff' V
+instance DenoteT Layout (EffV v) (Eff' v) (Fix v) where
   denoteT = L.denote
 
-instance DenoteT S.Render Eff Eff' V where
-  denoteT :: S.Render (PEnv Eff Eff' V) (FreeEnv Eff V) -> PEnv Eff Eff' V
+instance (LitStr <: v) 
+  => DenoteT S.Render (EffV v) (Eff' v) (Fix v) where
   denoteT = X.denote
 
-instance DenoteT Page Eff Eff' V where
+instance (Null <: v, Lit Uuid <: v) 
+  => DenoteT Page (EffV v) (Eff' v) (Fix v) where
   denoteT = P.denote
 
-instance DenoteT (LiftT Stmt) Eff Eff' V where
+instance DenoteT (LiftT Stmt) (EffV v) (Eff' v) (Fix v) where
   denoteT = Lt.denote
 
-instance DenoteT Forms Eff Eff' V where
+instance ( LitStr <: v, LitBool <: v, LitInt <: v) 
+ =>  DenoteT Forms (EffV v) (Eff' v) (Fix v) where
   denoteT = F.denoteR
 
-instance DenoteT (Input (Fix Module)) Eff Eff' V where
+instance (LitStr <: v, LitBool <: v, LitInt <: v, Null <: v, [] <: v,
+  Eq (v (Fix v))) 
+  => DenoteT (Input (Fix Module)) (EffV v) (Eff' v) (Fix v) where
   denoteT = F.denoteRInput
 
-instance DenoteT TBody Eff Eff' V where
+instance (Null <: v, Lit Uuid <: v) 
+  => DenoteT TBody (EffV v) (Eff' v) (Fix v) where
   denoteT = P.denoteBody
 
-instance DenoteT EvalT Eff Eff' V where
+instance (Lit Uuid <: v) => DenoteT EvalT (EffV v) (Eff' v) (Fix v) where
   denoteT = P.denoteE

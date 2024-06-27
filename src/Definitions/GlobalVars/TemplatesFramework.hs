@@ -14,7 +14,7 @@ import Definitions.Templates.Denotation
 import Definitions.Pages.Denotation as P
 import Templates.Effects as E
 import Templates.Syntax
-import Actions.Framework hiding (run)
+import Actions.FrameworkIO hiding (Eff, run)
 import Actions.Effects
 import Syntax
 import Definitions.Entity.Denotation
@@ -23,7 +23,7 @@ import qualified Definitions.Fun.Denotation as F
 import qualified Definitions.Entity.Denotation as E
 import qualified Definitions.Templates.Denotation as T
 import Definitions.Pages.Syntax
-import qualified Templates.Framework as T
+import qualified Templates.FrameworkIO as T
 import qualified Utils as U
 import Templates.Handlers.Env
 import Templates.Handlers.Render
@@ -43,13 +43,14 @@ import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 import Templates.Handlers.Forms (singleAccessState, idH)
 
+type Eff = EffA V'
 type Eff' = Random Label LabelId + State (Maybe LabelId) 
   + ReqParamsSt + Attribute + Stream HtmlOut + State AttList + E.Render V' + State Address
-  + DbRead (EntityDecl V) + TempEHeap V' + EHeap V' + MLState Address V + DbWrite V + End
+  + TempEHeap V' + EHeap V' + MLState Address V + DbWrite V + DbRead (EntityDecl V) + End
 type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
-type Eff'' = PageDefs EffA Eff' V + TDefs EffA Eff' V + EntityDefsEnv EffA V
-    + FunctionEnv EffA V + End
-type EnvTy = FreeEnv EffA V 
+type Eff'' = PageDefs Eff Eff' V + TDefs Eff Eff'  V + EntityDefsEnv Eff V
+    + FunctionEnv Eff V + End
+type EnvTy = FreeEnv Eff V 
 type T = PageCall +: VarListT +: Layout +: S.Render +: Page +: LiftT Stmt
 type DefSyntax = Envs  (BiFix T (Fix Module)) (Fix Module) 
 
@@ -69,30 +70,30 @@ instance DenoteDef FDecl EnvTy Eff'' where --- Maybe?? This works???
 instance DenoteDef EntityDef EnvTy Eff'' where
   denoteDef = E.denoteDef
 
-instance DenoteDef' TemplateDef (PEnv EffA Eff' V) EnvTy Eff'' where
+instance DenoteDef' TemplateDef (PEnv Eff Eff' V) EnvTy Eff'' where
   denoteDef' = T.denoteDefT
 
-instance DenoteDef' PageDef (PEnv EffA Eff' V) EnvTy Eff'' where
+instance DenoteDef' PageDef (PEnv Eff Eff' V) EnvTy Eff'' where
   denoteDef' = P.denoteDef
 
-runProgram :: Program (Envs (PEnv EffA Eff' V) EnvTy) (PEnv EffA Eff' V) -> FilePath
+runProgram :: Program (Envs (PEnv Eff Eff' V) EnvTy) (PEnv Eff Eff' V) -> FilePath
     -> IO T.Out'
 runProgram (Fragment defs pCall) = case unwrap
-  $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env EffA V )
-  $ handle_ entityDefsH (Env { entityDefs =[]} :: Env EffA V )
-  $ handle_ templatesH (TEnv { templates = []} :: TEnv EffA Eff' V )
-  $ handle_ pagesH (TEnv { pages = []} :: TEnv EffA Eff' V )
+  $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env Eff V )
+  $ handle_ entityDefsH (Env { entityDefs =[]} :: Env Eff V )
+  $ handle_ templatesH (TEnv { templates = []} :: TEnv Eff Eff' V )
+  $ handle_ pagesH (TEnv { pages = []} :: TEnv Eff Eff' V )
   $ denoteDefList' defs of
   ((((_, tEnv'), tEnv), env'), env) ->
     run $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
-runObservableProgram :: Program (Envs (PEnv EffA Eff' V) EnvTy) (PEnv EffA Eff' V) -> FilePath
+runObservableProgram :: Program (Envs (PEnv Eff Eff' V) EnvTy) (PEnv Eff Eff' V) -> FilePath
     -> IO (T.Out', DbStatus)
 runObservableProgram (Fragment defs pCall) = case unwrap
-  $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env EffA V )
-  $ handle_ entityDefsH (Env { entityDefs =[]} :: Env EffA V )
-  $ handle_ templatesH (TEnv { templates = []} :: TEnv EffA Eff' V )
-  $ handle_ pagesH (TEnv { pages = []} :: TEnv EffA Eff' V )
+  $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env Eff V )
+  $ handle_ entityDefsH (Env { entityDefs =[]} :: Env Eff V )
+  $ handle_ templatesH (TEnv { templates = []} :: TEnv Eff Eff' V )
+  $ handle_ pagesH (TEnv { pages = []} :: TEnv Eff Eff' V )
   $ denoteDefList' defs of
   ((((_, tEnv'), tEnv), env'), env) ->
     runObservable $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
@@ -106,11 +107,11 @@ run e file = do
 runObservable :: Free Eff' () -> FilePath -> IO (T.Out', DbStatus)
 runObservable e file = do
   (((_, str), heap), writeStatus) <- unwrap
+    $ handle mockDbReadH
     $ handle_ (dbWriteH file) []
     $ handle_ heap (makeEnv [])
     $ handle_ eHeapH []
     $ handle_ tempEHeapH' (makeEnv [])
-    $ handle mockDbReadH
     $ handle_ stateElH Nothing
     $ handle renderH
     $ handle_ stateH []
@@ -122,16 +123,15 @@ runObservable e file = do
     $ e
   return (str, writeStatus)
 
-instance Lift EffA Eff' V where
+instance Lift Eff Eff' V where
   lift  = handleExp
 
 
 
-handleExp :: () => Free EffA V -> Free Eff' V
+handleExp :: () => Free Eff V -> Free Eff' V
 handleExp e = bubbleDown
   $ handle uuidH
   $ handle condition
-  $ handle mockDbReadH
   $ handle funReturn
   e
 
@@ -142,22 +142,22 @@ bubbleDown ::
     => Free eff v -> Free eff' v
 bubbleDown = fold Pure (Op . cmap)
 
-instance DenoteT Layout EffA Eff' V where
+instance DenoteT Layout Eff Eff' V where
   denoteT = L.denote
 
-instance DenoteT S.Render EffA Eff' V where
+instance DenoteT S.Render Eff Eff' V where
   denoteT = X.denote
 
-instance DenoteT Page EffA Eff' V where
+instance DenoteT Page Eff Eff' V where
   denoteT = P.denote
 
-instance DenoteT (LiftT Stmt) EffA Eff' V where
+instance DenoteT (LiftT Stmt) Eff Eff' V where
   denoteT = Lt.denote
 
-instance DenoteT PageCall EffA Eff' V where
+instance DenoteT PageCall Eff Eff' V where
   denoteT = denoteP
 
-instance DenoteT VarListT EffA Eff' V where
+instance DenoteT VarListT Eff Eff' V where
   denoteT = D.denoteT
 
 -- eDefEnv :: EName -> Props -> [FDecl e] -> EntityDecl e

@@ -3,7 +3,7 @@
 module Actions.EntityTest where
 import Test.HUnit
 import Utils as U
-import Actions.Framework
+import Actions.FrameworkIO
 import Definitions.Program.Syntax
 import Definitions.Entity.Framework
 import Definitions.Entity.Syntax
@@ -16,16 +16,27 @@ import Actions.Handlers.Entity (entityDefsH)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Modules.Entity.Denotation (mapProperties)
 import Actions.Values
+import System.Directory (removeFile)
+import Actions.Handlers.Entity (DbStatus(..))
 
-testEq :: Denote m Eff V
-  => String -> Out -> Fix m -> Test
-testEq id res syntax =  TestCase $
-  assertEqual id res $ runExp $ foldD syntax
+-- testEq :: Denote m Eff V
+--   => String -> Out -> Fix m -> IO Test
+-- testEq id res syntax = do
+--   let file = "./test/Actions/dbs/entity/"++id++ ".txt"
+--   removeFile file
+--   (output, dbStatus) <- runExp (foldD syntax) file
+--   return 
+--     $ TestCase  
+--     $ assertEqual id res output
 
 testEqProgram :: ()
-  => String -> Out -> Program (Envs (Fix Module)) (Fix Module) -> Test
-testEqProgram id res syntax =  TestCase $
-  assertEqual id res $ runProgram $ foldProgram syntax
+  => String -> Out -> Program (Envs (Fix Module)) (Fix Module) -> IO Test
+testEqProgram id res syntax =  do
+  let file = "./test/Actions/dbs/entity/"++id++ ".txt"
+  -- removeFile file
+  (output, dbStatus) <- runProgram (foldProgram syntax) file
+  return $ TestCase 
+    $ assertEqual (id++" db read") (res) (output)
 
 --------------------------------
 
@@ -34,8 +45,13 @@ eDeclSyntax = Fragment
   [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []]
   $ eDecl "dummy1" [("y", int 1)]
 
-testEDecl = TestCase $
-  assertEqual "testing declaration" 36 $ length (unbox' $ runProgram $ foldProgram eDeclSyntax :: Uuid)
+testEDecl :: IO Test
+testEDecl = do 
+  let file = "./test/Actions/dbs/entity/tDecl.txt"
+  -- removeFile file
+  (uuid, dbstatus) <- runProgram (foldProgram eDeclSyntax) file
+  return $ TestCase $
+    assertEqual "testing_declaration" 36 $ length (unbox' $ uuid :: Uuid)
   
   -- testEqProgram 
   -- "testing declaration"
@@ -48,8 +64,8 @@ actualUnitTestSyntax = mapProperties
 testMapProperties = TestCase $ assertEqual "testMapProperties"
   (EDecl "dummy1" [("id", box "some"), ("y", boxI 1)]) actualUnitTestSyntax
 
-testGetProperty :: Test
-testGetProperty = testEqProgram "simple function call"
+testGetProperty :: IO Test
+testGetProperty = testEqProgram "simple _function_call"
   (boxI 1)
   propSyntax
 
@@ -60,7 +76,7 @@ propSyntax = Fragment
     (eDecl "dummy1" [("y", int 1)])
     (pAccess (var "dummy") "y")
 
-testMethodCall = testEqProgram "simple function call"
+testMethodCall = testEqProgram "method_call"
   (boxI 6)
   objFunSyntax
 
@@ -75,11 +91,11 @@ objFunSyntax = Fragment
 
 testDefsStoring :: Test
 testDefsStoring = TestCase $
-  assertEqual "storing the def"
+  assertEqual "storing_the_def"
   ("dummy1", [("x", Int), ("y", Int)])
   (case
   handle_ entityDefsH Env{entityDefs = []}
-    $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free Eff' [()]) (map (fmap foldD) dummy1Definition) of
+    $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free (Eff' V') [()]) (map (fmap foldD) dummy1Definition) of
       (Pure (_, env)) ->
         case U.entityDefs env of
         [EDef name params _ _] -> (name, params))
@@ -87,11 +103,15 @@ testDefsStoring = TestCase $
 dummy1Definition :: [Envs (Fix Module)]
 dummy1Definition = [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []]
 
-entityTests :: Test
-entityTests = TestList
-  [ testDefsStoring
-  , testMapProperties
-  , testEDecl
-  , testGetProperty
-  , testMethodCall
-  ]
+entityTests :: IO Test
+entityTests = do
+  testEDecl' <- testEDecl
+  testMethodCall' <- testMethodCall
+  testGetProperty' <- testGetProperty
+  return $ TestList
+    [ testDefsStoring
+    , testMapProperties
+    , testEDecl'
+    , testGetProperty'
+    , testMethodCall'
+    ]

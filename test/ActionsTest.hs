@@ -24,5 +24,11 @@ actionsTests = TestList
   , funTests
   , loopTests
   , stmtTests
-  , entityTests
   ]
+
+actionsIOTests :: IO Test 
+actionsIOTests = do 
+  eTest <- entityTests
+  return $ TestList 
+    [ eTest
+    ]

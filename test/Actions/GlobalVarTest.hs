@@ -3,7 +3,7 @@
 module Actions.GlobalVarTest where
 import Utils
 import Definitions.GlobalVars.ActionsFramework as G
-import Actions.Framework
+import Actions.FrameworkIO
 import Test.HUnit
 import Definitions.Program.Syntax
 import Definitions.Program.Denotation (foldProgramV)

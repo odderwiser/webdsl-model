@@ -1,5 +1,5 @@
 module Templates.TemplateTest where
-import Templates.Framework as Tp
+import Templates.FrameworkIO as Tp
 import Test.HUnit as T
 import Utils.Denote
 import Definitions.Templates.Framework
@@ -11,16 +11,23 @@ import Actions.Syntax as A
 import Actions.Str as As
 import Templates.Modules.Lift.Denotation (consT)
 import Definitions.Templates.Syntax (tDef)
+import Utils
+import Actions.FrameworkIO
+import System.Directory (removeFile)
 
-testEq :: ()
-  => String -> Out' -> Module' -> T.Test
-testEq id res syntax =  T.TestCase $
-  T.assertEqual id res $ Tp.run $ foldDT syntax
+type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V'))
+  (PEnv (EffV V') (Eff' V') V) 
 
 testEqProgram :: String -> Out'
-    -> Program DefSyntax Module' -> T.Test
-testEqProgram id res syntax =  TestCase $
-  assertEqual id res $ runProgram $ foldTProgram syntax
+    -> Program DefSyntax Module' -> IO T.Test
+testEqProgram id res syntax = do
+  let file = "./test/Templates/dbs/tps/"++id++ ".txt"
+  output <- runProgram (foldTProgram syntax :: Program'') file
+  return $ T.TestCase $
+    T.assertEqual id res $ output
+  
+  --  TestCase $
+  -- assertEqual id res $ runProgram $ foldTProgram syntax
 
 
 defsSyn :: [DefSyntax]
@@ -34,7 +41,7 @@ tCallSyntax :: Program DefSyntax Module'
 tCallSyntax = Fragment defsSyn $ section False 
   $ tCall "nestedVars" [(int 5, Int), (As.str "a", S.String)]
 
-testTCall = testEqProgram "test TCall"
+testTCall = testEqProgram "test_TCall"
   (   "<html><head></head><body>"
      ++ "<span class=\"section section1\">"
      ++ "6</span></body></html>")
@@ -62,8 +69,10 @@ testElemsCons = testEqProgram "test Elems"
     ++ "11</body></html>")
   elementsSyntaxCons
 
-templateTests = T.TestList 
-  [ testTCall
-  , testElems
-  , testElemsCons
-  ]
+templateTests = do 
+  tests <-  sequence 
+    [ testTCall
+    , testElems
+    , testElemsCons
+    ]
+  return $ T.TestList tests

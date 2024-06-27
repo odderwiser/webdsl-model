@@ -22,7 +22,7 @@ import Actions.Modules.Stmt.Denotation as S
 
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
-import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps)
+import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
@@ -36,13 +36,12 @@ type ModuleV = Col + Arith + Boolean + Str
 type Module  = EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
 type Out     = V --todo: make different!
 
-runExp :: FreeEnv Eff V -> IO Out
-runExp e = run e (Env { varEnv = []}) [] ""
+runExp :: FreeEnv Eff V -> String -> IO (Out, DbStatus)
+runExp e = run e (Env { varEnv = []}) [] 
 
 run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)] -> String
-  -> IO Out
-run e env store file = do 
-  (out, readstatus) <-  unwrap
+  -> IO (Out, DbStatus)
+run e env store file = unwrap
     $ handle mockDbReadH
     $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
     $ handle_ heap' (makeEnv store)
@@ -51,7 +50,7 @@ run e env store file = do
     $ handle funReturn
     $ handle condition
     $ e env 
-  return out
+  -- return out
   
 
 

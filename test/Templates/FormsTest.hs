@@ -1,11 +1,11 @@
 module Templates.FormsTest where
-import Templates.Framework as Tp
+import Templates.FrameworkIO as Tp
 import qualified Test.HUnit as T
 import Utils
 import Definitions.Program.Syntax
 import Definitions.Pages.Framework
 import Definitions.Pages.Syntax
-import Actions.Framework
+import Actions.FrameworkIO
 import Templates.Syntax
 import Templates.Modules.Lift.Denotation (consT, consTList)
 import Syntax as S
@@ -17,23 +17,32 @@ import Actions.Modules.Eval.Syntax (var)
 import qualified Data.Set as Set (insert, notMember, empty, member)
 import Definitions.Templates.Syntax (StatementType(Definition), TBody(Body), body)
 import Definitions.Templates.Syntax (StatementType(..))
+import System.Directory (removeFile)
+import Definitions.Templates.Framework (EnvTy)
+
+type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V')) 
+  (PageCall (PEnv (EffV V') (Eff' V') V) (EnvTy V'))
 
 testEq :: ()
-  => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
-testEq id res syntax =  T.TestCase $
-  T.assertEqual id res $ runProgram $ foldProgram syntax
+  => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> IO T.Test
+testEq id res syntax = do
+  let file = "./test/Templates/dbs/forms/"++id++ ".txt"
+  -- removeFile file
+  output <- runProgram (foldProgram syntax :: Program'') file
+  return $ T.TestCase $
+    T.assertEqual id res $ output
 
 testEqId :: ()
-  => String -> [HtmlOutput] -> Program DefSyntax (PageCall Module' (Fix Module)) -> T.Test
-testEqId id res syntax =
-  let
-    output = runProgram $ foldProgram syntax
-    (bool, res') = compareRes res "" output Set.empty ""
-  in T.TestCase $ T.assertEqual id (output, True) (res', bool)
+  => String -> [HtmlOutput] -> Program DefSyntax (PageCall Module' (Fix Module)) -> IO T.Test
+testEqId id res syntax = do
+  let file = "./test/Templates/dbs/forms/"++id++ ".txt"
+  output <- runProgram (foldProgram syntax :: Program'') file
+  let (bool, res') = compareRes res "" output Set.empty ""
+  return $ T.TestCase $ T.assertEqual id (output, True) (res', bool)
 
 --- Tests  
 
-testForms= testEqId "test Forms"
+testForms= testEqId "test_Forms"
   (formsOutput 1)
   formsSyntax
 
@@ -159,9 +168,13 @@ noLabelOutput =
   , Name    , Plain "\" value=\"false\">"
   , Plain   "</form></body></html>" ]
 
-formsTests = T.TestList
+formsTests = 
     [ testForms
     , testFormsWithVars
     , testDoubleLabel
     , testNoLabel
     ]
+
+formsTestsIO = do 
+  tests <- sequence formsTests
+  return $ T.TestList tests

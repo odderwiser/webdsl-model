@@ -4,7 +4,7 @@ module Templates.GlobalVarTest where
 import Definitions.Program.Syntax
 import Definitions.GlobalVars.TemplatesFramework
 import Utils
-import Actions.Framework
+import Actions.FrameworkIO
 import Test.HUnit
 import Templates.Framework (Out')
 import Syntax
