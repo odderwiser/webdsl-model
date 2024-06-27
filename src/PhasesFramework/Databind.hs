@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-missing-fields #-}
 module PhasesFramework.Databind where
 import Templates.Effects
 import Actions.Effects
@@ -17,7 +18,7 @@ import Actions.Values (Lit)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn)
-import Actions.Handlers.Entity (uuidH, eHeapH)
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH)
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import qualified Templates.Modules.Page.Denotation as F
@@ -30,17 +31,25 @@ import qualified Definitions.Pages.Denotation as D
 import qualified Definitions.Fun.Denotation as F
 import qualified Definitions.Entity.Denotation as E
 import qualified Definitions.Templates.Denotation as T
+import PhasesFramework.Program
+import Data.Aeson (ToJSON, FromJSON)
+import Actions.Str (LitStr)
+import Actions.Modules.Arith.Syntax (LitInt)
+import Actions.Modules.Bool.Syntax (LitBool)
+import Templates.Handlers.Render as R
 
 type DbEff' v = Databind + State (Maybe LabelId) + Random Label LabelId +
   State Seed + State FormId + State TVarSeed + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Throw 
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End
 
-type Vt = Lit TVarAddress + PropRef + V'
-type Vt' = Fix Vt
-
 data Databind k
   deriving Functor
+
+dH :: Handler Databind a v a 
+dH = Handler {
+  ret = pure
+}
 
 
 instance DenoteT Layout (EffV Vt) (DbEff' Vt) Vt' where
@@ -87,3 +96,27 @@ instance DenoteDef EntityDef (FreeEnv (EffV Vt) Vt') (Eff'' (DbEff' Vt) Vt) wher
 
 instance DenoteDef' TemplateDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV Vt) Vt')(Eff'' (DbEff' Vt) Vt) where
   denoteDef'= T.denoteDefT
+
+
+runApplied :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  => Free (DbEff' v) () -> String -> IO Out'
+runApplied e file = do
+  ((_, out), readstatus) <-  unwrap
+    $ handle mockDbReadH
+    $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+    $ handle_ heap' (makeEnv [])
+    $ handle_ eHeapH []
+    $ handle_ stateElH Nothing
+    $ handle renderH
+    $ handle_ stateH []
+    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
+    $ handle_ attributeH ("section", 1)
+    $ handle_ singleAccessState Nothing
+    $ handle idH
+    $ handle_ autoIncrementState (Seed 0)
+    $ handle_ simpleStateH ""
+    $ handle_ autoIncrementState (Count 0)
+    $ handle dH
+    $ e 
+  return out

@@ -33,6 +33,8 @@ type VDef = Def (EffV Vt) (VEff' Vt) Vt'
 type ADef = Def (EffV Vt) (AEff' Vt) Vt'
 type Def eff eff' v = Envs ( PEnv eff eff' v) (FreeEnv eff v)
 
+type PgCall eff eff' v =  PageCall ( PEnv eff eff' v) (FreeEnv eff v)
+
 runProgram :: forall v f g h . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v, PageCall <:: f,
   Denote h (EffV V') V, DenoteT f (EffV V') (T.Eff' V') V,
@@ -47,7 +49,7 @@ runProgram f@(Fragment defs pCall) = case
 
 runProgram r@(Request defs (pCall, params)) = do
   let (rEnv, dDEnv, vEnv, aEnv) = handleDefs <$> foldPhases defs
-  let (dbCall, vCall, aCall) = foldCall pCall
+  let (dbCall, vCall, aCall) = foldRequest pCall
   return $ return ""
 
 foldDefs:: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f)
@@ -66,5 +68,10 @@ foldPhases defs =
   , foldDefs defs :: [ADef]
   )
 
+foldRequest pCall = 
+  ( foldCall pCall :: PgCall (EffV Vt) (DbEff' Vt) Vt'
+  , foldCall pCall :: PgCall (EffV Vt) (VEff' Vt) Vt'
+  , foldCall pCall :: PgCall (EffV Vt) (AEff' Vt) Vt'
+  )
 
 projPCall (BIn pCall) = fromJust $ proj' pCall
