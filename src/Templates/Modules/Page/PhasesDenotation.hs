@@ -46,7 +46,7 @@ denoteEProcess :: forall eff eff' v v'.
   , MLState TVarAddress v <: eff', v ~ Fix v'
   , Lit TVarAddress <: v', Null <: v', Functor eff)
   => EvalT (PEnv eff eff' v) (FreeEnv eff v)
-  -> (PEnv eff eff' v)
+  -> PEnv eff eff' v
 denoteEProcess (VarDeclT name)  env     = do
   seed :: TVarSeed  <- get
   (loc :: String)   <- encode $ name ++show seed

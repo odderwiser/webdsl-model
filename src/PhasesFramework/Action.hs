@@ -9,7 +9,7 @@ import Actions.Syntax
 import Actions.Values (Lit)
 import Actions.FrameworkIO
 import Templates.Syntax as S
-import Definitions.Templates.Syntax (TBody)
+import Definitions.Templates.Syntax (TBody, TemplateDef)
 import Templates.FrameworkIO
 import Actions.Handlers.Entity (uuidH)
 import Actions.Handlers.Return (funReturn)
@@ -19,8 +19,18 @@ import qualified Templates.Modules.Render.Denotation as X
 import qualified Templates.Modules.Page.PhasesDenotation as P
 import qualified Templates.Modules.Lift.Denotation as Lt
 import qualified Templates.Modules.Forms.PhasesDenotation as F
+import qualified Templates.Modules.Page.Denotation as F
+import qualified Templates.Modules.Page.PhasesDenotation as PF
+import Definitions.Pages.Syntax (PageDef)
+import Definitions.Fun.Syntax (FDecl)
+import Definitions.Entity.Syntax (EntityDef)
+import Definitions.Pages.Framework (Eff'')
+import qualified Definitions.Pages.Denotation as D
+import qualified Definitions.Fun.Denotation as F
+import qualified Definitions.Entity.Denotation as E
+import qualified Definitions.Templates.Denotation as T
 
-type AEff' v = State (Maybe LabelId) + Random Label LabelId 
+type AEff' v = ActionE + State (Maybe LabelId) + Random Label LabelId + State TVarSeed
   + State ButtonCount + State Seed + State FormId + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Throw 
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End -- can I get rid of this read and write?
@@ -29,6 +39,8 @@ type Vt = Lit TVarAddress + PropRef +
     V'
 type Vt' = Fix Vt
 
+data ActionE k 
+  deriving Functor
 
 instance DenoteT Layout (EffV Vt) (AEff' Vt) Vt' where
   denoteT = L.denoteProcess
@@ -60,3 +72,15 @@ instance Lift (EffV Vt) (AEff' Vt) Vt' where
     $ handle funReturn
     $ handle condition
     e
+
+instance DenoteDef' PageDef (PEnv (EffV Vt) (AEff' Vt) Vt') (FreeEnv (EffV Vt) Vt') (Eff'' (AEff' Vt)  Vt) where
+  denoteDef' = D.denoteDef
+
+instance DenoteDef FDecl (FreeEnv (EffV Vt) Vt') (Eff'' (AEff' Vt) Vt) where --- Maybe?? This works???
+  denoteDef = F.denoteDef
+
+instance DenoteDef EntityDef (FreeEnv (EffV Vt) Vt') (Eff'' (AEff' Vt) Vt) where
+  denoteDef = E.denoteDef
+
+instance DenoteDef' TemplateDef (PEnv (EffV Vt) (AEff' Vt) Vt') (FreeEnv (EffV Vt) Vt')(Eff'' (AEff' Vt) Vt) where
+  denoteDef'= T.denoteDefT
