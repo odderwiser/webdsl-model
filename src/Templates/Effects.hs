@@ -5,6 +5,8 @@ import Templates.Modules.Layout.Syntax hiding (Title)
 import Templates.Modules.Attributes.Syntax
 import Text.HTML.TagSoup (Tag (TagText, TagOpen), renderTags, escapeHTML)
 import Actions.Effects (MLState, random, Random)
+import GHC.Generics
+import Data.Aeson
 
 -- Layout ---
 type IsEscaped = Bool
@@ -98,7 +100,10 @@ newtype ButtonCount = Count Int
 type FormId = String
 
 newtype TVarAddress = Address String
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
+
+instance ToJSON TVarAddress
+instance FromJSON TVarAddress
 newtype TVarSeed = VSeed Int
     deriving (Eq, Num, Show)
 instance Show ButtonCount where

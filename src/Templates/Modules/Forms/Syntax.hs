@@ -6,6 +6,8 @@ import Utils.Fix
 import Actions.Modules.Eval.Syntax (VName)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Definitions.Entity.Syntax (PName)
+import GHC.Generics (Generic)
+import Data.Aeson (ToJSON, FromJSON)
 
 data Param = Placeholder
 type IsAttAssigned' = Bool
@@ -53,4 +55,7 @@ varInitT :: (EvalT <:: f) => VName -> Fix g -> BiFix f (Fix g)
 varInitT name v = injBf $ VarInit name v 
 
 data PropRef e = PropRef (Uuid, PName)
-    deriving (Functor, Eq, Show)
+    deriving (Functor, Eq, Show, Generic)
+
+instance ToJSON (PropRef e)
+instance FromJSON (PropRef e)

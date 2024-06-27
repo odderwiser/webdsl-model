@@ -68,7 +68,7 @@ runProgram :: forall v f . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   (PageCall (PEnv (EffV v) (T.Eff' v) (Fix v)) (T.EnvTy v)) -> String -> IO T.Out'
 runProgram f@(Fragment defs pCall) = T.runApplied
     $ denoteP pCall
-    $ handleDefs f
+    $ handleDefs defs
 
 handleDefs :: forall v eff' f . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v, 
@@ -76,9 +76,8 @@ handleDefs :: forall v eff' f . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   DenoteDef' TemplateDef (PEnv (EffV v) eff' (Fix v)) (T.EnvTy v) (Eff'' eff' v),
   DenoteDef EntityDef (T.EnvTy v) (Eff'' eff' v) ,
   DenoteDef FDecl (T.EnvTy v) (Eff'' eff' v))
-  => Program (Envs (PEnv (EffV v) eff' (Fix v)) (T.EnvTy v))
-  (PageCall (PEnv (EffV v) eff' (Fix v)) (T.EnvTy v)) -> TEnv (EffV v) eff' (Fix v)
-handleDefs (Fragment defs pCall) = case unwrap
+  => [Envs (PEnv (EffV v) eff' (Fix v)) (T.EnvTy v)] -> TEnv (EffV v) eff' (Fix v)
+handleDefs defs = case unwrap
   $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env (EffV v) (Fix v) )
   $ handle_ entityDefsH (Env { entityDefs =[]} :: Env (EffV v) (Fix v) )
   $ handle_ templatesH (TEnv { templates = []} :: TEnv (EffV v) eff' (Fix v) )
