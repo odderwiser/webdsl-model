@@ -21,17 +21,16 @@ denoteEDb :: forall eff eff' v v'.
   ( Heap v' <: eff', Lift eff eff' v, State TVarSeed <: eff'
   , MLState TVarAddress v <: eff', v ~ Fix v'
   , Lit TVarAddress <: v', Null <: v', Random String String <: eff')
-  => TEnv eff eff' v
-  -> EvalT (PEnv eff eff' v) (FreeEnv eff v)
-  -> Free eff' ()
-denoteEDb env (VarDeclT name)     = do
+  => EvalT (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denoteEDb (VarDeclT name) env    = do
   seed :: TVarSeed  <- get
   (loc :: String)   <- encode $ name ++show seed
   assign (Address loc, V.null :: v)
   (loc' :: Address) <- derefEnv' name (actionEnv env) -- I hope this is deterministic enough
   assign (loc', box $ Address loc :: v)
 
-denoteEDb env (VarInit  name exp) = do
+denoteEDb (VarInit  name exp) env = do
   loc     <- derefEnv' name (actionEnv env)
   exp'    <- lift $ exp (actionEnv env)
   seed :: TVarSeed  <- get
@@ -46,16 +45,15 @@ denoteEProcess :: forall eff eff' v v'.
   , Random String String <: eff'
   , MLState TVarAddress v <: eff', v ~ Fix v'
   , Lit TVarAddress <: v', Null <: v', Functor eff)
-  => TEnv eff eff' v
-  -> EvalT (PEnv eff eff' v) (FreeEnv eff v)
-  -> Free eff' ()
-denoteEProcess env (VarDeclT name)     = do
+  => EvalT (PEnv eff eff' v) (FreeEnv eff v)
+  -> (PEnv eff eff' v)
+denoteEProcess (VarDeclT name)  env     = do
   seed :: TVarSeed  <- get
   (loc :: String)   <- encode $ name ++show seed
   (loc' :: Address) <- derefEnv' name (actionEnv env)
   assign (loc', box $ Address loc :: v)
 
-denoteEProcess env (VarInit  name exp) = do
+denoteEProcess (VarInit  name exp) env  = do
   seed :: TVarSeed  <- get
   (loc :: String)   <- encode $ name ++show seed
   (loc' :: Address) <- derefEnv' name (actionEnv env)

@@ -78,6 +78,8 @@ library
         PhasesFramework.Program,
         PhasesFramework.Framework,
         PhasesFramework.Databind,
+        PhasesFramework.Validate,
+        PhasesFramework.Action,
         Templates.Framework,
         Templates.FrameworkIO,
         Templates.Effects,

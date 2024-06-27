@@ -121,6 +121,13 @@ denoteV (Input exp _) env = do
   -- it should have some validation tuples and these can be rechecked?
   return ()
 
+denoteA :: (Functor eff, Functor eff')
+  => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denoteA (Input exp _) env = 
+  return ()
+
+
 -- so far this only allows in-place, anonymous action definitions
 denoteAction :: (Lift eff eff' v
   ,  State FormId <: eff', State ButtonCount <: eff'
