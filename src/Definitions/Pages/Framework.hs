@@ -89,15 +89,15 @@ handleDefs (Fragment defs pCall) = case unwrap
 
 makeTEnv :: Env eff v -> Env eff v -> TEnv eff eff' v -> TEnv eff eff' v
 makeTEnv eEnv fEnv tEnv = TEnv
-    { actionEnv = Env
-      { varEnv = []
-      , entityDefs = entityDefs eEnv
-      , defs = U.defs  fEnv
-      , globalVars = []
-      }
-    , templates = templates tEnv
-    , U.elements = []
+  { actionEnv = Env
+    { varEnv = []
+    , entityDefs = entityDefs eEnv
+    , defs = U.defs  fEnv
+    , globalVars = []
     }
+  , templates = templates tEnv
+  , U.elements = []
+  }
 
 
 test exp env env' tEnv tEnv' = denoteP exp
