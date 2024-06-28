@@ -35,7 +35,7 @@ denoteEDb (VarInit  name exp) env = do
   exp'    <- lift $ exp (actionEnv env)
   seed :: TVarSeed  <- get
   (loc' :: String)   <- encode $ name ++show seed
-  assign (Address loc', V.null :: v)
+  assign (Address loc', exp')
   assign
     (loc, box $ Address loc' :: v)
 

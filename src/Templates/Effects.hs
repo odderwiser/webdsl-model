@@ -100,7 +100,7 @@ newtype ButtonCount = Count Int
 type FormId = String
 
 newtype TVarAddress = Address String
-    deriving (Eq, Show, Generic)
+    deriving (Eq, Show, Ord, Generic)
 
 instance ToJSON TVarAddress
 instance FromJSON TVarAddress

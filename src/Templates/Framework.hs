@@ -29,8 +29,10 @@ import Actions.Str (LitStr)
 import Actions.Arith (LitInt)
 import Actions.Modules.Bool.Syntax (LitBool)
  
-type Eff' v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
-  + Attribute + Stream HtmlOut + State AttList + E.Render v + MLState Address (Fix v) + State Address + End
+type Eff' v = State ButtonCount + State FormId + State Seed 
+  + Random Label LabelId + State (Maybe LabelId) 
+  + Attribute + Stream HtmlOut + State AttList 
+  + E.Render v + MLState Address (Fix v) + State Address + End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
 type Module' = BiFix T (Fix Module)   
@@ -50,17 +52,18 @@ runEnv e env = runApplied $ e env
 runApplied :: (LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
   => Free (Eff' v) () -> Out'
 runApplied e = case unwrap
-    $ handle_ stateElH Nothing
-    $ handle_ heap (makeEnv [])
-    $ handle renderH
-    $ handle_ stateH []
-    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
-    $ handle_ attributeH ("section", 1)
-    $ handle_ singleAccessState Nothing
-    $ handle idH
-    $ handle_ autoIncrementState (Seed 0)
-    $ handle_ simpleStateH ""
-    $ handle_ autoIncrementState (Count 0)
+    $ handle_ stateElH Nothing             -- state address 
+    $ handle_ heap (makeEnv [])            -- heap v
+    $ handle renderH                       -- render v
+    $ handle_ stateH []                    -- state attlist
+    $ handle_ renderHtmlH                  -- stream htmlout
+      (PageR { R.title = Nothing, body = "", pageCall = False})
+    $ handle_ attributeH ("section", 1)    -- attribute
+    $ handle_ singleAccessState Nothing    -- state maybe labelid
+    $ handle idH                           -- random label labelid
+    $ handle_ autoIncrementState (Seed 0)  -- state seed
+    $ handle_ simpleStateH ""              -- state formid
+    $ handle_ autoIncrementState (Count 0) -- state buttincount
     $ e 
   of
     ((_, str), heap)    -> str

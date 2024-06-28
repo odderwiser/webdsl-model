@@ -1,6 +1,6 @@
 module Templates.Handlers.Forms where
 import Utils
-import Templates.Effects (State (..))
+import Templates.Effects (State (..), Throw)
 import Actions.Effects (Random (Random))
 import qualified Codec.Binary.UTF8.String as S
 import Data.UUID.V3 (namespaceOID, generateNamed)
@@ -43,3 +43,8 @@ simpleStateH = Handler_
       (GetS k) -> k val val
       (PutS v k) -> k v
   }
+
+mockThrowH :: Functor g => Handler Throw a g a 
+mockThrowH = Handler {
+  ret = pure
+}
