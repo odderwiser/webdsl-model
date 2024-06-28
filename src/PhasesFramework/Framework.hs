@@ -16,7 +16,7 @@ import Definitions.Pages.Framework (Envs)
 import Data.Bifunctor
 import PhasesFramework.Databind
 import PhasesFramework.Validate
-import PhasesFramework.Action (AEff')
+import PhasesFramework.Action (AEff', executeAPhase)
 import qualified Definitions.Templates.Framework as T
 import Templates.Modules.Page.PhasesDenotation (denotePProcess)
 import PhasesFramework.Program
@@ -38,8 +38,7 @@ type Def eff eff' v = Envs ( PEnv eff eff' v) (FreeEnv eff v)
 type PgCall eff eff' v =  PageCall ( PEnv eff eff' v) (FreeEnv eff v)
 
 runProgram :: forall v f g h . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v, PageCall <:: f,
-  Denote h (EffV V') V, DenoteT f (EffV V') (T.Eff' V') V,
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v,
   Bifunctor f)
   => Program ((Envs T.Module')  (Fix Module)) (PageCall T.Module' (Fix Module))
  -> String -> IO T.Out'
@@ -53,8 +52,10 @@ runProgram r@(Request defs (pCall, params)) file = do
   let (rEnv, dBEnv, vEnv, aEnv) = foldPhases defs -- i can't <$> here, why?
   let (dbCall, vCall, aCall) = foldRequest pCall
   cache <- executeDbPhase (denotePProcess dbCall $ handleDefs dBEnv) file params
-  nothing :: () <- executeVPhase (denotePProcess vCall $ handleDefs vEnv) file params
-  return ""
+  nothing :: () <- executeVPhase (denotePProcess vCall $ handleDefs vEnv) file params cache
+  nothing :: () <- executeAPhase (denotePProcess aCall $ handleDefs aEnv) file params cache
+  (T.runApplied
+      $ denoteP (foldCall pCall) $ handleDefs rEnv) file
 
 foldDefs:: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f)
   => [Envs (BiFix f (Fix h)) (Fix h)] -> [Envs (PEnv eff eff' v) (FreeEnv eff v)]

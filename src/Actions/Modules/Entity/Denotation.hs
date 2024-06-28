@@ -125,7 +125,7 @@ denoteEDecl decl@(EDecl entity props) env = do
   return $ box id
 
 denoteEDecl' :: forall eff v.
-  ( MLState Address (Fix v) <: eff, TempEHeap v <: eff, Random String String <: eff
+  ( MLState Address (Fix v) <: eff, Random String String <: eff
   , Lit Address <: v, Lit Uuid <: v, LitStr <: v, Null <: v
   , Show (v (Fix v)), EntityDecl <: v
   ) => EntityDecl (FreeEnv eff (Fix v))

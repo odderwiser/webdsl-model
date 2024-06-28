@@ -78,3 +78,10 @@ refH :: (Functor remEff)
   => b -> Handler_ (MLState a b) a env remEff (a, env)
   -> env -> Free remEff (a, env)
 refH value handler env = handle_ handler env (ref value)
+
+globalNamesH :: Functor g => Handler_ (Writer v) a [v] g (a, [v])
+globalNamesH = Handler_ {
+  ret_ = curry pure
+  , hdlr_ = \eff map -> case eff of
+    (Write r k ) -> k $ r : map 
+}

@@ -13,9 +13,9 @@ type Eff' v = FunctionEnv (EffV v) (Fix v) + End
 instance DenoteDef FDecl (FreeEnv (EffV v)  (Fix v)) (Eff' v) where
   denoteDef = F.denoteDef
 
-runProgram :: Program (Envs (FreeEnv Eff V)) (FreeEnv Eff V)
+runProgram :: Program (Envs (FreeEnv Eff V)) () (FreeEnv Eff V)
   -> Out
-runProgram (Fragment defs exp) = case unwrap
+runProgram (Fragment defs _ exp) = case unwrap
   $ handle_ defsH (Env { varEnv = [], U.defs =[]} :: Env Eff V ) 
   $ denoteDefList defs of
     (_, env) -> run exp env []

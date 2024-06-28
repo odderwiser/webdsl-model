@@ -43,6 +43,12 @@ data MLState m v k
   | Assign (m, v) k
   deriving Functor
 
+-- data Writer v k = Write v k
+--   deriving Functor
+
+-- write :: (Writer <: f) -> v -> Free f ()
+-- write v = inj $ Op $ Write v $ Pure ()
+
 instance Show (MLState m v k) where 
   show :: MLState m v k -> String
   show ant = "dummy show"
@@ -69,10 +75,10 @@ drop env = Op $ inj $ DropLocalVars env Pure
 
 --- Entity stuff --
 
-data Write e k = Write e k
+data Writer e k = Write e k
   deriving Functor
 
-write :: Write e <: f => e -> Free f ()
+write :: Writer e <: f => e -> Free f ()
 write value = Op $ inj $ Write value $ Pure ()
 
 data MutateEnv env k =

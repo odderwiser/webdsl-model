@@ -11,7 +11,7 @@ import Actions.FrameworkIO
 import Templates.Syntax as S
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import Templates.FrameworkIO
-import Actions.Handlers.Entity (uuidH)
+import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH)
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 import qualified Templates.Modules.Layout.Denotation as L
@@ -29,18 +29,53 @@ import qualified Definitions.Pages.Denotation as D
 import qualified Definitions.Fun.Denotation as F
 import qualified Definitions.Entity.Denotation as E
 import qualified Definitions.Templates.Denotation as T
+import PhasesFramework.Program
+import Data.Aeson (ToJSON)
+import Data.Aeson.Types (FromJSON)
+import Actions.Str (LitStr)
+import Actions.Arith
+import Actions.Bool (LitBool)
+import Templates.Handlers.Forms
+import Templates.Handlers.Env
+import qualified Data.Map as Map
+import Templates.Handlers.Layout
+import PhasesFramework.Handlers (cacheH)
+import Actions.Handlers.Heap
 
-type AEff' v = ActionE + State (Maybe LabelId) + Random Label LabelId + State TVarSeed
-  + State ButtonCount + State Seed + State FormId + ReqParamsSt + State Address
+type AEff' v = ActionE + State FormId + State Seed 
+  + Random Label LabelId + State (Maybe LabelId) + State TVarSeed
+  + State ButtonCount +  ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Throw 
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End -- can I get rid of this read and write?
 
-type Vt = Lit TVarAddress + PropRef + 
-    V'
-type Vt' = Fix Vt
-
 data ActionE k 
   deriving Functor
+
+aH :: Functor g => Handler ActionE a g a
+aH = Handler { ret = pure }  
+
+executeAPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  => Free (AEff' v) () -> String -> [(String, String)] -> [(TVarAddress, Fix v)]  ->  IO ()
+executeAPhase e file params cache = do
+  ((_, cache), readstatus) <-  unwrap
+    $ handle mockDbReadH
+    $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+    $ handle_ heap' (makeEnv [])
+    $ handle_ eHeapH []
+    $ handle mockThrowH -- throw (effect to remove)
+    $ handle_ cacheH (Map.fromList cache)
+    $ handle_ stateElH Nothing -- state address
+    $ handle_ paramsH (Map.fromList params) -- reqparamsst
+    $ handle_ autoIncrementState (Count 0) -- state buttincount
+    $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
+    $ handle_ singleAccessState Nothing --state maybe labelid
+    $ handle idH -- random label labelid
+    $ handle_ autoIncrementState (Seed 0) -- state seed
+    $ handle_ simpleStateH "" --state formid
+    $ handle aH     --action
+    $ e 
+  return ()
 
 instance DenoteT Layout (EffV Vt) (AEff' Vt) Vt' where
   denoteT = L.denoteProcess

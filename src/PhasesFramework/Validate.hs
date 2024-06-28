@@ -52,15 +52,15 @@ vH = Handler { ret = pure }
 
 executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
-  => Free (VEff' v) () -> String -> [(String, String)] -> IO ()
-executeVPhase e file params = do
+  => Free (VEff' v) () -> String -> [(String, String)] -> [(TVarAddress, Fix v)] -> IO ()
+executeVPhase e file params cache = do
   ((_, cache), readstatus) <-  unwrap
     $ handle mockDbReadH
     $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
     $ handle_ heap' (makeEnv [])
     $ handle_ eHeapH []
     $ handle mockThrowH -- throw (effect to remove)
-    $ handle_ cacheH (Map.empty)
+    $ handle_ cacheH (Map.fromList cache)
     $ handle_ stateElH Nothing -- state address
     $ handle_ paramsH (Map.fromList params) -- reqparamsst
     $ handle_ autoIncrementState (VSeed 0) -- state tvarseed

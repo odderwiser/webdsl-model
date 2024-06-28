@@ -2,19 +2,19 @@ module Definitions.Program.Syntax where
 import Utils.Denote
 import Utils.Fix
 import Utils.Environment
-import Definitions.GlobalVars.Syntax (GlobalVar, DatabaseEntry)
+import Definitions.GlobalVars.Syntax (GlobalVar, DatabaseEntry, VarList)
 import Network.HTTP.Types (Status, Method)
 import Definitions.Pages.Syntax (RequestParams)
 
-data Program e f
-    = Program [e]  -- real program will have an entry point 
-    | Fragment [e] f -- no entrypoint: just a
-    | Sequence [e] [(f, RequestParams)]
-    | Request [e] (f, RequestParams)
+data Program e g f
+    = Program [e] [GlobalVar g] -- real program will have an entry point 
+    | Fragment [e] (VarList g) f -- no entrypoint: just a
+    | Request [e]  [GlobalVar g] (f, RequestParams)
+    | Sequence [e] [GlobalVar g] [(f, RequestParams)]
     deriving Functor
 
-data ProgramV g e f = WithVars [GlobalVar g] (Program e f) 
-    deriving Functor
+-- data ProgramV g e f = WithVars [GlobalVar g] (Program e f) 
+--     deriving Functor
 
 
 -- type Path = [String]
