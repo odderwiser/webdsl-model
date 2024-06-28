@@ -19,6 +19,7 @@ import PhasesFramework.Validate
 import PhasesFramework.Action (AEff')
 import qualified Definitions.Templates.Framework as T
 import Templates.Modules.Page.PhasesDenotation (denotePProcess)
+import PhasesFramework.Program
 
 type RenderProgram = ProgramDef (EffV V') (T.Eff' V') V
 type DbProgram = ProgramDef (EffV Vt) (DbEff' Vt) Vt'
@@ -52,10 +53,11 @@ runProgram r@(Request defs (pCall, params)) file = do
   let (rEnv, dBEnv, vEnv, aEnv) = foldPhases defs -- i can't <$> here, why?
   let (dbCall, vCall, aCall) = foldRequest pCall
   cache <- executeDbPhase (denotePProcess dbCall $ handleDefs dBEnv) file params
+  nothing :: () <- executeVPhase (denotePProcess vCall $ handleDefs vEnv) file params
   return ""
 
 foldDefs:: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f)
-  => [Envs (BiFix f (Fix h)) (Fix h)] -> [Envs ( PEnv eff eff' v) (FreeEnv eff v)]
+  => [Envs (BiFix f (Fix h)) (Fix h)] -> [Envs (PEnv eff eff' v) (FreeEnv eff v)]
 foldDefs = map T.foldTDefs
 
 foldCall :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f)

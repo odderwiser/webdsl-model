@@ -14,7 +14,7 @@ import qualified Templates.Modules.Page.PhasesDenotation as P
 import qualified Templates.Modules.Render.Denotation as X
 import qualified Templates.Modules.Layout.Denotation as L
 import Templates.FrameworkIO as T
-import Actions.Handlers.Entity (uuidH)
+import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH)
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 import Definitions.Templates.Syntax
@@ -29,15 +29,48 @@ import qualified Definitions.Pages.Denotation as D
 import qualified Definitions.Fun.Denotation as F
 import qualified Definitions.Entity.Denotation as E
 import qualified Definitions.Templates.Denotation as T
+import Actions.Modules.Arith.Syntax (LitInt)
+import Data.Aeson (ToJSON, FromJSON)
+import Actions.Str (LitStr)
+import Actions.Modules.Bool.Syntax (LitBool)
+import PhasesFramework.Program
+import Templates.Handlers.Forms
+import Templates.Handlers.Env (paramsH)
+import qualified Data.Map as Map
+import Templates.Handlers.Layout
+import PhasesFramework.Handlers
+import Actions.Handlers.Heap
     
-type VEff' v = Validate + State (Maybe LabelId) + Random Label LabelId +
-  State Seed + State FormId + ReqParamsSt + State Address + State TVarSeed
+type VEff' v = Validate + State FormId + State Seed 
+  + Random Label LabelId + State (Maybe LabelId)
+  + State TVarSeed + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Throw 
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End -- can I get rid of this read and write?
 
-type Vt = Lit TVarAddress + PropRef + 
-    V'
-type Vt' = Fix Vt
+vH :: Functor g => Handler Validate a g a
+vH = Handler { ret = pure }  
+
+executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  => Free (VEff' v) () -> String -> [(String, String)] -> IO ()
+executeVPhase e file params = do
+  ((_, cache), readstatus) <-  unwrap
+    $ handle mockDbReadH
+    $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+    $ handle_ heap' (makeEnv [])
+    $ handle_ eHeapH []
+    $ handle mockThrowH -- throw (effect to remove)
+    $ handle_ cacheH (Map.empty)
+    $ handle_ stateElH Nothing -- state address
+    $ handle_ paramsH (Map.fromList params) -- reqparamsst
+    $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
+    $ handle_ singleAccessState Nothing --state maybe labelid
+    $ handle idH -- random label labelid
+    $ handle_ autoIncrementState (Seed 0) -- state seed
+    $ handle_ simpleStateH "" --state formid
+    $ handle vH     --databind
+    $ e 
+  return ()
 
 data Validate k  
   deriving Functor
