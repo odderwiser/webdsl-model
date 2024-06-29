@@ -7,8 +7,8 @@ import Network.HTTP.Types (Status, Method)
 import Definitions.Pages.Syntax (RequestParams)
 
 data Program e g f
-    = Program [e] [GlobalVar g] -- real program will have an entry point 
-    | Fragment [e] (VarList g) f -- no entrypoint: just a
+    = Program [e] (Maybe g) -- real program will have an entry point 
+    | Fragment [e] (Maybe g) f -- no entrypoint: just a
     | Request [e]  [GlobalVar g] (f, RequestParams)
     | Sequence [e] [GlobalVar g] [(f, RequestParams)]
     deriving Functor

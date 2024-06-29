@@ -92,16 +92,16 @@ instance Lift (EffV Vt) (DbEff' Vt) Vt' where
  
 --
 
-instance DenoteDef' PageDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV Vt) Vt') (Eff'' (DbEff' Vt) Vt) where
+instance DenoteDef' PageDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV Vt) Vt') (Eff'' (EffV Vt) (DbEff' Vt) Vt) where
   denoteDef' = D.denoteDef
 
-instance DenoteDef FDecl (FreeEnv (EffV Vt) Vt') (Eff'' (DbEff' Vt) Vt) where --- Maybe?? This works???
+instance DenoteDef FDecl (FreeEnv (EffV Vt) Vt') (Eff'' (EffV Vt) (DbEff' Vt) Vt) where --- Maybe?? This works???
   denoteDef = F.denoteDef
 
-instance DenoteDef EntityDef (FreeEnv (EffV Vt) Vt') (Eff'' (DbEff' Vt) Vt) where
+instance DenoteDef EntityDef (FreeEnv (EffV Vt) Vt') (Eff'' (EffV Vt) (DbEff' Vt) Vt) where
   denoteDef = E.denoteDef
 
-instance DenoteDef' TemplateDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV Vt) Vt')(Eff'' (DbEff' Vt) Vt) where
+instance DenoteDef' TemplateDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV Vt) Vt')(Eff'' (EffV Vt) (DbEff' Vt) Vt) where
   denoteDef'= T.denoteDefT
 
 type Cache v= [(TVarAddress, Fix v)]

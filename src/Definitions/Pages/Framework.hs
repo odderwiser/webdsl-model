@@ -43,10 +43,10 @@ import Actions.Arith (LitInt)
 import Actions.Bool (LitBool)
 import Actions.Values (Null)
 
-type Envs = PageDef +: TemplateDef +: LiftT EntityDef +: LiftT FDecl
-type Eff'' eff' v = PageDefs (EffV v) eff' (Fix v)
-  + TDefs (EffV v) eff' (Fix v)
-  + EntityDefsEnv (EffV v) (Fix v) + FunctionEnv (EffV v) (Fix v) + End
+type Envs = PageDef +: TemplateDef +: LiftE EntityDef +: LiftE FDecl
+type Eff'' eff eff' v = PageDefs eff eff' (Fix v)
+  + TDefs eff eff' (Fix v)
+  + EntityDefsEnv eff (Fix v) + FunctionEnv eff (Fix v) + End
 type DefSyntax = Envs T.Module' (Fix Module)
 type Program' = Program DefSyntax (PageCall T.Module' (Fix Module))
 -- type Eff' = State E.Seed + Random Label LabelId + State (Maybe LabelId) + ReqParamsSt + Attribute + Stream HtmlOut
@@ -54,37 +54,37 @@ type Program' = Program DefSyntax (PageCall T.Module' (Fix Module))
 
 
 foldProgram :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
-    => Program ((g (BiFix f (Fix h)))  (Fix h)) (PageCall (BiFix f (Fix h)) (Fix h))
-    -> Program ((g ( PEnv eff eff' v)) (FreeEnv eff v)) (PageCall ( PEnv eff eff' v) (FreeEnv eff v))
-foldProgram (Fragment defs pg@(PCall name args params))
-    = Fragment (fmap T.foldTDefs defs) (bimap foldDT foldD pg)
+    => Program ((g (BiFix f (Fix h)))  (Fix h)) () (PageCall (BiFix f (Fix h)) (Fix h))
+    -> Program ((g ( PEnv eff eff' v)) (FreeEnv eff v)) () (PageCall ( PEnv eff eff' v) (FreeEnv eff v))
+foldProgram (Fragment defs _ pg@(PCall name args params))
+    = Fragment (fmap T.foldTDefs defs) Nothing (bimap foldDT foldD pg)
 
-foldProgram (Program defs)
-    = Fragment (fmap T.foldTDefs defs) (PCall "root" [] []) -- can root have arguments? 
+foldProgram (Program defs _)
+    = Fragment (fmap T.foldTDefs defs) Nothing (PCall "root" [] []) -- can root have arguments? 
 
 runProgram :: forall v f . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v)
-  => Program (Envs (PEnv (EffV v) (T.Eff' v) (Fix v)) (T.EnvTy v))
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v,Show (v (Fix v)))
+  => Program (Envs (PEnv (EffV v) (T.Eff' v) (Fix v))  (T.EnvTy v)) ()
   (PageCall (PEnv (EffV v) (T.Eff' v) (Fix v)) (T.EnvTy v)) -> String -> IO T.Out'
-runProgram f@(Fragment defs pCall) = T.runApplied
+runProgram f@(Fragment defs _ pCall) = T.runApplied
     $ denoteP pCall
     $ handleDefs defs
 
-handleDefs :: forall v eff' f . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v, 
-  DenoteDef' PageDef (PEnv (EffV v) eff' (Fix v)) (T.EnvTy v) (Eff'' eff' v),
-  DenoteDef' TemplateDef (PEnv (EffV v) eff' (Fix v)) (T.EnvTy v) (Eff'' eff' v),
-  DenoteDef EntityDef (T.EnvTy v) (Eff'' eff' v) ,
-  DenoteDef FDecl (T.EnvTy v) (Eff'' eff' v))
-  => [Envs (PEnv (EffV v) eff' (Fix v)) (T.EnvTy v)] -> TEnv (EffV v) eff' (Fix v)
+handleDefs :: forall v eff eff' f . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v, Functor eff,
+  DenoteDef' PageDef (PEnv eff eff' (Fix v)) (FreeEnv eff (Fix v)) (Eff'' eff eff' v),
+  DenoteDef' TemplateDef (PEnv eff eff' (Fix v)) (FreeEnv eff (Fix v)) (Eff'' eff eff' v),
+  DenoteDef EntityDef (FreeEnv eff (Fix v)) (Eff'' eff eff' v) ,
+  DenoteDef FDecl (FreeEnv eff (Fix v)) (Eff'' eff eff' v))
+  => [Envs (PEnv eff eff' (Fix v)) (FreeEnv eff (Fix v))] -> TEnv eff eff' (Fix v)
 handleDefs defs = case unwrap
-  $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env (EffV v) (Fix v) )
-  $ handle_ entityDefsH (Env { entityDefs =[]} :: Env (EffV v) (Fix v) )
-  $ handle_ templatesH (TEnv { templates = []} :: TEnv (EffV v) eff' (Fix v) )
-  $ handle_ pagesH (TEnv { pages = []} :: TEnv (EffV v) eff' (Fix v) )
+  $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env eff (Fix v) )
+  $ handle_ entityDefsH (Env { entityDefs =[]} :: Env eff (Fix v) )
+  $ handle_ templatesH (TEnv { templates = []} :: TEnv eff eff' (Fix v) )
+  $ handle_ pagesH (TEnv { pages = []} :: TEnv eff eff' (Fix v) )
   $ denoteDefList' defs of
   ((((_, tEnv'), tEnv), env'), env) ->
-    (makeTEnv env' env tEnv :: TEnv (EffV v) eff' (Fix v)) { U.pages = pages tEnv'}
+    (makeTEnv env' env tEnv :: TEnv eff eff' (Fix v)) { U.pages = pages tEnv'}
 
 makeTEnv :: Env eff v -> Env eff v -> TEnv eff eff' v -> TEnv eff eff' v
 makeTEnv eEnv fEnv tEnv = TEnv
@@ -103,16 +103,16 @@ test exp env env' tEnv tEnv' = denoteP exp
   $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
 
-instance DenoteDef' PageDef (PEnv (EffV v) (T.Eff' v) (Fix v)) (T.EnvTy v) (Eff'' (T.Eff' v) v) where
+instance DenoteDef' PageDef (PEnv (EffV v) (T.Eff' v) (Fix v)) (T.EnvTy v) (Eff'' (EffV v) (T.Eff' v) v) where
   denoteDef' = D.denoteDef
 
-instance DenoteDef FDecl (T.EnvTy v) (Eff'' (T.Eff' v) v) where --- Maybe?? This works???
+instance DenoteDef FDecl (T.EnvTy v) (Eff'' (EffV v) (T.Eff' v) v) where --- Maybe?? This works???
   denoteDef = F.denoteDef
 
-instance DenoteDef EntityDef (T.EnvTy v) (Eff'' (T.Eff' v) v) where
+instance DenoteDef EntityDef (T.EnvTy v) (Eff'' (EffV v) (T.Eff' v) v) where
   denoteDef = E.denoteDef
 
-instance DenoteDef' TemplateDef (PEnv (EffV v) (T.Eff' v) (Fix v)) (T.EnvTy v) (Eff'' (T.Eff' v) v) where
+instance DenoteDef' TemplateDef (PEnv (EffV v) (T.Eff' v) (Fix v)) (T.EnvTy v) (Eff'' (EffV v) (T.Eff' v) v) where
   denoteDef'= T.denoteDefT
 
 pDefEnv a b c = Right $ pDef a b c

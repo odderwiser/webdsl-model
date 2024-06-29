@@ -30,7 +30,7 @@ import Actions.Handlers.Entity (DbStatus(..))
 --     $ assertEqual id res output
 
 testEqProgram :: ()
-  => String -> Out -> Program (Envs (Fix Module)) (Fix Module) -> IO Test
+  => String -> Out -> Program (Envs (Fix Module)) () (Fix Module) -> IO Test
 testEqProgram id res syntax =  do
   let file = "./test/Actions/dbs/entity/"++id++ ".txt"
   -- removeFile file
@@ -40,9 +40,9 @@ testEqProgram id res syntax =  do
 
 --------------------------------
 
-eDeclSyntax :: Program (Envs (Fix Module)) (Fix Module)
+eDeclSyntax :: Program (Envs (Fix Module)) () (Fix Module)
 eDeclSyntax = Fragment
-  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []]
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []] Nothing
   $ eDecl "dummy1" [("y", int 1)]
 
 testEDecl :: IO Test
@@ -69,9 +69,9 @@ testGetProperty = testEqProgram "simple _function_call"
   (boxI 1)
   propSyntax
 
-propSyntax :: Program (Envs (Fix Module)) (Fix Module)
+propSyntax :: Program (Envs (Fix Module)) () (Fix Module)
 propSyntax = Fragment
-  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []]
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []] Nothing
   $ varInit "dummy"
     (eDecl "dummy1" [("y", int 1)])
     (pAccess (var "dummy") "y")
@@ -80,11 +80,11 @@ testMethodCall = testEqProgram "method_call"
   (boxI 6)
   objFunSyntax
 
-objFunSyntax :: Program (Envs (Fix Module)) (Fix Module)
+objFunSyntax :: Program (Envs (Fix Module)) () (Fix Module)
 objFunSyntax = Fragment
   [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id]
     [inj $ FDecl "dummy2" [ "z" ]
-      $ return' $ add (var "z") (pVar "y")]]
+      $ return' $ add (var "z") (pVar "y")]] Nothing
   $ varInit "dummy"
     (eDecl "dummy1" [("y", int 1)])
     (eCall (var "dummy") "dummy2" [int 5] )
@@ -95,7 +95,7 @@ testDefsStoring = TestCase $
   ("dummy1", [("x", Int), ("y", Int)])
   (case
   handle_ entityDefsH Env{entityDefs = []}
-    $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free (Eff' V') [()]) (map (fmap foldD) dummy1Definition) of
+    $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free (Eff' Eff V') [()]) (map (fmap foldD) dummy1Definition) of
       (Pure (_, env)) ->
         case U.entityDefs env of
         [EDef name params _ _] -> (name, params))

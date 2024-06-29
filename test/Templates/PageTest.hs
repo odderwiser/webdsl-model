@@ -21,13 +21,13 @@ import System.Directory (removeFile)
 -- testEq :: ()
 --   => String -> Out' -> Module' -> T.Test
 -- testEq id res syntax =  T.TestCase $
---   T.assertEqual id res $ Tp.run $ foldDT syntax
+--   T.assertEqual id res $ Tp.run (foldDT syntax) 
 
-type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V'))
+type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V')) ()
   (PageCall (PEnv (EffV V') (Eff' V') V) (EnvTy V'))
 
 testEqProgram :: ()
-  => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> IO T.Test
+  => String -> Out' -> Program DefSyntax () (PageCall Module' (Fix Module)) -> IO T.Test
 testEqProgram id res syntax = do
   let file = "./test/Templates/dbs/pgs/"++id++ ".txt"
   -- removeFile file
@@ -41,15 +41,16 @@ defsSyn = [
   tDef "inside" [("a", Int)] $ output $ var "a"
   ]
 
-pCallSyntax :: Program'
-pCallSyntax = Fragment defsSyn pCallRoot
+pCallSyntax :: Program DefSyntax () (PageCall Module' (Fix Module))
+pCallSyntax = Fragment defsSyn Nothing pCallRoot
 
 testPCall = testEqProgram "page Call"
     (   "<html><head></head><body id=\"root\">"
      ++ "3</body></html>")
      pCallSyntax
 
-properProgramSyntax = Program defsSyn
+properProgramSyntax :: Program DefSyntax () (PageCall Module' (Fix Module))
+properProgramSyntax = Program defsSyn Nothing
 
 testProperProgram = testEqProgram "root page"
     (   "<html><head></head><body id=\"root\">"

@@ -26,7 +26,7 @@ type DbProgram = ProgramDef (EffV Vt) (DbEff' Vt) Vt'
 type VProgram = ProgramDef (EffV Vt) (VEff' Vt) Vt'
 type AProgram = ProgramDef (EffV Vt) (AEff' Vt) Vt'
 
-type ProgramDef eff eff' v = Program (Def eff eff' v)
+type ProgramDef eff eff' v = Program (Def eff eff' v) ()
   (PageCall ( PEnv eff eff' v) (FreeEnv eff v))
 
 type RenderDef = Def (EffV V') (T.Eff' V') V
@@ -40,15 +40,15 @@ type PgCall eff eff' v =  PageCall ( PEnv eff eff' v) (FreeEnv eff v)
 runProgram :: forall v f g h . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v,
   Bifunctor f)
-  => Program ((Envs T.Module')  (Fix Module)) (PageCall T.Module' (Fix Module))
+  => Program ((Envs T.Module') (Fix Module)) () (PageCall T.Module' (Fix Module))
  -> String -> IO T.Out'
-runProgram f@(Fragment defs pCall) file = case
+runProgram f@(Fragment defs Nothing pCall) file = case
    foldProgram f
-  of f@(Fragment defs' pCall' ::  RenderProgram ) -> (T.runApplied
+  of f@(Fragment defs' Nothing pCall' ::  RenderProgram ) -> (T.runApplied
       $ denoteP pCall'
       $ handleDefs defs') file
 
-runProgram r@(Request defs (pCall, params)) file = do
+runProgram r@(Request defs _ (pCall, params)) file = do
   let (rEnv, dBEnv, vEnv, aEnv) = foldPhases defs -- i can't <$> here, why?
   let (dbCall, vCall, aCall) = foldRequest pCall
   cache <- executeDbPhase (denotePProcess dbCall $ handleDefs dBEnv) file params

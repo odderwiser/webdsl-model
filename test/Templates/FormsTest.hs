@@ -20,11 +20,11 @@ import Definitions.Templates.Syntax (StatementType(..))
 import System.Directory (removeFile)
 import Definitions.Templates.Framework (EnvTy)
 
-type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V')) 
+type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V'))  ()
   (PageCall (PEnv (EffV V') (Eff' V') V) (EnvTy V'))
 
 testEq :: ()
-  => String -> Out' -> Program DefSyntax (PageCall Module' (Fix Module)) -> IO T.Test
+  => String -> Out' -> Program DefSyntax () (PageCall Module' (Fix Module)) -> IO T.Test
 testEq id res syntax = do
   let file = "./test/Templates/dbs/forms/"++id++ ".txt"
   -- removeFile file
@@ -33,7 +33,7 @@ testEq id res syntax = do
     T.assertEqual id res $ output
 
 testEqId :: ()
-  => String -> [HtmlOutput] -> Program DefSyntax (PageCall Module' (Fix Module)) -> IO T.Test
+  => String -> [HtmlOutput] -> Program DefSyntax () (PageCall Module' (Fix Module)) -> IO T.Test
 testEqId id res syntax = do
   let file = "./test/Templates/dbs/forms/"++id++ ".txt"
   output <- runProgram (foldProgram syntax :: Program'') file
@@ -99,7 +99,7 @@ formsOutput int =
   ++ "<button class=\"button\" name=\""
   , Button  , Plain "\">submit</button></form></body></html>" ]
 
-formsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
+formsSyntax :: Program (Envs Module' (Fix Module)) () (PageCall Module' (Fix Module))
 formsSyntax = Program
   [ pDef "root" [] $ form False $ consTList
     [ label (S.str "labelBool") $ input true Bool
@@ -107,9 +107,9 @@ formsSyntax = Program
     , label (S.str "labelStr") $ input (S.str "a") S.String
     , submit (int 1) (S.str "submit")
     ]
-  ]
+  ] Nothing
 
-formsWithVarsSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
+formsWithVarsSyntax :: Program (Envs Module' (Fix Module)) () (PageCall Module' (Fix Module))
 formsWithVarsSyntax = Program
   [ pDef "root" [] $ body ["a", "b", "c"]
     (consTList [vDeclT "a"
@@ -121,18 +121,18 @@ formsWithVarsSyntax = Program
       , label (S.str "labelStr") $ input (var "c") S.String
       , submit (int 1) (S.str "submit")
       ]
-  ]
+  ] Nothing
 
 testDoubleLabel = testEqId "test double label" doubleLabelOutput doubleLabelSyntax
 
-doubleLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
+doubleLabelSyntax :: Program (Envs Module' (Fix Module)) () (PageCall Module' (Fix Module))
 doubleLabelSyntax = Program
   [ pDef "root" [] $ body ["c"] (varInitT "c" (S.str "a"))
     (form False
       $ label (S.str "unused")
       $ label (S.str "used")
       $ input (var "c") S.String)
-  ]
+  ] Nothing
 
 doubleLabelOutput =
   [ Plain "<html><head></head><body id=\"root\"><form id=\""
@@ -143,7 +143,7 @@ doubleLabelOutput =
   , Id True ,  Plain "\" class=\"inputString\" name=\""
   , Name    , Plain "\" type=\"text\" value=\"a\"></form></body></html>" ]
 
-noLabelSyntax :: Program (Envs Module' (Fix Module)) (PageCall Module' (Fix Module))
+noLabelSyntax :: Program (Envs Module' (Fix Module)) () (PageCall Module' (Fix Module))
 noLabelSyntax = Program
   [ pDef "root" [] $ body ["c", "a"]
     (consTList [ varInitT "c" (S.str "a")
@@ -152,7 +152,7 @@ noLabelSyntax = Program
     (form False $ consTList
       [ label (S.str "unused") $ label (S.str "used") $ input (var "c") S.String
       , input (var "a") Bool])
-  ]
+  ] Nothing
 
 testNoLabel = testEqId "test no label" noLabelOutput noLabelSyntax
 

@@ -18,7 +18,7 @@ import Templates.Modules.Page.Denotation as P
 import Templates.Modules.Lift.Denotation as Lt
 import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt, Eval)
-import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, dbWriteH, mockDbReadH)
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase, Elems)
 import Templates.Modules.Forms.Denotation as F
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH)
 import Actions.Modules.Entity.Syntax (Entity, EntityDecl)
@@ -40,26 +40,33 @@ type Module' = BiFix T (Fix Module)
 type Out' = String
 
 
-run :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
+run :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
   => PEnv (EffV v) (Eff' v) (Fix v) -> String
   -> IO  Out'
 run e = runEnv e (TEnv { actionEnv = Env {}})
 
 runEnv :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Show (v (Fix v))) 
   => PEnv (EffV v) (Eff' v) (Fix v) -> TEnv (EffV v) (Eff' v) (Fix v) -> String
   -> IO Out'
 runEnv e env = runApplied (e env) 
 
-runApplied :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
+runApplied :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
   => Free (Eff' v) () -> String -> IO Out'
-runApplied e file = do
+runApplied e file = runApplied' e [] file
+
+
+runApplied' :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+  => Free (Eff' v) () -> [(Address, (Fix v))] -> String -> IO Out'
+runApplied' e heap file = do
+  (status, elems :: Elems v) <- openDatabase file
   ((_, out), readstatus) <-  unwrap
-    $ handle mockDbReadH
+    $ handle_ inMemoryDbReadH (elems, status)
     $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-    $ handle_ heap' (makeEnv [])
+    $ handle_ heap' (makeEnv heap)
     $ handle_ eHeapH []
     $ handle_ stateElH Nothing
     $ handle renderH
@@ -72,6 +79,8 @@ runApplied e file = do
     $ handle_ simpleStateH ""
     $ handle_ autoIncrementState (Count 0)
     $ e 
+  print "store after"
+  print heap
   return out
  
 

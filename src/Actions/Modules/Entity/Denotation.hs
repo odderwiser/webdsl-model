@@ -29,10 +29,11 @@ getObj :: (EHeap v <: f, DbRead (EntityDecl (Fix v)) <: f, Lit Uuid <: v)
   => FreeEnv f (Fix v) -> Env f (Fix v) -> Free f (EntityDecl (Fix v))
 getObj object env = do
   id      <- object env
-  entity  <- deref (unbox id :: Uuid)
+  let uuid = (unbox' id :: Uuid)
+  entity  <- deref uuid
   case entity of 
     (Just (e :: EntityDecl (Fix v))) -> return e 
-    Nothing                          -> getEntity (unbox id :: Uuid)
+    Nothing                          -> getEntity uuid
 
 getObj' id = do
   entity  <- deref id

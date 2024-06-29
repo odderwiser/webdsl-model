@@ -9,9 +9,9 @@ import qualified Templates.GlobalVarTest as T
 
 main :: IO ()
 main = do
+  actionIo <- actionsIOTests
   globalVarA <- A.globalVarTests
   globalVarT <- T.globalVarTests
-  actionIo <- actionsIOTests
   templateIO <- templatesTestsIO
   result <- runTestTT $ test 
     [ actionsTests

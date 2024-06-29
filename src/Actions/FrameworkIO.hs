@@ -22,7 +22,7 @@ import Actions.Modules.Stmt.Denotation as S
 
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
-import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus)
+import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus, openDatabase, inMemoryDbReadH)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
@@ -41,16 +41,22 @@ runExp e = run e (Env { varEnv = []}) []
 
 run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)] -> String
   -> IO (Out, DbStatus)
-run e env store file = unwrap
-    $ handle mockDbReadH
+run e env store file = do
+  (dbstatus, elems) <- openDatabase file
+  print "store before running:"
+  print store
+  ((out, heap ), status) <- unwrap
+    $ handle_ inMemoryDbReadH (elems, dbstatus)
     $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
-    $ handle_ heap' (makeEnv store)
+    $ handle_ heap'' store --(makeEnv store)
     $ handle_ eHeapH []
     $ handle uuidH
     $ handle funReturn
     $ handle condition
     $ e env 
-  -- return out
+  print "store after running"
+  print heap
+  return (out, status)
   
 
 

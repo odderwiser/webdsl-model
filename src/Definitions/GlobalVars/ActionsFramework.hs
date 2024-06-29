@@ -9,7 +9,7 @@ import Definitions.Fun.Denotation as F
 import Definitions.Fun.Syntax
 import Actions.Handlers.Env (FunctionEnv, defsH, globalNamesH)
 import Definitions.Program.Syntax
-import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps, DbStatus)
+import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps, DbStatus (Failure, Empty), openDatabase, inMemoryDbReadH, tempEHeapH')
 import Actions.Handlers.Return (funReturn)
 import Actions.FrameworkIO as A
 import Syntax
@@ -17,7 +17,7 @@ import Actions.Arith as A
 import Actions.Bool as B
 import Actions.Syntax
 import Actions.Str
-import Definitions.GlobalVars.Syntax (GlobalVar, VarList, Uuid)
+import Definitions.GlobalVars.Syntax (GlobalVar, VarList (VList), Uuid)
 import Definitions.GlobalVars.Denotation as G
 import Definitions.GlobalVars.Effects
 import Actions.Modules.Col.Denotation as C
@@ -34,31 +34,19 @@ import Actions.Handlers.Cond
 import Data.Aeson.KeyMap (empty)
 import Actions.Effects
 import Actions.Values (Lit, Null)
-import Data.Aeson (ToJSON, FromJSON)
-import Definitions.Entity.Framework (handleDefs)
+import Data.Aeson (ToJSON, FromJSON, Result (Success))
+import qualified Definitions.Entity.Framework as E
 --running syntax
 
 --preprocessing
 type Envs = EntityDef + FDecl
-type EffP v = EntityDefsEnv (EffA v) (Fix v) + FunctionEnv (EffA v) (Fix v) + End
+type EffP v = E.Eff' (EffA v) v --EntityDefsEnv (EffA v) (Fix v) + FunctionEnv (EffA v) (Fix v) + End
 type EffA v = Abort (Fix v)
   + Cond + Random String String
-  +  Writer (VName, Address) + EHeap v + MLState Address (Fix v)
+  +  Writer (VName, Address) + TempEHeap v + EHeap v + MLState Address (Fix v)
   + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
 type Sym = VarList + Module
 
-runProgram :: DenoteDef sym e (EffP V')
-  => Program (Fix Sym)  (Fix Sym) (Fix Module)
-  -> FilePath -> IO ((Out, [(Address, MaybeEntity V')]), DbStatus)
-runProgram (Fragment defs vars exp) file =
-  let (pDefs :: Env (EffV V') V, vDefs :: Env (EffA V') V)
-        = (handleDefs defs, handleDefs  defs)
-      (gVarEnv, heap, dbStatus) = runVars defs pDefs [] file
-  in
-    run exp (vDefs {globalVars = gVarEnv}) heap file
-
-
-  
   --  case unwrap
   -- $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env (EffV V') V )
   -- $ handle_ entityDefsH (Env { entityDefs =[]} :: Env (EffV V') V )
@@ -68,6 +56,20 @@ runProgram (Fragment defs vars exp) file =
   --     , entityDefs = entityDefs env'
   --     , defs = U.defs env
   --     } []
+
+
+runProgram :: ()
+  => Program (E.Envs (Fix Module))  (Fix Sym) (Fix Module)
+  -> FilePath -> IO (Out, DbStatus)
+runProgram (Fragment defs (Just vars) exp) file = do
+  let (pDefs, vDefs)
+        = ( E.handleDefs (map (fmap foldD) defs ::  [Envs (FreeEnv (EffV V') (Fix V'))])
+          , E.handleDefs (map (fmap foldD) defs ::  [Envs (FreeEnv (EffA V') (Fix V'))]))
+  (gVarEnv, heap, dbStatus) <- runVars (foldD vars :: FreeEnv (EffA V') (Fix V')) vDefs [] file
+  print gVarEnv
+  (v, status) <- run (foldD exp) (pDefs {globalVars = gVarEnv}) heap file
+  return (v, dbStatus)
+
 
 
 instance DenoteDef FDecl (FreeEnv (EffA v) (Fix v)) (EffP v) where
@@ -82,25 +84,27 @@ instance DenoteDef EntityDef (FreeEnv (EffA v) (Fix v)) (EffP v) where
 -- runExp :: FreeEnv (EffA V') V -> FilePath -> IO (Out,  DbStatus)
 -- runExp e = run e (Env { varEnv = []}) []
 
-runVars :: (ToJSON (v (Fix v)), Lit Uuid <: v, FromJSON (v (Fix v))) 
+runVars :: (ToJSON (v (Fix v)), Lit Uuid <: v, FromJSON (v (Fix v)))
   => FreeEnv (EffA v) (Fix v) -> Env (EffA v) (Fix v) -> [(Address, Fix v)] -> FilePath
   -> IO ([(Name, Address)], [(Address, (Fix v))], DbStatus)
 runVars e env store file = do
+  (status, db :: Elems v) <- openDatabase file
   (((_, globalEnv), heap), dbstatus) <- unwrap
-      $ handle mockDbReadH
+      $ handle_ inMemoryDbReadH (db, status)
       $ handle_ (dbWriteH file) ([] :: [WriteOps v])
       $ handle_ heap'' store
       $ handle_ eHeapH []
-      $ handle_ globalNamesH [] 
+      $ handle_ tempEHeapH' (makeEnv [])
+      $ handle_ globalNamesH []
       $ handle uuidH
       $ handle condition
       $ handle funReturn
       $ e env
-  return ([], [], dbstatus)
+  return (globalEnv, heap, dbstatus)
 
 instance (Lit Uuid <: v, Lit Address <: v,
  EntityDecl <: v, LitStr <: v, Null <: v,
- Show (v (Fix v))) 
+ Show (v (Fix v)))
  =>  Denote VarList (EffA v) (Fix v) where
   denote = G.denote
 
@@ -127,18 +131,18 @@ instance ( Eq (v (Fix v)), LitInt <: v,
 instance (LitStr <: v) => Denote Str (EffA v) (Fix v) where
   denote = Str.denote
 
-instance (Null <: v, [] <: v, LitBool <: v, LitInt <: v) 
+instance (Null <: v, [] <: v, LitBool <: v, LitInt <: v)
   => Denote Loop (EffA v) (Fix v) where
   denote = St.denoteLoop
 
 instance (Null <: v) => Denote Fun (EffA v) (Fix v) where
   denote = F.denote
 
-instance (Null <: v, Lit Uuid <: v) 
+instance (Null <: v, Lit Uuid <: v)
   => Denote Entity (EffA v) (Fix v) where
   denote = En.denote
 
 instance (Lit Address <: v, Lit Uuid <: v,
- LitStr <: v, Null <: v, Show (v (Fix v))) 
+ LitStr <: v, Null <: v, Show (v (Fix v)))
  => Denote EntityDecl (EffA v) (Fix v) where
   denote = En.denoteEDecl

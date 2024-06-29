@@ -1,10 +1,6 @@
 module PhasesFramework.Program where
 import Utils
-import Data.Bifunctor
-import Definitions.Program.Syntax
-import Definitions.Templates.Framework hiding (foldTProgram)
-import Definitions.Pages.Syntax
-import Definitions.GlobalVars.Syntax (VarListT (..))
+import Definitions.GlobalVars.Syntax 
 import Actions.Values
 import Templates.Effects (TVarAddress)
 import Templates.Syntax (PropRef)

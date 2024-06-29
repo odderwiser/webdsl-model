@@ -26,19 +26,20 @@ import Actions.Str (LitStr)
 import Actions.Arith (LitInt)
 import Actions.Bool (LitBool)
 import Data.Aeson (ToJSON, FromJSON)
+import Templates.Modules.Lift.Syntax (LiftE)
 --running syntax
 
 -- preprocessing
-type Envs = TemplateDef +: LiftT EntityDef +: LiftT FDecl
+type Envs = TemplateDef +: LiftE EntityDef +: LiftE FDecl
 type Eff'' v = TDefs (EffV v) (Eff' v) (Fix v) + EntityDefsEnv (EffV v) (Fix v) + FunctionEnv (EffV v) (Fix v) + End
 type EnvTy v = FreeEnv (EffV v) (Fix v)
 type DefSyntax = Envs Module' (Fix Module)
 
 runProgram :: (LitStr <: v,  LitInt <: v, LitBool <: v, [] <: v, 
-  ToJSON (v(Fix v)), FromJSON (v (Fix v))) 
-  => Program (Envs (PEnv (EffV v) (Eff' v) (Fix v)) (EnvTy v)) 
+  ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)))
+  => Program (Envs (PEnv (EffV v) (Eff' v) (Fix v)) (EnvTy v)) ()
   (PEnv (EffV v) (Eff' v) (Fix v)) -> String -> IO Out'
-runProgram (Fragment defs exp) = case unwrap
+runProgram (Fragment defs Nothing exp) = case unwrap
   $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env (EffV v) (Fix v) )
   $ handle_ entityDefsH (Env { entityDefs =[]} :: Env (EffV v) (Fix v) )
   $ handle_ templatesH (TEnv { templates = []} :: TEnv (EffV v) (Eff' v) (Fix v) )
@@ -65,9 +66,9 @@ makeTEnv eEnv fEnv tEnv = TEnv
     }
 
 foldTProgram :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
-    => Program ((g (BiFix f (Fix h))) (Fix h)) (BiFix f (Fix h))
-    -> Program ((g (PEnv eff eff' v)) (FreeEnv eff v)) (PEnv eff eff' v)
-foldTProgram (Fragment defs program) = Fragment (fmap foldTDefs defs) (foldDT program)
+    => Program ((g (BiFix f (Fix h))) (Fix h)) () (BiFix f (Fix h))
+    -> Program ((g (PEnv eff eff' v)) (FreeEnv eff v)) () (PEnv eff eff' v)
+foldTProgram (Fragment defs _ program) = Fragment (fmap foldTDefs defs) Nothing (foldDT program)
 
 foldTDefs :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
   => (g (BiFix f (Fix h))) (Fix h) -> (g (PEnv eff eff' v)) (FreeEnv eff v)

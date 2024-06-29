@@ -38,9 +38,9 @@ testfCall = testEqProgram "simple function call"
   (boxI 7)
   fCallSyntax
 
-fCallSyntax :: Program (FDecl (Fix Module)) (Fix Module)
+fCallSyntax :: Program (FDecl (Fix Module)) () (Fix Module)
 fCallSyntax = Fragment [FDecl "addThree" ["x"]
-    (A.add (var "x") (int 3))]
+    (A.add (var "x") (int 3))] Nothing
   $ funCall "addThree" [int 4]
 
 funTests :: Test

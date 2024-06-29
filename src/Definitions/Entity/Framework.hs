@@ -16,11 +16,11 @@ import Actions.FrameworkIO
 
 --preprocessing
 type Envs = EntityDef + FDecl
-type Eff' v = EntityDefsEnv (EffV v) (Fix v) + FunctionEnv (EffV v) (Fix v) + End -- weird
+type Eff' eff v = EntityDefsEnv eff (Fix v) + FunctionEnv eff (Fix v) + End -- weird
 
 runProgram (Fragment defs _ exp) = run exp (handleDefs defs) []
 
-handleDefs :: (DenoteDef sym e (EntityDefsEnv eff v + (FunctionEnv eff v + End)),  
+handleDefs :: (DenoteDef sym e (Eff' eff v'), v~Fix v',  
   Functor eff) => [sym e] -> Env eff v
 handleDefs defs = case unwrap
   $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env eff v )
@@ -31,12 +31,13 @@ handleDefs defs = case unwrap
       { varEnv = []
       , entityDefs = entityDefs env'
       , defs = U.defs env  
+      , globalVars = []
       }
 
-instance DenoteDef EntityDef (FreeEnv (EffV v) (Fix v)) (Eff' v) where
+instance DenoteDef EntityDef (FreeEnv (EffV v) (Fix v)) (Eff' (EffV v) v) where
   denoteDef = E.denoteDef
 
-instance DenoteDef FDecl (FreeEnv (EffV v)  (Fix v)) (Eff' v) where
+instance DenoteDef FDecl (FreeEnv (EffV v)  (Fix v)) (Eff' (EffV v) v) where
   denoteDef = F.denoteDef
 
 

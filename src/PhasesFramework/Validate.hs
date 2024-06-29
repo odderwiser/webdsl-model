@@ -106,14 +106,14 @@ instance Lift (EffV Vt) (VEff' Vt) Vt' where
     $ handle condition
     e
 
-instance DenoteDef' PageDef (PEnv (EffV Vt) (VEff' Vt) Vt') (FreeEnv (EffV Vt) Vt') (Eff'' (VEff' Vt) Vt) where
+instance DenoteDef' PageDef (PEnv (EffV Vt) (VEff' Vt) Vt') (FreeEnv (EffV Vt) Vt') (Eff'' (EffV Vt) (VEff' Vt) Vt) where
   denoteDef' = D.denoteDef
 
-instance DenoteDef FDecl (FreeEnv (EffV Vt) Vt') (Eff'' (VEff' Vt) Vt) where --- Maybe?? This works???
+instance DenoteDef FDecl (FreeEnv (EffV Vt) Vt') (Eff''  (EffV Vt) (VEff' Vt) Vt) where --- Maybe?? This works???
   denoteDef = F.denoteDef
 
-instance DenoteDef EntityDef (FreeEnv (EffV Vt) Vt') (Eff'' (VEff' Vt) Vt) where
+instance DenoteDef EntityDef (FreeEnv (EffV Vt) Vt') (Eff'' (EffV Vt) (VEff' Vt) Vt) where
   denoteDef = E.denoteDef
 
-instance DenoteDef' TemplateDef (PEnv (EffV Vt) (VEff' Vt) Vt') (FreeEnv (EffV Vt) Vt')(Eff'' (VEff' Vt) Vt) where
+instance DenoteDef' TemplateDef (PEnv (EffV Vt) (VEff' Vt) Vt') (FreeEnv (EffV Vt) Vt')(Eff''  (EffV Vt) (VEff' Vt) Vt) where
   denoteDef'= T.denoteDefT

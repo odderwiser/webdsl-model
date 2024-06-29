@@ -2,9 +2,9 @@ module Utils.Denote where
 import Utils.Free (Free)
 import Utils.Composition
 import Utils.Fix
-import Utils.Environment (FreeEnv, PEnv, Env)
+import Utils.Environment (FreeEnv, PEnv, Env, TEnv (actionEnv))
 import Data.Bifunctor (Bifunctor (bimap))
-import Templates.Modules.Lift.Syntax (LiftT (..))
+import Templates.Modules.Lift.Syntax (LiftT (..), LiftE (LiftE))
 
 
 class Functor sym => Denote sym eff v where
@@ -33,7 +33,7 @@ class (Functor eff', Bifunctor sym) => DenoteDef' sym f e eff' where
     denoteDefList' ::  [sym f e] -> Free eff' [()]
     denoteDefList' = mapM denoteDef'
 
-instance DenoteDef sym e eff' => DenoteDef' (LiftT sym) f e eff' where
+instance DenoteDef sym e eff' => DenoteDef' (LiftE sym) f e eff' where
   denoteDef' (LiftE x)  = denoteDef x
 
 instance  (DenoteDef sym1 e eff', DenoteDef sym2 e eff')
@@ -63,6 +63,11 @@ instance  (DenoteT sym1 eff eff' v,
     denoteT a = case a of
         (L' f) -> denoteT f
         (R' f) -> denoteT f
+
+instance (Denote sym eff v, Functor eff', Lift eff eff' v) => DenoteT (LiftE sym) eff eff' v where
+  denoteT (LiftE x) env = do 
+    v <- lift $ denote x (actionEnv env)
+    return ()
 
 -- data (Functor f) => Fix' e f = In' (e (Fix f) (Fix' e f))
 

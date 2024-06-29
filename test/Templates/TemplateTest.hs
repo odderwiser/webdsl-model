@@ -15,11 +15,11 @@ import Utils
 import Actions.FrameworkIO
 import System.Directory (removeFile)
 
-type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V'))
+type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V')) ()
   (PEnv (EffV V') (Eff' V') V) 
 
 testEqProgram :: String -> Out'
-    -> Program DefSyntax Module' -> IO T.Test
+    -> Program DefSyntax () Module' -> IO T.Test
 testEqProgram id res syntax = do
   let file = "./test/Templates/dbs/tps/"++id++ ".txt"
   output <- runProgram (foldTProgram syntax :: Program'') file
@@ -37,8 +37,8 @@ defsSyn = [
     tDef "inside" [("a", Int)] $ output $ var "a"
     ]
 
-tCallSyntax :: Program DefSyntax Module'
-tCallSyntax = Fragment defsSyn $ section False 
+tCallSyntax :: Program DefSyntax () Module'
+tCallSyntax = Fragment defsSyn  Nothing $ section False 
   $ tCall "nestedVars" [(int 5, Int), (As.str "a", S.String)]
 
 testTCall = testEqProgram "test_TCall"
@@ -47,22 +47,22 @@ testTCall = testEqProgram "test_TCall"
      ++ "6</span></body></html>")
   tCallSyntax
 
-elementsSyntax :: Program DefSyntax Module'
+elementsSyntax :: Program DefSyntax () Module'
 elementsSyntax = Fragment 
   [ tDef "withElems" [] $ Ts.elements
   , tDef "callElems" [("a", Int)] $ tCallElems "withElems" [] $ output $ var "a"
-  ] $ tCall "callElems" [(int 1, Int)]
+  ] Nothing $ tCall "callElems" [(int 1, Int)]
 
 testElems = testEqProgram "test Elems"
   (   "<html><head></head><body>"
     ++ "1</body></html>")
   elementsSyntax
 
-elementsSyntaxCons :: Program DefSyntax Module'
+elementsSyntaxCons :: Program DefSyntax () Module'
 elementsSyntaxCons = Fragment 
   [ tDef "withElems" [] Ts.elements
   , tDef "callElems" [("a", Int)] $ tCallElems "withElems" [] $ consT (output $ var "a") (output $ var "a")
-  ] $ tCall "callElems" [(int 1, Int)]
+  ] Nothing $ tCall "callElems" [(int 1, Int)]
 
 testElemsCons = testEqProgram "test Elems"
   (   "<html><head></head><body>"

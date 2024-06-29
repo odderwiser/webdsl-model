@@ -6,7 +6,7 @@ import Definitions.GlobalVars.TemplatesFramework
 import Utils
 import Actions.FrameworkIO
 import Test.HUnit
-import Templates.Framework (Out')
+import Templates.Framework (Out', T)
 import Syntax
 import Definitions.Pages.Framework (pDefEnv)
 import Definitions.Templates.Framework (tDefEnv)
@@ -19,15 +19,17 @@ import Definitions.GlobalVars.Syntax
 import Definitions.Templates.Syntax (tDef)
 import System.Directory (doesFileExist, removeFile)
 import Actions.Handlers.Entity( DbStatus(..) )
+import Definitions.GlobalVars.ActionsFramework (Sym)
+import Templates.FrameworkIO (Module')
 
 testEqProgram :: ()
-  => String -> Out' -> ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module))
+  => String -> Out' -> Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
   ->  IO Test
 testEqProgram id res syntax =  do
   let file = "./test/Actions/dbs/"++id++ ".txt"
   removeFile file
-  (output, dbStatus) <- runObservableProgram (foldProgramVT syntax) file
-  (output', dbStatus') <- runObservableProgram (foldProgramVT syntax) file
+  (output, dbStatus) <- runObservableProgram syntax file
+  (output', dbStatus') <- runObservableProgram syntax file
   return $ TestList
         [ TestCase $ assertEqual (id++" db read") (res, Empty) (output, dbStatus)
         , TestCase $ assertEqual (id++" db Write") (res, Success) (output', dbStatus') ]
@@ -40,11 +42,12 @@ defsSyn = [
     eDef' "obj" [("a", Int)] []
     ]
 
-pCallSyntax :: ProgramV (Fix Module) DefSyntax (BiFix T (Fix Module))
-pCallSyntax = WithVars
-    [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")])
+pCallSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
+pCallSyntax = Fragment defsSyn 
+    (vList [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")])
     , VDef "right" (EDecl "obj" [("a", int 5), ("other", var "left")])
-    ] $ Fragment defsSyn $ injBf $ pCallRoot
+    ])
+    $ pCallRoot
 
 testPCall = testEqProgram "test1"
     (   "<html><head></head><body id=\"root\">"

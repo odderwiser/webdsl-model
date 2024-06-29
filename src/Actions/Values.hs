@@ -25,7 +25,7 @@ boxV :: (Lit v <: f) => v -> Fix f
 boxV = injF . V
 
 showValue :: forall a v. (Show a, Lit a <: v) => Fix v -> String
-showValue = show . (unbox :: Fix v -> a) 
+showValue = show . (unbox' :: Fix v -> a) 
 
 data Null e = Null
     deriving (Functor, Eq, Show, Generic)

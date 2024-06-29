@@ -4,7 +4,7 @@ import Syntax as S
 import Actions.Syntax
 import Definitions.GlobalVars.Syntax
 import Utils.Environment (FreeEnv)
-import Utils  as U
+import Utils  as U hiding (denote)
 import Actions.Modules.Entity.Denotation (denoteEDecl, denoteEDecl')
 import Actions.Modules.Str.Syntax (LitStr)
 import Data.Traversable
@@ -33,16 +33,17 @@ refGlobalEnv name loc env = do
 -- denoteT :: forall f v g v'. ( Denote EntityDecl f (Fix v)
 --   , Heap v <: f
 --   , Random String String <: f
---   , DbRead (EntityDecl (Fix v)) <: g
+--   , DbRead (EntityDecl (Fix v)) <: g, DbRead (EntityDecl (Fix v)) <: f
 --   ,  DbWrite (Fix v) <: f, DbWrite (Fix v) <: g
+--   ,  Writer (VName, Address) <: f, Cond <: f
 --   , Lit Uuid <: v,  Lit Address <: v
 --   , EntityDecl <: v, Null <: v,  Show (v (Fix v)), v' ~ Fix v
 --   , Functor g, Lift f g (Fix v)
---   ) => VarListT  (PEnv f g v') (FreeEnv f v') -> TEnv f g v' 
+--   ) => LiftE VarList  (PEnv f g v') (FreeEnv f v') -> TEnv f g v' 
 --   -> Free g ()
--- denoteT (VList list t) env = do
---   env' <- denoteWeaken' list (actionEnv env :: Env f v') U.lift
---   t env {actionEnv = env'}
+-- denoteT (LiftE v@(VList list)) env = do
+--   env' <- U.lift $ denote v (actionEnv env :: Env f v')
+--   return ()
 
 
 denoteWeaken' :: forall f g v.
@@ -53,6 +54,7 @@ denoteWeaken' :: forall f g v.
   ,  DbWrite (Fix v) <: g
   , Lit Uuid <: v,  Lit Address <: v
   , EntityDecl <: v, Null <: v,  Show (v (Fix v))
+  , TempEHeap v <: g
   ) => [GlobalVar (Env f (Fix v) -> Free f (Fix v))]
     -> Env f (Fix v) -> (Free f (Fix v) -> Free g (Fix v))
     -> Free g (Env f (Fix v))
@@ -70,9 +72,9 @@ denote :: forall eff v.
   , LitStr <: v, Null <: v
   , Random String String <: eff
   , Writer (VName, Address) <: eff
-  , Show (v (Fix v))
+  , Show (v (Fix v)), TempEHeap v <: eff
   ) => VarList (FreeEnv eff (Fix v)) ->  Env eff (Fix v) -> Free eff (Fix v)
-denote (Weaken (VList list e)) env = do
+denote (VList list) env = do
   env' <- denoteWeaken list env
   mapM_ write $ globalVars env'
   return V.null
@@ -85,6 +87,7 @@ denoteWeaken :: forall f g v.
   , DbRead (EntityDecl (Fix v)) <: f
   ,  DbWrite (Fix v) <: f
   , Lit Uuid <: v,  Lit Address <: v
+  , TempEHeap v <: f
   , Cond <: f, EntityDecl <: v, Null <: v,  Show (v (Fix v))
   ) => [GlobalVar (FreeEnv f (Fix v))]
     -> Env f (Fix v) -> Free f (Env f (Fix v))
@@ -118,7 +121,7 @@ evaluateVariables ::
   , Random String String <: eff
   , Show (v (Fix v))
   , Heap v <: eff'
-  , DbWrite (Fix v) <: eff'
+  , DbWrite (Fix v) <: eff', TempEHeap v <: eff'
   ) => [GlobalVar (FreeEnv eff (Fix v))] -> Env eff (Fix v)
     -> (Free eff (Fix v) -> Free eff' (Fix v))
     -> Free eff' (Env eff (Fix v))
@@ -133,19 +136,20 @@ evaluateVariables list env lift = do
 
 
 phase1 :: forall eff eff' v.
-  ( Functor eff, Heap v <: eff', Null <:v
+  ( Functor eff, Heap v <: eff', TempEHeap v <: eff', Null <:v
   , Lit Address <: v
   ) => Env eff (Fix v) -> VName
     -> Free eff' (Env eff (Fix v))
 phase1 env name = do
-  (loc' :: Address)   <- ref (V.null :: Fix v)
+  (loc  :: Address)   <- ref (Nothing :: MaybeEntity v)
+  (loc' :: Address)   <- ref (box loc :: Fix v)
   refGlobalEnv name loc' env
 
 phase2 :: forall eff eff' v.
   ( Functor eff', Heap v <: eff'
   , Denote EntityDecl eff (Fix v)
   , Lit Address <: v, EntityDecl <: v, LitStr <: v, Null <: v
-  , Random String String <: eff
+  , Random String String <: eff, TempEHeap v <: eff'
   , Show (v (Fix v))
   , Heap v <: eff
   ) => Env eff (Fix v) -> (Free eff (Fix v) -> Free eff' (Fix v))
@@ -153,28 +157,30 @@ phase2 :: forall eff eff' v.
     -> Free eff' ()
 phase2 env lift (VDef name entity) = do
   loc              <- derefEnv' name env
+  (box' :: Fix v)  <- deref loc
   entity'          <- lift $ denoteEDecl' entity (env :: Env eff (Fix v)) -- doesn't write to environment, only reads. Important: should evaluate objects to fix v and save as such!!
   assign
-    ( loc
-    , injF $ projEntity entity')
+    ( unbox box' :: Address
+    , Just $ projEntity entity')
 
 -- only now we have a guarantee that all objects have SOME uuid
 phase3 :: forall eff eff' v.
   ( Functor eff, Heap v <: eff'
-  , DbWrite (Fix v) <: eff', EntityDecl <: v
+  , DbWrite (Fix v) <: eff', EntityDecl <: v, TempEHeap v <: eff'
   , Lit Address <: v, Lit Uuid <: v
   ) => Env eff (Fix v) -> VName -> Free eff' ()
 phase3 env name = do
   loc                       <- derefEnv' name env
   (box' :: Fix v)           <- deref loc
-  (uuid :: Uuid)            <- updateEntity ( projF box' )
+  (entity :: MaybeEntity v) <- deref (unbox box' :: Address)
+  (uuid :: Uuid)            <- updateEntity entity
   assign
     ( loc
     , box uuid :: Fix v )
 
 updateEntity :: forall f v.
   ( Heap v <: f, EntityDecl <: v
-  , Lit Uuid <: v,  Lit Address <: v
+  , Lit Uuid <: v,  Lit Address <: v, TempEHeap v <: f
   , DbWrite (Fix v) <: f
   ) => Maybe (EntityDecl (Fix v)) -> Free f Uuid
 updateEntity (Just e@(EDecl name params)) = do
@@ -185,14 +191,14 @@ updateEntity (Just e@(EDecl name params)) = do
 
 mapParams :: forall f v a.
   ( Lit Uuid <: v,  Lit Uuid <: v, Lit Address <: v
-  , EntityDecl <: v, Functor f, Heap v <: f
+  , EntityDecl <: v, Functor f, Heap v <: f, TempEHeap v <: f
   ) => (a, Fix v) -> Free f (a, Fix v)
 mapParams (name, value) = case projF value of
   (Just (Box (address :: Address))) -> do
-    (entity :: Fix v) <- deref address
+    (entity :: MaybeEntity v) <- deref address
     return
       ( name
-      , box $ getUuid $ fromJust $ projF entity )
+      , box $ getUuid $ fromJust $ entity )
   _                       -> return (name, value)
 
 writeVars :: forall f g v. (Heap v <: g, Functor f
