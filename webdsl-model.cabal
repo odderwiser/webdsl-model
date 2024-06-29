@@ -173,6 +173,7 @@ test-suite webdsl-tests
                         Templates.GlobalVarTest,
                         Templates.LayoutTest,
                         Templates.PageTest,
+                        Templates.PhasesTest,
                         Templates.TemplateTest,
                         Templates.XmlTest,
                         ActionsTest,

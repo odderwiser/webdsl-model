@@ -11,7 +11,7 @@ import Actions.FrameworkIO
 import Templates.Syntax as S
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import Templates.FrameworkIO
-import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH)
+import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase)
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 import qualified Templates.Modules.Layout.Denotation as L
@@ -56,12 +56,13 @@ aH = Handler { ret = pure }
 
 executeAPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
-  => Free (AEff' v) () -> String -> [(String, String)] -> [(TVarAddress, Fix v)]  ->  IO ()
-executeAPhase e file params cache = do
+  => Free (AEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)]  ->  IO ()
+executeAPhase e heap file params cache = do
+  (status, elems) <- openDatabase file
   ((_, cache), readstatus) <-  unwrap
-    $ handle mockDbReadH
+    $ handle_ inMemoryDbReadH (elems, status)
     $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-    $ handle_ heap' (makeEnv [])
+    $ handle_ heap' (makeEnv heap)
     $ handle_ eHeapH []
     $ handle mockThrowH -- throw (effect to remove)
     $ handle_ cacheH (Map.fromList cache)

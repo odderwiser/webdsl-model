@@ -14,7 +14,7 @@ import qualified Templates.Modules.Page.PhasesDenotation as P
 import qualified Templates.Modules.Render.Denotation as X
 import qualified Templates.Modules.Layout.Denotation as L
 import Templates.FrameworkIO as T
-import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH)
+import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, openDatabase, inMemoryDbReadH)
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 import Definitions.Templates.Syntax
@@ -52,12 +52,13 @@ vH = Handler { ret = pure }
 
 executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
-  => Free (VEff' v) () -> String -> [(String, String)] -> [(TVarAddress, Fix v)] -> IO ()
-executeVPhase e file params cache = do
+  => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)] -> IO ()
+executeVPhase e heap file params cache = do
+  (status, elems) <- openDatabase file
   ((_, cache), readstatus) <-  unwrap
-    $ handle mockDbReadH
+    $ handle_ inMemoryDbReadH (elems, status)
     $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-    $ handle_ heap' (makeEnv [])
+    $ handle_ heap' (makeEnv heap)
     $ handle_ eHeapH []
     $ handle mockThrowH -- throw (effect to remove)
     $ handle_ cacheH (Map.fromList cache)

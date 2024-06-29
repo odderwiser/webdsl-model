@@ -9,8 +9,8 @@ import Definitions.Pages.Syntax (RequestParams)
 data Program e g f
     = Program [e] (Maybe g) -- real program will have an entry point 
     | Fragment [e] (Maybe g) f -- no entrypoint: just a
-    | Request [e]  [GlobalVar g] (f, RequestParams)
-    | Sequence [e] [GlobalVar g] [(f, RequestParams)]
+    | Request [e]  (Maybe g) (f, RequestParams)
+    | Sequence [e] (Maybe g) [(f, RequestParams)]
     deriving Functor
 
 -- data ProgramV g e f = WithVars [GlobalVar g] (Program e f) 

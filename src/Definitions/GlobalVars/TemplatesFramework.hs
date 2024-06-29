@@ -93,16 +93,18 @@ runObservableProgram :: Program DefSyntax (Fix Sym) (PageCall (BiFix T.T (Fix Mo
     -> IO (T.Out', DbStatus)
 runObservableProgram (Fragment defs (Just vars) pCall) file = do
   let (pDefs, vDefs)
-        = ( P.handleDefs (map (bimap foldDT foldD) defs ::  [P.Envs (PEnv (EffV V') (T.Eff' V') V) (FreeEnv (EffV V') V )])
-          , P.handleDefs (map (bimap foldDT foldD) defs ::  [P.Envs (PEnv Eff Eff' V) (FreeEnv Eff V )]))
+        = ( P.handleDefs (map T.foldTDefs defs ::  [P.Envs (PEnv (EffV V') (T.Eff' V') V) (FreeEnv (EffV V') V )])
+          , P.handleDefs (map T.foldTDefs defs ::  [P.Envs (PEnv Eff Eff' V) (FreeEnv Eff V )]))
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv vDefs) [] file
-  let heap' = cleanHeap heap Set.empty
-  out <- T.runApplied' (denoteP (bimap foldDT foldD pCall) (pDefs {actionEnv = (actionEnv pDefs) {globalVars = gVarEnv} } )) heap' file
+  out <- T.runApplied' (denoteP (bimap foldDT foldD pCall) 
+    (injectGlobal pDefs gVarEnv )) heap file
   return (out, dbStatus)
 
-cleanHeap [] _ = []
-cleanHeap ((k, v) : tail) set | Set.member k set = cleanHeap tail set 
-                              | otherwise = (k, v) : cleanHeap tail (Set.insert k set)
+injectGlobal defs env = defs {actionEnv = (actionEnv defs) {globalVars = env} }
+
+-- cleanHeap [] _ = []
+-- cleanHeap ((k, v) : tail) set | Set.member k set = cleanHeap tail set 
+--                               | otherwise = (k, v) : cleanHeap tail (Set.insert k set)
 
   --  case unwrap
   -- $ handle_ defsH (Env { varEnv = [], defs =[]} :: Env Eff V )

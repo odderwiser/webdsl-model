@@ -10,6 +10,7 @@ data Fix f = In (f (Fix f))
 
 data BiFix e f = BIn (e (BiFix e f) f)
 
+
 deriving instance (Eq (f (Fix f))) => Eq (Fix f)
 deriving instance (Show (f (Fix f))) => Show (Fix f)
 
@@ -21,3 +22,6 @@ injF = In . inj
 
 projF :: (f <: g) => Fix g -> Maybe (f (Fix g))
 projF (In fix) = proj fix
+
+cmapF :: (Functor g, g <<: h ) => Fix g -> Fix h
+cmapF (In g) = In $ fmap cmapF (cmap g)

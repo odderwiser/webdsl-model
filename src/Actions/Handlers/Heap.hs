@@ -42,9 +42,13 @@ heap' = heapHandler const Map.size Map.lookup Map.insert
   --     Deref key k -> k (fromJust $ Map.lookup key map) map
   --     Assign (key, value) k -> k $ Map.insert key value map }
 
-heap'' :: (Functor g) => 
+heap'' :: (Functor g) =>
   Handler_ (MLState Address v) a [(Address, v)] g (a, [(Address, v)])
-heap'' = heapHandler' (,) length lookup (\k v list -> (k, v) : list)
+heap'' = heapHandler' (,) length lookup
+  (\k v list -> case lookup k list of
+    Nothing -> (k, v) : list
+    Just v' -> map (\(k'', v'') -> if k'' == k then (k, v) else (k'', v'')) list
+  )
 
 -- heapHandler :: Functor remEff
 --   => (t1 -> col -> output)
