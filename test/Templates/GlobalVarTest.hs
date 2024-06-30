@@ -8,7 +8,7 @@ import Actions.FrameworkIO
 import Test.HUnit
 import Templates.Framework (Out', T)
 import Syntax
-import Definitions.Pages.Framework (pDefEnv)
+import Definitions.Pages.Framework (pDefEnv, DefSyntax)
 import Definitions.Templates.Framework (tDefEnv)
 import Templates.Syntax
 import Actions.Arith as A

@@ -53,7 +53,7 @@ type Eff' = T.Eff' V'
 type Eff'' = PageDefs Eff Eff' V + TDefs Eff Eff'  V + EntityDefsEnv Eff V
     + FunctionEnv Eff V + End
 type EnvTy = FreeEnv Eff V
-type DefSyntax = P.Envs  (BiFix T.T (Fix Module)) (Fix Module)
+-- type DefSyntax = P.Envs  (BiFix T.T (Fix Module)) (Fix Module)
 type VModule = LiftE (VarList)
 
 -- foldProgramVT :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g, VarListT <:: f, PageCall <:: f)
@@ -89,7 +89,7 @@ instance DenoteDef' PageDef (PEnv Eff Eff' V) EnvTy Eff'' where
 --   ((((_, tEnv'), tEnv), env'), env) ->
 --     run $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
-runObservableProgram :: Program DefSyntax (Fix Sym) (PageCall (BiFix T.T (Fix Module)) (Fix Module))-> FilePath
+runObservableProgram :: Program P.DefSyntax (Fix Sym) (PageCall (BiFix T.T (Fix Module)) (Fix Module))-> FilePath
     -> IO (T.Out', DbStatus)
 runObservableProgram (Fragment defs (Just vars) pCall) file = do
   let (pDefs, vDefs)

@@ -18,7 +18,7 @@ import Actions.Values (Lit)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn)
-import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH)
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities))
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import qualified Templates.Modules.Page.Denotation as F
@@ -43,17 +43,18 @@ import Actions.Handlers.Heap (heap', makeEnv)
 import qualified Data.Map as Map
 import Templates.Handlers.Env (paramsH)
 import PhasesFramework.Handlers (cacheH)
+import qualified Data.Aeson.KeyMap as KM
 
-type DbEff' v = Databind + State FormId + State Seed 
-  + Random Label LabelId + State (Maybe LabelId) 
+type DbEff' v = Databind + State FormId + State Seed
+  + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Throw 
+  + MLState TVarAddress (Fix v) + Throw
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End
 
 data Databind k
   deriving Functor
 
-dH :: Functor v => Handler Databind a v a 
+dH :: Functor v => Handler Databind a v a
 dH = Handler {
   ret = pure
 }
@@ -89,7 +90,7 @@ instance Lift (EffV Vt) (DbEff' Vt) Vt' where
     $ handle funReturn
     $ handle condition
     e
- 
+
 --
 
 instance DenoteDef' PageDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV Vt) Vt') (Eff'' (EffV Vt) (DbEff' Vt) Vt) where
@@ -106,27 +107,36 @@ instance DenoteDef' TemplateDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV 
 
 type Cache v= [(TVarAddress, Fix v)]
 
-executeDbPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
+executeDbPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, V' <<: v)
   => Free (DbEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> IO (Cache v)
 executeDbPhase e heap file params = do
-  (status, elems) <- openDatabase file
-  ((_, cache), readstatus) <-  unwrap
-    $ handle_ inMemoryDbReadH (elems, status)
-    $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-    $ handle_ heap' (makeEnv heap)
-    $ handle_ eHeapH []
-    $ handle mockThrowH -- throw (effect to remove)
-    $ handle_ cacheH (Map.empty)
-    $ handle_ stateElH Nothing -- state address
-    $ handle_ paramsH (Map.fromList params) -- reqparamsst
-    $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
-    $ handle_ singleAccessState Nothing --state maybe labelid
-    $ handle idH -- random label labelid
-    $ handle_ autoIncrementState (Seed 0) -- state seed
-    $ handle_ simpleStateH "" --state formid
-    $ handle dH     --databind
-    $ e 
+  (status, elems :: Elems V') <- openDatabase file
+  print "reading database in databind"
+  print status
+  print elems
+  let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
+  print "post mapping"
+  print elems' 
+  let (action, elems'') = unwrap
+        $ handle_ inMemoryDbReadH (elems', status)
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v])
+        $ handle_ heap' (makeEnv heap)
+        $ handle_ eHeapH []
+        $ handle mockThrowH -- throw (effect to remove)
+        $ handle_ cacheH (Map.empty)
+        $ handle_ stateElH Nothing -- state address
+        $ handle_ paramsH (Map.fromList params) -- reqparamsst
+        $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
+        $ handle_ singleAccessState Nothing --state maybe labelid
+        $ handle idH -- random label labelid
+        $ handle_ autoIncrementState (Seed 0) -- state seed
+        $ handle_ simpleStateH "" --state formid
+        $ handle dH     --databind
+        $ e
+  print "after reading"
+  print elems''
+  ((_, cache), readstatus) <- action
   return cache
 
 -- State (Maybe LabelId) 

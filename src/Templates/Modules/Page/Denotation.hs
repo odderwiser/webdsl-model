@@ -99,7 +99,7 @@ denoteP :: (Stream HtmlOut <: eff'
   , v ~ Fix v', Null <: v') =>
     PageCall (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
-denoteP (PCall name args _) env = do
+denoteP (PCall name args) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefPDef name env
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)

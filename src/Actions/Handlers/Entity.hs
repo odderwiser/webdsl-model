@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use lambda-case" #-}
 {-# OPTIONS_GHC -Wno-missing-fields #-}
+{-# LANGUAGE StandaloneDeriving #-}
 module Actions.Handlers.Entity where
 import Actions.Effects
 import Actions.Modules.Entity.Syntax
@@ -106,7 +107,7 @@ eHeapH = Handler_
       (Deref key k)     -> k (Prelude.lookup key env) env
       (Ref (Just value) k)     -> let id = getUuid value
         in k id ((id, value) : env)
-      (Assign (name, Just (value)) k) -> k ((name, value) : env)
+      (Assign (name, Just value) k) -> k ((name, value) : env)
   }
 
 mockDbReadH :: (Functor remEff)
@@ -118,12 +119,15 @@ mockDbReadH = Handler
   }
 
 inMemoryDbReadH :: (Functor remEff, Functor v)
-  => Handler_ (DbRead (EntityDecl (Fix v))) val ((Elems v), DbStatus) remEff val
+  => Handler_ (DbRead (EntityDecl (Fix v))) val ((Elems v), DbStatus) remEff (val, (Elems v))
 inMemoryDbReadH = Handler_
-  { ret_ = \v (elems, db) -> pure v
+  { ret_ = \v (elems, db) -> pure (v, elems)
   , hdlr_ = \eff e@(elems, db) -> case eff of
       Connect k -> k (db == Success) (elems, db)
       GetEntity uuid k -> k
+        (case KM.lookup (KM.fromString uuid) $ entities elems of
+          Nothing -> head $  KM.elems $ entities elems) (elems { vars = KM.insert (KM.fromString $"dummy"++uuid ) "not real" $ vars elems} , db)
+      GetEntity' uuid k -> k
         (fromJust $ KM.lookup (KM.fromString uuid) $ entities elems) e
       GetAll name k -> k
         (filter (\(EDecl name' _) -> name == name')
@@ -149,7 +153,9 @@ data Elems v = Elems
   , entities :: KM.KeyMap (EntityDecl (Fix v))
   , classes  :: KM.KeyMap (Set.Set Uuid)
   }
-  deriving Generic
+  deriving (Generic)
+
+deriving instance (Show (v (Fix v))) => Show (Elems v)
 
 data WriteOps v = WriteGV VName Uuid
   | UpdateProperties Uuid (Map.Map PName (Fix v))

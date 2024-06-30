@@ -14,7 +14,7 @@ import qualified Templates.Modules.Page.PhasesDenotation as P
 import qualified Templates.Modules.Render.Denotation as X
 import qualified Templates.Modules.Layout.Denotation as L
 import Templates.FrameworkIO as T
-import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, openDatabase, inMemoryDbReadH)
+import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, openDatabase, inMemoryDbReadH, Elems)
 import Actions.Handlers.Return (funReturn)
 import Actions.Handlers.Cond (condition)
 import Definitions.Templates.Syntax
@@ -54,23 +54,24 @@ executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
   => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)] -> IO ()
 executeVPhase e heap file params cache = do
-  (status, elems) <- openDatabase file
-  ((_, cache), readstatus) <-  unwrap
-    $ handle_ inMemoryDbReadH (elems, status)
-    $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-    $ handle_ heap' (makeEnv heap)
-    $ handle_ eHeapH []
-    $ handle mockThrowH -- throw (effect to remove)
-    $ handle_ cacheH (Map.fromList cache)
-    $ handle_ stateElH Nothing -- state address
-    $ handle_ paramsH (Map.fromList params) -- reqparamsst
-    $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
-    $ handle_ singleAccessState Nothing --state maybe labelid
-    $ handle idH -- random label labelid
-    $ handle_ autoIncrementState (Seed 0) -- state seed
-    $ handle_ simpleStateH "" --state formid
-    $ handle vH     --databind
-    $ e 
+  (status, elems :: Elems v) <- openDatabase file
+  let (action, elems') =  unwrap
+        $ handle_ inMemoryDbReadH (elems, status)
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+        $ handle_ heap' (makeEnv heap)
+        $ handle_ eHeapH []
+        $ handle mockThrowH -- throw (effect to remove)
+        $ handle_ cacheH (Map.fromList cache)
+        $ handle_ stateElH Nothing -- state address
+        $ handle_ paramsH (Map.fromList params) -- reqparamsst
+        $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
+        $ handle_ singleAccessState Nothing --state maybe labelid
+        $ handle idH -- random label labelid
+        $ handle_ autoIncrementState (Seed 0) -- state seed
+        $ handle_ simpleStateH "" --state formid
+        $ handle vH     --databind
+        $ e 
+  ((_, cache), readstatus) <- action
   return ()
 
 data Validate k  

@@ -75,6 +75,7 @@ library
         Definitions.Program.Denotation,
         Definitions.Program.Effects, 
         Definitions.Program.Handlers,
+        Definitions.Syntax,
         PhasesFramework.Program,
         PhasesFramework.Framework,
         PhasesFramework.Handlers,

@@ -16,7 +16,7 @@ import Actions.Modules.Entity.Syntax
 import Actions.Modules.Str.Syntax as Str
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values as V
-import Definitions.GlobalVars.Effects (setEntity, DbWrite, getEntity, DbRead)
+import Definitions.GlobalVars.Effects (setEntity, DbWrite, getEntity, DbRead, getEntity')
 
 getProperty name (EDecl _ params) = return
     $ fromJust
@@ -33,7 +33,20 @@ getObj object env = do
   entity  <- deref uuid
   case entity of 
     (Just (e :: EntityDecl (Fix v))) -> return e 
-    Nothing                          -> getEntity uuid
+    Nothing                          -> do
+      entity <- getEntity uuid
+      assign (uuid, Just entity)
+      return entity
+
+getObj'' :: (EHeap v <: f, DbRead (EntityDecl (Fix v)) <: f, Lit Uuid <: v)
+  => FreeEnv f (Fix v) -> Env f (Fix v) -> Free f (EntityDecl (Fix v))
+getObj'' object env = do
+  id      <- object env
+  let uuid = (unbox' id :: Uuid)
+  entity  <- deref uuid
+  case entity of 
+    (Just (e :: EntityDecl (Fix v))) -> return e 
+    Nothing                          -> getEntity' uuid
 
 getObj' id = do
   entity  <- deref id

@@ -63,22 +63,23 @@ runApplied' :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   => Free (Eff' v) () -> [(Address, (Fix v))] -> String -> IO Out'
 runApplied' e heap file = do
   (status, elems :: Elems v) <- openDatabase file
-  ((_, out), readstatus) <-  unwrap
-    $ handle_ inMemoryDbReadH (elems, status)
-    $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-    $ handle_ heap' (makeEnv heap)
-    $ handle_ eHeapH []
-    $ handle_ stateElH Nothing
-    $ handle renderH
-    $ handle_ stateH []
-    $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
-    $ handle_ attributeH ("section", 1)
-    $ handle_ singleAccessState Nothing
-    $ handle idH
-    $ handle_ autoIncrementState (Seed 0)
-    $ handle_ simpleStateH ""
-    $ handle_ autoIncrementState (Count 0)
-    $ e 
+  let (action, elems') = unwrap
+        $ handle_ inMemoryDbReadH (elems, status)
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+        $ handle_ heap' (makeEnv heap)
+        $ handle_ eHeapH []
+        $ handle_ stateElH Nothing
+        $ handle renderH
+        $ handle_ stateH []
+        $ handle_ renderHtmlH (PageR { R.title = Nothing, body = "", pageCall = False})
+        $ handle_ attributeH ("section", 1)
+        $ handle_ singleAccessState Nothing
+        $ handle idH
+        $ handle_ autoIncrementState (Seed 0)
+        $ handle_ simpleStateH ""
+        $ handle_ autoIncrementState (Count 0)
+        $ e 
+  ((_, out), readstatus) <- action
   print "store after"
   print heap
   return out

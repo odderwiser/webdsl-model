@@ -89,18 +89,19 @@ runVars :: (ToJSON (v (Fix v)), Lit Uuid <: v, FromJSON (v (Fix v)))
   -> IO ([(Name, Address)], [(Address, (Fix v))], DbStatus)
 runVars e env store file = do
   (status, db :: Elems v) <- openDatabase file
-  (((_, globalEnv), heap), dbstatus) <- unwrap
-      $ handle_ inMemoryDbReadH (db, status)
-      $ handle_ (dbWriteH file) ([] :: [WriteOps v])
-      $ handle_ heap'' store
-      $ handle_ eHeapH []
-      $ handle_ tempEHeapH' (makeEnv [])
-      $ handle_ globalNamesH []
-      $ handle uuidH
-      $ handle condition
-      $ handle funReturn
-      $ e env
-  return (globalEnv, heap, dbstatus)
+  let (action, elems' ) = unwrap
+        $ handle_ inMemoryDbReadH (db, status)
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v])
+        $ handle_ heap'' store
+        $ handle_ eHeapH []
+        $ handle_ tempEHeapH' (makeEnv [])
+        $ handle_ globalNamesH []
+        $ handle uuidH
+        $ handle condition
+        $ handle funReturn
+        $ e env
+  (((_, globalEnv), heap), dbstatus) <- action
+  return (globalEnv, heap, status)
 
 instance (Lit Uuid <: v, Lit Address <: v,
  EntityDecl <: v, LitStr <: v, Null <: v,

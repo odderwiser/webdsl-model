@@ -90,7 +90,7 @@ denotePProcess :: ( MLState Address v <: eff, Lift eff eff' v
   , v ~ Fix v', Null <: v') =>
     PageCall (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
-denotePProcess (PCall name args _) env = do
+denotePProcess (PCall name args) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefPDef name env
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)

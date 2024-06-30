@@ -43,9 +43,7 @@ type VarDef = Def Tp.Eff Tp.Eff' V
 
 type PgCall eff eff' v =  PageCall ( PEnv eff eff' v) (FreeEnv eff v)
 
-runProgram :: forall v f g h . (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Null <: v,
-  Bifunctor f)
+runProgram :: ()
   => Program ((Envs T.Module') (Fix Module)) (Fix A.Sym) (PageCall T.Module' (Fix Module))
  -> String -> IO T.Out'
 runProgram f@(Fragment defs Nothing pCall) file = P.runProgram
@@ -60,15 +58,16 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   let (dbCall, vCall, aCall) = foldRequest pCall
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv $ P.handleDefs varDef) [] file
   let heap' = map (second cmapF) heap
+  print (gVarEnv, heap, dbStatus)
   cache <- executeDbPhase 
     (denotePProcess dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv) 
     heap' file params
-  nothing :: () <- executeVPhase (denotePProcess vCall 
-    $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache
-  nothing :: () <- executeAPhase (denotePProcess aCall 
-    $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
-  (T.runApplied
-      $ denoteP (foldCall pCall) $ P.handleDefs rEnv) file
+  -- -- nothing :: () <- executeVPhase (denotePProcess vCall 
+  --   $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache
+  -- nothing :: () <- executeAPhase (denotePProcess aCall 
+  --   $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
+  (T.runApplied'
+      $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
 
 -- class Phase eff' v out where
 --   execute :: Free eff' () ->  [(Address, Fix v)] -> String -> [(String, String)] -> IO out
@@ -90,7 +89,7 @@ foldCall :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f)
   => PageCall (BiFix f (Fix h)) (Fix h) -> PageCall ( PEnv eff eff' v) (FreeEnv eff v)
 foldCall = bimap foldDT foldD
 
-foldPhases :: [Tp.DefSyntax] -> ([RenderDef], [DbDef], [VDef], [ADef], [VarDef])
+foldPhases :: [P.DefSyntax] -> ([RenderDef], [DbDef], [VDef], [ADef], [VarDef])
 foldPhases defs =
   ( foldDefs defs :: [RenderDef]
   , foldDefs defs :: [DbDef]

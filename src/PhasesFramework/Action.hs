@@ -59,23 +59,24 @@ executeAPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   => Free (AEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)]  ->  IO ()
 executeAPhase e heap file params cache = do
   (status, elems) <- openDatabase file
-  ((_, cache), readstatus) <-  unwrap
-    $ handle_ inMemoryDbReadH (elems, status)
-    $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-    $ handle_ heap' (makeEnv heap)
-    $ handle_ eHeapH []
-    $ handle mockThrowH -- throw (effect to remove)
-    $ handle_ cacheH (Map.fromList cache)
-    $ handle_ stateElH Nothing -- state address
-    $ handle_ paramsH (Map.fromList params) -- reqparamsst
-    $ handle_ autoIncrementState (Count 0) -- state buttincount
-    $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
-    $ handle_ singleAccessState Nothing --state maybe labelid
-    $ handle idH -- random label labelid
-    $ handle_ autoIncrementState (Seed 0) -- state seed
-    $ handle_ simpleStateH "" --state formid
-    $ handle aH     --action
-    $ e 
+  let (action, elems') =  unwrap
+        $ handle_ inMemoryDbReadH (elems, status)
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+        $ handle_ heap' (makeEnv heap)
+        $ handle_ eHeapH []
+        $ handle mockThrowH -- throw (effect to remove)
+        $ handle_ cacheH (Map.fromList cache)
+        $ handle_ stateElH Nothing -- state address
+        $ handle_ paramsH (Map.fromList params) -- reqparamsst
+        $ handle_ autoIncrementState (Count 0) -- state buttincount
+        $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
+        $ handle_ singleAccessState Nothing --state maybe labelid
+        $ handle idH -- random label labelid
+        $ handle_ autoIncrementState (Seed 0) -- state seed
+        $ handle_ simpleStateH "" --state formid
+        $ handle aH     --action
+        $ e 
+  ((_, cache), readstatus) <- action
   return ()
 
 instance DenoteT Layout (EffV Vt) (AEff' Vt) Vt' where

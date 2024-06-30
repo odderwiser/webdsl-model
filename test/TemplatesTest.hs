@@ -5,6 +5,7 @@ import Templates.XmlTest (xmlTests)
 import Templates.TemplateTest (templateTests)
 import Templates.PageTest (pageTestsIO)
 import Templates.FormsTest (formsTestsIO)
+import Templates.PhasesTest (phasesTests)
 
 
 templatesTests :: Test

@@ -7,16 +7,20 @@ import Utils.Composition
 import Data.Bifunctor (Bifunctor (bimap, first, second))
 import Templates.Modules.Forms.Syntax (EvalT)
 import Definitions.Templates.Syntax (TBody (Body))
+import Utils.Fix (BiFix, Fix, injBf)
 
 type PgName = String
 
-data PageCall t a = PCall PgName [(a, Type)] RequestParams
+data PageCall t a = PCall PgName [(a, Type)]
   deriving Functor
 
-pCallRoot = PCall "root" [] []
+pCallRoot = PCall "root" []
+
+pCall :: (PageCall <:: f) => String -> BiFix f (Fix g)
+pCall name = injBf $ PCall name []
 
 instance Bifunctor PageCall where
-  bimap g f (PCall name types params) = PCall name (map (first f) types) params
+  bimap g f (PCall name types) = PCall name (map (first f) types) 
 
 type RequestParams = [(String, String)] -- parsable to headers
 

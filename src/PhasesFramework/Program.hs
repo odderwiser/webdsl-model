@@ -28,3 +28,7 @@ import Actions.FrameworkIO (V')
 
 type Vt = Lit TVarAddress + PropRef + V'
 type Vt' = Fix Vt
+
+weaken :: Fix Vt -> Fix V'
+weaken (In g) = case g of
+    (R (R a)) -> In  $ fmap weaken a

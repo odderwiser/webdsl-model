@@ -22,7 +22,7 @@ import Actions.Modules.Stmt.Denotation as S
 
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
-import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus, openDatabase, inMemoryDbReadH)
+import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus, openDatabase, inMemoryDbReadH, Elems)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
@@ -40,20 +40,21 @@ runExp :: FreeEnv Eff V -> String -> IO (Out, DbStatus)
 runExp e = run e (Env { varEnv = []}) [] 
 
 run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)] -> String
-  -> IO (Out, DbStatus)
+  -> IO (Fix V', DbStatus)
 run e env store file = do
-  (dbstatus, elems) <- openDatabase file
+  (dbstatus, elems :: Elems V') <- openDatabase file
   print "store before running:"
   print store
-  ((out, heap ), status) <- unwrap
-    $ handle_ inMemoryDbReadH (elems, dbstatus)
-    $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
-    $ handle_ heap'' store --(makeEnv store)
-    $ handle_ eHeapH []
-    $ handle uuidH
-    $ handle funReturn
-    $ handle condition
-    $ e env 
+  let (action, elems') = unwrap
+        $ handle_ inMemoryDbReadH (elems, dbstatus)
+        $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
+        $ handle_ heap'' store --(makeEnv store)
+        $ handle_ eHeapH []
+        $ handle uuidH
+        $ handle funReturn
+        $ handle condition
+        $ e env 
+  ((out, heap :: [(Address, V)]  ), status) <- action
   print "store after running"
   print heap
   return (out, status)
