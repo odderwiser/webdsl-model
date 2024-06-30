@@ -128,7 +128,7 @@ denotePDb (PCall name args) env = do
 
 denotePV :: ( MLState Address v <: eff, Lift eff eff' v
   , MLState Address v <: eff', State Address <: eff'
-  , Reader () TId <: eff', State TId <: eff'
+  , Reader () TId <: eff'
   , v ~ Fix v', Null <: v') =>
     PageCall (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v

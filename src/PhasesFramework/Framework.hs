@@ -25,7 +25,7 @@ import qualified Definitions.GlobalVars.TemplatesFramework as Tp
 import Syntax (Address)
 import Definitions.GlobalVars.Denotation (Heap)
 import Templates.Effects (State)
-import Templates.Modules.Page.PhasesDenotation (denotePDb)
+import Templates.Modules.Page.PhasesDenotation (denotePDb, denotePV, denotePA)
 
 type RenderProgram e = ProgramDef (EffV V') (T.Eff' V') V e
 type DbProgram e = ProgramDef (EffV Vt) (DbEff' Vt) Vt' e
@@ -60,15 +60,22 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv $ P.handleDefs varDef) [] file
   let heap' = map (second cmapF) heap
   print (gVarEnv, heap, dbStatus)
-  cache <- executeDbPhase 
+  (cache, dBvalidaton, tIds) <- executeDbPhase 
     (denotePDb dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv) 
     heap' file params
-  -- -- nothing :: () <- executeVPhase (denotePProcess vCall 
-  --   $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache
+  validation <- executeVPhase (denotePV vCall 
+    $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache tIds
+  case (dBvalidaton ++ validation) of 
+    [] ->  do
+      nothing :: () <- executeAPhase (denotePA aCall 
+        $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
+      (T.runApplied'
+        $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
+    _  -> (T.runApplied'
+        $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
+  
   -- nothing :: () <- executeAPhase (denotePProcess aCall 
   --   $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
-  (T.runApplied'
-      $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
 
 -- class Phase eff' v out where
 --   execute :: Free eff' () ->  [(Address, Fix v)] -> String -> [(String, String)] -> IO out

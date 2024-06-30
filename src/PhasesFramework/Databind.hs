@@ -110,7 +110,8 @@ type Cache v= [(TVarAddress, Fix v)]
 
 executeDbPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, V' <<: v)
-  => Free (DbEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> IO (Cache v)
+  => Free (DbEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] 
+  -> IO (Cache v, [(TId, String)], [TId])
 executeDbPhase e heap file params = do
   (status, elems :: Elems V') <- openDatabase file
   print "reading database in databind"
@@ -141,7 +142,7 @@ executeDbPhase e heap file params = do
   print "after reading"
   print elems''
   (((_, cache), validationErrors), templateIds) <- action
-  return cache
+  return (cache, validationErrors, templateIds)
 
 -- State (Maybe LabelId) 
 --   + State TVarSeed + ReqParamsSt + State Address

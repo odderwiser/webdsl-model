@@ -59,6 +59,14 @@ templateIdMaybeReaderH = Handler_
       (h : t)-> k (Just $ TId  h) t
   }
 
+consumingReaderH :: (Functor g) => Handler_ (Reader () v) val [v] g val
+consumingReaderH = Handler_
+  { ret_ = \v ids -> pure v
+  , hdlr_ = \(ReadNext k ) input ->  case input of
+      h : t -> k h t 
+  }
+
+
 appendWriterH :: Functor g => Handler_ (Writer v) val [v] g (val, [v])
 appendWriterH = Handler_ 
   { ret_ = curry pure

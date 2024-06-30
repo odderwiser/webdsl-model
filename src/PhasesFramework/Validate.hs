@@ -44,7 +44,7 @@ import Actions.Handlers.Heap
 type VEff' v = Validate + State FormId + State Seed 
   + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Throw 
+  + MLState TVarAddress (Fix v) + Reader () TId + Throw 
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End -- can I get rid of this read and write?
 
 vH :: Functor g => Handler Validate a g a
@@ -52,8 +52,9 @@ vH = Handler { ret = pure }
 
 executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
-  => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)] -> IO ()
-executeVPhase e heap file params cache = do
+  => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)] 
+  -> [TId] -> IO [(TId, String)]
+executeVPhase e heap file params cache tIds = do
   (status, elems :: Elems v) <- openDatabase file
   let (action, elems') =  unwrap
         $ handle_ inMemoryDbReadH (elems, status)
@@ -61,6 +62,7 @@ executeVPhase e heap file params cache = do
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
         $ handle mockThrowH -- throw (effect to remove)
+        $ handle_ consumingReaderH tIds
         $ handle_ cacheH (Map.fromList cache)
         $ handle_ stateElH Nothing -- state address
         $ handle_ paramsH (Map.fromList params) -- reqparamsst
@@ -72,7 +74,7 @@ executeVPhase e heap file params cache = do
         $ handle vH     --databind
         $ e 
   ((_, cache), readstatus) <- action
-  return ()
+  return ([])
 
 data Validate k  
   deriving Functor
