@@ -48,7 +48,7 @@ import qualified Data.Aeson.KeyMap as KM
 type DbEff' v = Databind + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Throw
+  + MLState TVarAddress (Fix v) + Writer (TId, String)
   + Reader () (Maybe TId) + Writer TId + State TSeed 
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End
 
@@ -127,7 +127,7 @@ executeDbPhase e heap file params = do
         $ handle_ autoIncrementState (TSeed 0)
         $ handle_ appendWriterH []
         $ handle_ templateIdMaybeReaderH []
-        $ handle mockThrowH -- throw (effect to remove)
+        $ handle_ appendWriterH [] -- throw (effect to remove)
         $ handle_ cacheH (Map.empty)
         $ handle_ stateElH Nothing -- state address
         $ handle_ paramsH (Map.fromList params) -- reqparamsst
@@ -140,7 +140,7 @@ executeDbPhase e heap file params = do
         $ e
   print "after reading"
   print elems''
-  ((_, cache), templateIds) <- action
+  (((_, cache), validationErrors), templateIds) <- action
   return cache
 
 -- State (Maybe LabelId) 

@@ -59,8 +59,8 @@ templateIdMaybeReaderH = Handler_
       (h : t)-> k (Just $ TId  h) t
   }
 
-appendWriterH :: Functor g => Handler_ (Writer TId) v [String] g (v, [String])
+appendWriterH :: Functor g => Handler_ (Writer v) val [v] g (val, [v])
 appendWriterH = Handler_ 
   { ret_ = curry pure
-  , hdlr_ = \(Write (TId id) k) output -> k $ snoc output id  
+  , hdlr_ = \(Write v k) output -> k $ snoc output v 
   }

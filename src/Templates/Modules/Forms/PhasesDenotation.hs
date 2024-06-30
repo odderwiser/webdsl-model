@@ -2,7 +2,7 @@
 module Templates.Modules.Forms.PhasesDenotation where
 import Templates.Effects as E
 import Utils
-import Actions.Effects ( Random, deref, MLState, assign, ref, EHeap )
+import Actions.Effects ( Random, deref, MLState, assign, ref, EHeap, Writer, write )
 import Actions.Bool (LitBool)
 import Actions.Arith (LitInt)
 import Actions.Str (LitStr)
@@ -17,6 +17,7 @@ import Definitions.GlobalVars.Syntax (Uuid)
 import Text.Read (readMaybe)
 import Actions.Modules.Entity.Denotation (setProperty, getObj')
 import Definitions.GlobalVars.Effects (DbRead)
+import Templates.Modules.Page.Syntax (TId (TId))
 
 
 denoteProcess :: forall eff eff' v v'.
@@ -44,7 +45,7 @@ denoteDb :: forall eff eff' v v' g.
   ( State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff',  ReqParamsSt <: eff'
   , MLState TVarAddress v <: eff'
-  , Heap v' <: eff', EHeap v' <: eff', Throw <: eff'
+  , Heap v' <: eff', EHeap v' <: eff', Writer (TId, String) <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
   , Lit TVarAddress <: v', PropRef <: v', DbRead (EntityDecl (Fix v')) <: eff', EntityDecl <: v'
   , Lift eff eff' v, Heap v' <: eff, Eval <: g, Entity <: g, Denote g eff v)
@@ -63,7 +64,7 @@ denoteDb (Input exp Bool) env = do --exp is a reference to param or template var
       case boundParam of
         Just "true"  -> bindValue valueRef (injF $ V True :: v)
         Just "false" -> bindValue valueRef (injF $ V False :: v)
-        _ -> throw "not a well-formed boolean value"
+        _ ->  write (TId (templateId env), "not a well-formed boolean value")
     Nothing -> return ()
 
 denoteDb (Input exp String) env = do --exp is a reference to param or template variable
@@ -78,7 +79,7 @@ denoteDb (Input exp String) env = do --exp is a reference to param or template v
       boundParam :: Maybe String <- E.read inputName
       case boundParam of
         Just str  -> bindValue valueRef (injF $ V str :: v) -- look out for scripts? idk 
-        _ -> throw "not a well-formed String value"
+        _ ->  write (TId (templateId env), "not a well-formed String value")
     Nothing -> return ()
 
 denoteDb (Input exp Int) env = do --exp is a reference to param or template variable
@@ -94,8 +95,8 @@ denoteDb (Input exp Int) env = do --exp is a reference to param or template vari
       case boundParam of
         Just int  -> case readMaybe int of
           Just (int' :: Int) -> bindValue valueRef (injF $ V int :: v) -- look out for scripts? idk 
-          Nothing -> throw "not a well-formed Int value"
-        _ -> throw "not a well-formed String value"
+          Nothing ->  write (TId (templateId env), "not a well-formed Int value")
+        _ ->  write (TId (templateId env),"value missing ")
     Nothing -> return ()
 
 denoteRef :: forall g v' eff.
