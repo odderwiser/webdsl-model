@@ -18,7 +18,7 @@ import Actions.Values (Lit)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn)
-import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities))
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH)
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import qualified Templates.Modules.Page.Denotation as F
@@ -120,7 +120,7 @@ executeDbPhase e heap file params = do
   print elems' 
   let (action, elems'') = unwrap
         $ handle_ inMemoryDbReadH (elems', status)
-        $ handle_ (dbWriteH file) ([] :: [WriteOps v])
+        $ handle_ (dbWriteInputH file) ([] :: [WriteOps v], (elems', status))
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
         $ handle mockThrowH -- throw (effect to remove)
@@ -136,7 +136,7 @@ executeDbPhase e heap file params = do
         $ e
   print "after reading"
   print elems''
-  ((_, cache), readstatus) <- action
+  (_, cache) <- action
   return cache
 
 -- State (Maybe LabelId) 

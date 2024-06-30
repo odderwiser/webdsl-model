@@ -126,7 +126,9 @@ inMemoryDbReadH = Handler_
       Connect k -> k (db == Success) (elems, db)
       GetEntity uuid k -> k
         (case KM.lookup (KM.fromString uuid) $ entities elems of
-          Nothing -> head $  KM.elems $ entities elems) (elems { vars = KM.insert (KM.fromString $"dummy"++uuid ) "not real" $ vars elems} , db)
+          Nothing -> head $  KM.elems $ entities elems
+          Just e -> e) (elems { vars = KM.insert (KM.fromString $"dummy"++uuid ) "not real" $ vars elems}
+            , db)
       GetEntity' uuid k -> k
         (fromJust $ KM.lookup (KM.fromString uuid) $ entities elems) e
       GetAll name k -> k
@@ -199,6 +201,33 @@ dbWriteH dbEntry = Handler_
       let uuid = getUuid e in
       k $ writeOps ++ [AddClassMember (projEName e) uuid, AddEntity uuid e]  --updateEntity e db
     (UpdateEntity uuid pName v k) -> k $ updateWriteOps writeOps (UpdateProperties uuid $ Map.singleton pName v)
+  }
+
+dbWriteInputH :: forall remEff val v.
+  (Functor remEff, Lit Uuid <: v,ToJSON (v (Fix v)), FromJSON (v (Fix v)))
+  => FilePath -> Handler_ (DbWrite (Fix v)) val ([WriteOps v], (Elems v, DbStatus)) remEff (IO val)
+dbWriteInputH dbEntry = Handler_
+  { ret_ = \ val (writeOps, (elems, status)) -> pure $ do
+    -- fileExists <- doesFileExist dbEntry
+    -- oldDbState <- if fileExists then readFile' dbEntry else return ""
+    -- (status, elems) <- openDatabase dbEntry 
+    case status of
+      Success -> do
+        writeFile dbEntry
+          $ encodeElems
+          $ updateDatabase elems writeOps
+      _ -> do
+        writeFile dbEntry
+          $ encodeElems
+          $ makeDb elems writeOps
+    return val
+  , hdlr_ = \eff (writeOps, elems) -> case eff of
+    (SetVar (name, id) k) -> k
+      $  (writeOps ++ [WriteGV name id], elems) --Elems (insert (fromString name) id vars) decls classes
+    (SetEntity e k) ->
+      let uuid = getUuid e in
+      k $ (writeOps ++ [AddClassMember (projEName e) uuid, AddEntity uuid e], elems)  --updateEntity e db
+    (UpdateEntity uuid pName v k) -> k $ (updateWriteOps writeOps (UpdateProperties uuid $ Map.singleton pName v), elems)
   }
 
 updateWriteOps (AddEntity uuid e : tail) v@(UpdateProperties uuid' props)
