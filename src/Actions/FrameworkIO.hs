@@ -26,14 +26,17 @@ import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, 
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
+import Actions.Modules.Phases.Syntax (Redirect)
+import qualified Actions.Modules.Phases.Denotation as Ph
+import qualified Templates.Effects as E
 
 type Eff = EffV V'
-type EffV v    =  Cond + Abort (Fix v) + Random String String 
+type EffV v    =  Cond + Abort (Fix v) + Random String String + E.Redirect (Fix v)
   + EHeap v + MLState Address (Fix v) + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
 type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
-type Module  = EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
+type Module  = Redirect + EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
 type Out     = V --todo: make different!
 
 runExp :: FreeEnv Eff V -> String -> IO (Out, DbStatus)
@@ -50,6 +53,7 @@ run e env store file = do
         $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
         $ handle_ heap'' store --(makeEnv store)
         $ handle_ eHeapH []
+        $ handle dummyRedirect
         $ handle uuidH
         $ handle funReturn
         $ handle condition
@@ -99,3 +103,7 @@ instance (Null <: v, Lit Uuid <: v)
 instance (Lit Address <: v, Lit Uuid <: v, Null <: v, Show  (v(Fix v))) 
   => Denote EntityDecl (EffV v) (Fix v) where
   denote = En.denoteEDecl
+
+instance (Null <: v)
+  => Denote Redirect (EffV v) (Fix v) where
+    denote = Ph.denoteA

@@ -10,7 +10,7 @@ import Definitions.Fun.Syntax
 import Actions.Handlers.Env (FunctionEnv, defsH, globalNamesH)
 import Definitions.Program.Syntax
 import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps, DbStatus (Failure, Empty), openDatabase, inMemoryDbReadH, tempEHeapH')
-import Actions.Handlers.Return (funReturn)
+import Actions.Handlers.Return (funReturn, dummyRedirect)
 import Actions.FrameworkIO as A
 import Syntax
 import Actions.Arith as A
@@ -36,6 +36,9 @@ import Actions.Effects
 import Actions.Values (Lit, Null)
 import Data.Aeson (ToJSON, FromJSON, Result (Success))
 import qualified Definitions.Entity.Framework as E
+import Actions.Modules.Phases.Syntax
+import qualified Actions.Modules.Phases.Denotation as Ph
+import qualified Templates.Effects as E
 --running syntax
 
 --preprocessing
@@ -43,7 +46,8 @@ type Envs = EntityDef + FDecl
 type EffP v = E.Eff' (EffA v) v --EntityDefsEnv (EffA v) (Fix v) + FunctionEnv (EffA v) (Fix v) + End
 type EffA v = Abort (Fix v)
   + Cond + Random String String
-  +  Writer (VName, Address) + TempEHeap v + EHeap v + MLState Address (Fix v)
+  +  Writer (VName, Address) + E.Redirect (Fix v)
+  + TempEHeap v + EHeap v + MLState Address (Fix v)
   + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
 type Sym = VarList + Module
 
@@ -95,6 +99,7 @@ runVars e env store file = do
         $ handle_ heap'' store
         $ handle_ eHeapH []
         $ handle_ tempEHeapH' (makeEnv [])
+        $ handle dummyRedirect
         $ handle_ globalNamesH []
         $ handle uuidH
         $ handle condition
@@ -147,3 +152,6 @@ instance (Lit Address <: v, Lit Uuid <: v,
  LitStr <: v, Null <: v, Show (v (Fix v)))
  => Denote EntityDecl (EffA v) (Fix v) where
   denote = En.denoteEDecl
+
+instance (Null <: v) => Denote Redirect (EffA v) (Fix v) where
+  denote = Ph.denoteA

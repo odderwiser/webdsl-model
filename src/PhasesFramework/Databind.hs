@@ -17,7 +17,7 @@ import qualified Templates.Modules.Forms.PhasesDenotation as F
 import Actions.Values (Lit)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
-import Actions.Handlers.Return (funReturn)
+import Actions.Handlers.Return (funReturn, dummyRedirect)
 import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH)
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Definitions.Templates.Syntax (TBody, TemplateDef)
@@ -87,6 +87,7 @@ instance DenoteT EvalT (EffV Vt) (DbEff' Vt) Vt' where
 
 instance Lift (EffV Vt) (DbEff' Vt) Vt' where
   lift e = bubbleDown
+    $ handle dummyRedirect
     $ handle uuidH
     $ handle funReturn
     $ handle condition

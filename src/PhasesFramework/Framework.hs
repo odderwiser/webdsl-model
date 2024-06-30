@@ -60,20 +60,25 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv $ P.handleDefs varDef) [] file
   let heap' = map (second cmapF) heap
   print (gVarEnv, heap, dbStatus)
-  (cache, dBvalidaton, tIds) <- executeDbPhase 
-    (denotePDb dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv) 
+  (cache, dBvalidaton, tIds) <- executeDbPhase
+    (denotePDb dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv)
     heap' file params
-  validation <- executeVPhase (denotePV vCall 
+  validation <- executeVPhase (denotePV vCall
     $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache tIds
-  case (dBvalidaton ++ validation) of 
+  case (dBvalidaton ++ validation) of
     [] ->  do
-      nothing :: () <- executeAPhase (denotePA aCall 
+      rCall :: Maybe (PageCall T.Module' (Fix Module)) <- executeAPhase (denotePA aCall
         $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
+      case rCall of
+        Nothing -> (T.runApplied'
+          $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
+        Just rCall' -> (T.runApplied'
+          $ denoteP (foldCall rCall') $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) [] file
       (T.runApplied'
         $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
     _  -> (T.runApplied'
         $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
-  
+
   -- nothing :: () <- executeAPhase (denotePProcess aCall 
   --   $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
 

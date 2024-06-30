@@ -7,7 +7,7 @@ import Templates.Syntax as S
 import Actions.FrameworkIO
 import Templates.Handlers.Render as R
 import Templates.Handlers.Layout
-import Actions.Handlers.Return (funReturn, funReturn')
+import Actions.Handlers.Return (funReturn, funReturn', dummyRedirect)
 import Actions.Handlers.Cond (condition)
 import Actions.Effects (MLState, Random, EHeap, Writer)
 import Syntax (Address)
@@ -100,6 +100,8 @@ instance (Lit Uuid <: v) => Lift (EffV v) (Eff' v) (Fix v) where
 
 handleExp :: Free (EffV v) (Fix v) -> Free (Eff' v) (Fix v)
 handleExp e = bubbleDown
+  $ handle dummyRedirect
+  $ handle uuidH
   $ handle funReturn
   $ handle condition
   e

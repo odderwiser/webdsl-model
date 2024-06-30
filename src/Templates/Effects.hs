@@ -7,6 +7,8 @@ import Text.HTML.TagSoup (Tag (TagText, TagOpen), renderTags, escapeHTML)
 import Actions.Effects (MLState, random, Random)
 import GHC.Generics
 import Data.Aeson
+import Data.Kind (Type)
+import qualified Syntax as S
 
 -- Layout ---
 type IsEscaped = Bool
@@ -129,3 +131,9 @@ data Throw k = Throw String
 
 throw :: (Throw <: f) => String -> Free f ()
 throw errorMsg = Op $ inj $ Throw errorMsg
+
+data Redirect v k = Redirect String [(v, S.Type)] k 
+    deriving Functor
+
+redirect :: (Redirect v <: f) => String -> [(v, S.Type)] -> Free f ()
+redirect name args = Op $ inj $ Redirect name args $ Pure ()

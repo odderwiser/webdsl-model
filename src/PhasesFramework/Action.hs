@@ -12,7 +12,7 @@ import Templates.Syntax as S
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import Templates.FrameworkIO
 import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase)
-import Actions.Handlers.Return (funReturn)
+import Actions.Handlers.Return (funReturn, redirectH)
 import Actions.Handlers.Cond (condition)
 import qualified Templates.Modules.Layout.Denotation as L
 import qualified Templates.Modules.Render.Denotation as X
@@ -21,7 +21,7 @@ import qualified Templates.Modules.Lift.Denotation as Lt
 import qualified Templates.Modules.Forms.PhasesDenotation as F
 import qualified Templates.Modules.Page.Denotation as F
 import qualified Templates.Modules.Page.PhasesDenotation as PF
-import Definitions.Pages.Syntax (PageDef)
+import Definitions.Pages.Syntax (PageDef, PageCall)
 import Definitions.Fun.Syntax (FDecl)
 import Definitions.Entity.Syntax (EntityDef)
 import Definitions.Pages.Framework (Eff'')
@@ -45,7 +45,7 @@ import Actions.Handlers.Heap
 type AEff' v = ActionE + State FormId + State Seed 
   + Random Label LabelId + State (Maybe LabelId) + State TVarSeed
   + State ButtonCount +  ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Throw 
+  + MLState TVarAddress (Fix v) + Throw + Redirect (Fix v)
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End -- can I get rid of this read and write?
 
 data ActionE k 
@@ -56,7 +56,8 @@ aH = Handler { ret = pure }
 
 executeAPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
-  => Free (AEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)]  ->  IO ()
+  => Free (AEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] 
+  -> [(TVarAddress, Fix v)]  ->  IO (Maybe (PageCall (BiFix h (Fix g)) (Fix g)))
 executeAPhase e heap file params cache = do
   (status, elems) <- openDatabase file
   let (action, elems') =  unwrap
@@ -64,6 +65,7 @@ executeAPhase e heap file params cache = do
         $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
+        $ handle_ redirectH Nothing
         $ handle mockThrowH -- throw (effect to remove)
         $ handle_ cacheH (Map.fromList cache)
         $ handle_ stateElH Nothing -- state address
@@ -76,8 +78,8 @@ executeAPhase e heap file params cache = do
         $ handle_ simpleStateH "" --state formid
         $ handle aH     --action
         $ e 
-  ((_, cache), readstatus) <- action
-  return ()
+  ((_, pageCall), readstatus) <- action
+  return pageCall
 
 instance DenoteT Layout (EffV Vt) (AEff' Vt) Vt' where
   denoteT = L.denoteProcess

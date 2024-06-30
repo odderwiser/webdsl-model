@@ -15,7 +15,7 @@ import qualified Templates.Modules.Render.Denotation as X
 import qualified Templates.Modules.Layout.Denotation as L
 import Templates.FrameworkIO as T
 import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, openDatabase, inMemoryDbReadH, Elems)
-import Actions.Handlers.Return (funReturn)
+import Actions.Handlers.Return (funReturn, dummyRedirect)
 import Actions.Handlers.Cond (condition)
 import Definitions.Templates.Syntax
 import qualified Templates.Modules.Page.Denotation as F
@@ -111,6 +111,7 @@ instance DenoteT EvalT (EffV Vt) (VEff' Vt) Vt' where
 
 instance Lift (EffV Vt) (VEff' Vt) Vt' where
   lift e = bubbleDown
+    $ handle dummyRedirect
     $ handle uuidH
     $ handle funReturn
     $ handle condition
