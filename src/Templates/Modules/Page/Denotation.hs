@@ -1,6 +1,6 @@
 module Templates.Modules.Page.Denotation where
 import Templates.Modules.Page.Syntax
-import Actions.Effects (MLState, ref, assign, write, Random, Writer)
+import Actions.Effects (MLState, ref, assign, write, Random, Writer, deref)
 import Definitions.Entity.Syntax (PName)
 import Syntax (Type, Address)
 import Utils
@@ -23,12 +23,14 @@ import Actions.Modules.Eval.Denotation (derefEnv')
 import Data.Bifunctor (second)
 import GHC.Float (timesDouble)
 import Definitions.Syntax (Uuid)
+import qualified Templates.Effects as E
 
 denote ::forall eff eff' v v'.
   ( Stream HtmlOut <: eff' , MLState Address v <: eff
   , Lift eff eff' v, MLState Address v <: eff'
   , State Address <: eff', Random Label String <: eff'
   , Reader () (Maybe TId) <: eff', Writer TId <: eff'
+  , Reader TId [String] <: eff', E.Render String <: eff'
   , State TSeed <: eff'
   , v ~ Fix v', Null <: v'
   ) => Page (PEnv eff eff' v) (FreeEnv eff v)
@@ -42,6 +44,8 @@ denote (PNavigate name vars text) pEnv = do
 denote (TCall name atts args Nothing) env = do
   (body, env') <- populateTCall name args env
   tEnv <- storeTemplateId name env
+  errors :: [String] <- E.read $ TId $ templateId tEnv
+  renderErrors errors
   body tEnv { actionEnv = env'}
 
 denote (TCall name atts args (Just elems)) env = do
@@ -49,6 +53,8 @@ denote (TCall name atts args (Just elems)) env = do
   (body, env'') <- populateTCall name args env'
   put loc
   tEnv <- storeTemplateId name env'
+  errors :: [String] <- E.read $ TId $ templateId tEnv
+  renderErrors errors
   body tEnv { actionEnv = env''}
 
 denote Elements env = do
@@ -105,6 +111,7 @@ denoteP :: (Stream HtmlOut <: eff'
   , MLState Address v <: eff', State Address <: eff'
   , Reader () (Maybe TId) <: eff', Random String String <: eff'
   , Writer TId <: eff', State TSeed <: eff'
+  , Reader TId [String] <: eff', E.Render String <: eff'
   , v ~ Fix v', Null <: v') =>
     PageCall (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
@@ -115,9 +122,18 @@ denoteP (PCall name args) env = do
   renderTag $ TagOpen "body" [("id", name)]
   isPageCall
   env'' <- storeTemplateId name env
+  errors :: [String] <- E.read $ TId $ templateId env''
+  renderErrors errors
   body env'' {actionEnv = env'}
   renderTag $ TagClose "body"
 
+renderErrors []     =  return ()
+renderErrors errors =  mapM_ 
+  (\error -> do
+    renderedError :: String <- render error
+    renderPlainText renderedError True
+    return ()) 
+  errors 
 
 storeTemplateId name env = do
   tId :: Maybe TId <- readNext
@@ -130,7 +146,7 @@ storeTemplateId name env = do
       return $ tId 
   return $ env {templateId  = tId' }
 
-readInTemplateId :: (Reader () TId <: f) => TEnv g f v ->  Free f (TEnv g f v)
+-- readInTemplateId :: (Reader () TId <: f) => TEnv g f v ->  Free f (TEnv g f v)
 readInTemplateId env = do
   (TId tId) <- readNext
   return $ env {templateId  = tId }

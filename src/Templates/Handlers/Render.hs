@@ -65,11 +65,19 @@ writeOutP pageR =
 writeBody elem pageR = pageR { body = body pageR ++ elem}
 
 renderH :: (Functor remEff, [] <: v, LitInt <: v, LitStr <: v, LitBool <: v)
-  => Handler (Render v)
+  => Handler (Render (Fix v))
   val remEff val
 renderH = Handler {
   ret = pure,
   hdlr = \(Render v k) -> k $ show' $ coerceTypes v 
+}
+
+renderErrorH :: (Functor remEff)
+  => Handler (Render String)
+  val remEff val
+renderErrorH = Handler {
+  ret = pure,
+  hdlr = \(Render v k) -> k $ "<p>"++ v++ "</p>" 
 }
 
 coerceTypes :: ([] <: v', LitInt <: v', LitStr <: v', LitBool <: v')

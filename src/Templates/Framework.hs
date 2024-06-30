@@ -20,7 +20,7 @@ import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt, Eval)
 import Actions.Handlers.Entity (uuidH, eHeapH)
 import Templates.Modules.Forms.Denotation as F
-import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH, templateIdMaybeReaderH, appendWriterH)
+import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH, templateIdMaybeReaderH, appendWriterH, nonConsumingReaderH)
 import Actions.Modules.Entity.Syntax (Entity)
 import Definitions.Templates.Syntax (TBody)
 import Actions.Values (Lit, Null)
@@ -28,12 +28,14 @@ import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Str (LitStr)
 import Actions.Arith (LitInt)
 import Actions.Modules.Bool.Syntax (LitBool)
- 
+import qualified Data.Map as Map
+
 type Eff' v = State ButtonCount + State FormId + State Seed + State TSeed
   + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList 
   + Reader () (Maybe TId) + Writer TId
-  + E.Render v + MLState Address (Fix v) + State Address + End
+  + Reader TId [String] +  E.Render String
+  + E.Render (Fix v) + MLState Address (Fix v) + State Address + End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
 type Module' = BiFix T (Fix Module)   
@@ -56,6 +58,8 @@ runApplied e = case unwrap
     $ handle_ stateElH Nothing             -- state address 
     $ handle_ heap (makeEnv [])            -- heap v
     $ handle renderH                       -- render v
+    $ handle renderErrorH 
+    $ handle_ nonConsumingReaderH Map.empty
     $ handle_ appendWriterH [] -- writer
     $ handle_ templateIdMaybeReaderH [] -- reader 
     $ handle_ stateH []                    -- state attlist

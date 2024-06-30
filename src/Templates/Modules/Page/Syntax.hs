@@ -31,4 +31,4 @@ elements :: (Page <:: f) => BiFix f e
 elements = injBf Elements
 
 newtype TId = TId String
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)

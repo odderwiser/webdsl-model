@@ -20,7 +20,7 @@ import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt, Eval)
 import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase, Elems)
 import Templates.Modules.Forms.Denotation as F
-import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH, appendWriterH, templateIdMaybeReaderH)
+import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH, appendWriterH, templateIdMaybeReaderH, nonConsumingReaderH)
 import Actions.Modules.Entity.Syntax (Entity, EntityDecl)
 import Definitions.Templates.Syntax (TBody)
 import Actions.Values (Lit, Null)
@@ -30,10 +30,12 @@ import Actions.Str (LitStr)
 import Actions.Bool (LitBool)
 import Actions.Arith (LitInt)
 import Data.Aeson (ToJSON, FromJSON)
+import qualified Data.Map as Map
  
 type Eff' v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
-  + Attribute + Stream HtmlOut + State AttList + E.Render v + State Address 
-  + Reader () (Maybe TId) + Writer TId + State TSeed + EHeap v
+  + Attribute + Stream HtmlOut + State AttList + E.Render (Fix v) + State Address 
+  + Reader () (Maybe TId) + Writer TId + State TSeed 
+   + Reader TId [String] +  E.Render String + EHeap v
   + MLState Address (Fix v) + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
@@ -69,6 +71,8 @@ runApplied' e heap file = do
         $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
+        $ handle renderErrorH 
+        $ handle_ nonConsumingReaderH Map.empty
         $ handle_ autoIncrementState (TSeed 0)
         $ handle_ appendWriterH []
         $ handle_ templateIdMaybeReaderH []

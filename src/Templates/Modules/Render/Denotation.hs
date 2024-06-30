@@ -9,7 +9,7 @@ import Actions.Values
 
 denote :: (Functor eff, Functor eff', Functor v',
     Stream HtmlOut <: eff', v~ Fix v', LitStr <: v',
-     E.Render v' <: eff', Lift eff eff' v)
+     E.Render v <: eff', Lift eff eff' v)
   => S.Render (PEnv eff eff' v) (FreeEnv eff v) 
   -> PEnv eff eff' v
 denote (XmlR xml) env = denoteXml xml env

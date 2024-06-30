@@ -84,11 +84,11 @@ reset :: (State ButtonCount <: f) => Free f ()
 reset = Op $ inj $ PutS (Count 0)  $ Pure ()
 
 data Render v k 
-    = Render (Fix v) (String -> k)
+    = Render v (String -> k)
     deriving Functor
 
 --todo: rename to renderValue
-render :: (Render v <: f) => Fix v -> Free f String
+render :: (Render v <: f) => v -> Free f String
 render v = Op $ inj $ Render v Pure
 
 data Reader k v c = Read k (v -> c) | ReadNext (v -> c)
