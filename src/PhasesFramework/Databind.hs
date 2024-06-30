@@ -49,6 +49,7 @@ type DbEff' v = Databind + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Throw
+  + Reader () (Maybe TId) + Writer TId + State TSeed 
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End
 
 data Databind k
@@ -123,6 +124,9 @@ executeDbPhase e heap file params = do
         $ handle_ (dbWriteInputH file) ([] :: [WriteOps v], (elems', status))
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
+        $ handle_ autoIncrementState (TSeed 0)
+        $ handle_ appendWriterH []
+        $ handle_ templateIdMaybeReaderH []
         $ handle mockThrowH -- throw (effect to remove)
         $ handle_ cacheH (Map.empty)
         $ handle_ stateElH Nothing -- state address
@@ -136,7 +140,7 @@ executeDbPhase e heap file params = do
         $ e
   print "after reading"
   print elems''
-  (_, cache) <- action
+  ((_, cache), templateIds) <- action
   return cache
 
 -- State (Maybe LabelId) 

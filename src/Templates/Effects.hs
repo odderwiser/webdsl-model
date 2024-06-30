@@ -79,6 +79,7 @@ get = Op $ inj $ GetS Pure
 
 put v = Op $ inj $ PutS v $ Pure ()
 
+
 reset :: (State ButtonCount <: f) => Free f ()
 reset = Op $ inj $ PutS (Count 0)  $ Pure ()
 
@@ -90,8 +91,19 @@ data Render v k
 render :: (Render v <: f) => Fix v -> Free f String
 render v = Op $ inj $ Render v Pure
 
-type ReqParamsSt = MLState String (Maybe String)
+data Reader k v c = Read k (v -> c) | ReadNext (v -> c)
+    deriving Functor
+
+read :: (Reader k v <: f) => k -> Free f v
+read key = (Op . inj)  $ Read key Pure
+
+readNext :: (Reader () v <: f) => Free f v
+readNext = (Op . inj) (ReadNext Pure :: Reader () v (Free f v))
+
+type ReqParamsSt = Reader String (Maybe String)
 newtype Seed = Seed Int
+    deriving (Eq, Num, Show)
+newtype TSeed = TSeed Int 
     deriving (Eq, Num, Show)
 type Label = String
 type LabelId = String

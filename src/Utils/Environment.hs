@@ -37,6 +37,7 @@ data TEnv eff eff' v =  TEnv
   , pages       :: [PageDef (PEnv eff eff' v) (FreeEnv eff v)]
   , templates   :: [TemplateDef (PEnv eff eff' v) (FreeEnv eff v)]
   , elements    :: [(Address, TClosure eff eff' v)]
+  , templateId  :: String
   }
 
 -- discussion: couuld it be modelled differently, for example with higher order effects?

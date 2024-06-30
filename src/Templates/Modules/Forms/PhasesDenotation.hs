@@ -55,11 +55,11 @@ denoteDb (Input exp Bool) env = do --exp is a reference to param or template var
   label        :: Maybe LabelId<- get
   seed         :: Seed         <- get
   inputName    :: String       <- encode $ show label ++ show seed
-  isActiveForm :: Maybe String <- deref $ "form_"++formId
+  isActiveForm :: Maybe String <- E.read $ "form_"++formId
   case isActiveForm of
     (Just "1") -> do
       valueRef <- lift $ denoteRef exp $ actionEnv env
-      boundParam :: Maybe String <- deref inputName
+      boundParam :: Maybe String <- E.read inputName
       case boundParam of
         Just "true"  -> bindValue valueRef (injF $ V True :: v)
         Just "false" -> bindValue valueRef (injF $ V False :: v)
@@ -71,11 +71,11 @@ denoteDb (Input exp String) env = do --exp is a reference to param or template v
   label        :: Maybe LabelId<- get
   seed         :: Seed         <- get
   inputName    ::String        <- encode $ show label ++ show seed
-  isActiveForm :: Maybe String <- deref $ "form_"++formId
+  isActiveForm :: Maybe String <- E.read  $ "form_"++formId
   case isActiveForm of
     (Just "1") -> do
       valueRef <- lift $ denoteRef exp $ actionEnv env
-      boundParam :: Maybe String <- deref inputName
+      boundParam :: Maybe String <- E.read inputName
       case boundParam of
         Just str  -> bindValue valueRef (injF $ V str :: v) -- look out for scripts? idk 
         _ -> throw "not a well-formed String value"
@@ -86,11 +86,11 @@ denoteDb (Input exp Int) env = do --exp is a reference to param or template vari
   label        :: LabelId      <- get
   seed         :: Seed         <- get
   inputName    :: String       <- encode $ show label ++ show seed
-  isActiveForm :: Maybe String <- deref $ "form_"++formId
+  isActiveForm :: Maybe String <- E.read  $ "form_"++formId
   case isActiveForm of
     (Just "1") -> do
       valueRef <- lift $ denoteRef exp $ actionEnv env
-      boundParam :: Maybe String <- deref inputName
+      boundParam :: Maybe String <- E.read inputName
       case boundParam of
         Just int  -> case readMaybe int of
           Just (int' :: Int) -> bindValue valueRef (injF $ V int :: v) -- look out for scripts? idk 
@@ -116,7 +116,7 @@ denoteV (Input exp _) env = do
   label        :: Maybe LabelId<- get
   seed         :: Seed         <- get
   inputName    :: String       <- encode $ show label ++ show seed
-  isActiveForm :: Maybe String <- deref $ "form_"++formId
+  isActiveForm :: Maybe String <- E.read  $ "form_"++formId
   -- here some validation should happen: possibly if exp is an entity
   -- it should have some validation tuples and these can be rechecked?
   return ()
@@ -140,7 +140,7 @@ denoteAction (Submit action name) env = do
   name <- lift $ name $ actionEnv env
   formId :: String <- get
   buttonCount :: ButtonCount <- get
-  isButtonPressed :: Maybe String <- deref $ "withForms_ia" ++ show buttonCount ++ "_" ++ formId
+  isButtonPressed :: Maybe String <- E.read $ "withForms_ia" ++ show buttonCount ++ "_" ++ formId
   case isButtonPressed  of
     Just name' -> case name' == unbox name of
       True -> lift $ action $ actionEnv env

@@ -10,19 +10,19 @@ import Templates.PhasesTest (phasesTests)
 
 main :: IO ()
 main = do
-  -- actionIo <- actionsIOTests
-  -- globalVarA <- A.globalVarTests
-  -- globalVarT <- T.globalVarTests
-  -- templateIO <- templatesTestsIO
-  phases' <- phasesTests
-  result <- runTestTT $ test [phases']
-    -- [ actionsTests
-    -- , actionIo
-    -- , templatesTests
-    -- , templateIO
-    -- , globalVarA
-    -- , globalVarT
-    -- ]
+  actionIo <- actionsIOTests
+  globalVarA <- A.globalVarTests
+  globalVarT <- T.globalVarTests
+  templateIO <- templatesTestsIO
+  -- phases' <- phasesTests
+  result <- runTestTT $ test --[phases']
+    [ actionsTests
+    , actionIo
+    , templatesTests
+    , templateIO
+    , globalVarA
+    , globalVarT
+    ]
   print result
   if failures result > 0 then exitFailure else exitSuccess
 

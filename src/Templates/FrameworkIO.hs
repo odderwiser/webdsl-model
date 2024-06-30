@@ -9,7 +9,7 @@ import Templates.Handlers.Render as R
 import Templates.Handlers.Layout
 import Actions.Handlers.Return (funReturn, funReturn')
 import Actions.Handlers.Cond (condition)
-import Actions.Effects (MLState, Random, EHeap)
+import Actions.Effects (MLState, Random, EHeap, Writer)
 import Syntax (Address)
 import Actions.Handlers.Heap (heap, makeEnv, heap')
 import Templates.Modules.Layout.Denotation as L
@@ -20,7 +20,7 @@ import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt, Eval)
 import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase, Elems)
 import Templates.Modules.Forms.Denotation as F
-import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH)
+import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH, appendWriterH, templateIdMaybeReaderH)
 import Actions.Modules.Entity.Syntax (Entity, EntityDecl)
 import Definitions.Templates.Syntax (TBody)
 import Actions.Values (Lit, Null)
@@ -32,7 +32,8 @@ import Actions.Arith (LitInt)
 import Data.Aeson (ToJSON, FromJSON)
  
 type Eff' v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
-  + Attribute + Stream HtmlOut + State AttList + E.Render v + State Address + EHeap v
+  + Attribute + Stream HtmlOut + State AttList + E.Render v + State Address 
+  + Reader () (Maybe TId) + Writer TId + State TSeed + EHeap v
   + MLState Address (Fix v) + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
@@ -68,6 +69,9 @@ runApplied' e heap file = do
         $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
+        $ handle_ autoIncrementState (TSeed 0)
+        $ handle_ appendWriterH []
+        $ handle_ templateIdMaybeReaderH []
         $ handle_ stateElH Nothing
         $ handle renderH
         $ handle_ stateH []
@@ -79,7 +83,7 @@ runApplied' e heap file = do
         $ handle_ simpleStateH ""
         $ handle_ autoIncrementState (Count 0)
         $ e 
-  ((_, out), readstatus) <- action
+  (((_, out), templateIds), readstatus) <- action
   print "store after"
   print heap
   return out

@@ -25,3 +25,10 @@ projF (In fix) = proj fix
 
 cmapF :: (Functor g, g <<: h ) => Fix g -> Fix h
 cmapF (In g) = In $ fmap cmapF (cmap g)
+
+class (Functor g) => WeakenF h g where
+    weakenF ::  Fix h -> Fix g
+
+instance Functor c => WeakenF (a + b + c) c where
+    weakenF (In fix) = case fix of
+        (R (R c)) -> In $ fmap weakenF c

@@ -10,7 +10,7 @@ import Actions.Syntax
 import Data.Maybe (fromJust)
 import Definitions.Pages.Syntax (PgName, PageDef (..))
 import qualified Data.Map as Map
-import Templates.Effects (ReqParamsSt)
+import Templates.Effects (ReqParamsSt, Reader (Read))
 import Data.IntMap (findWithDefault)
 import Definitions.Templates.Denotation (TDefs)
 
@@ -63,7 +63,7 @@ paramsH :: (Functor eff)
 paramsH = Handler_
   { ret_ = \v map -> pure v
   , hdlr_ = \op map -> case op of
-      (Deref  v k) -> k (Map.lookup v map) map
+      (Read v k) -> k (Map.lookup v map) map
   }
 
 mkParamsMap = Map.empty

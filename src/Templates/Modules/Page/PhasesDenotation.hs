@@ -3,16 +3,16 @@ import Definitions.GlobalVars.Denotation (Heap)
 import Utils
 import Actions.Values
 import Definitions.Templates.Syntax
-import Templates.Modules.Page.Denotation (populateTCall, refElements, derefElements, derefPDef)
+import Templates.Modules.Page.Denotation (populateTCall, refElements, derefElements, derefPDef, storeTemplateId, readInTemplateId)
 import Templates.Modules.Forms.Syntax (EvalT(..))
 import Data.Either (lefts, rights)
 import Control.Monad (foldM)
-import Actions.Effects (MLState, ref, assign, Random)
-import Templates.Effects (TVarAddress (Address), encode, State, TVarSeed (VSeed), get, put)
+import Actions.Effects (MLState, ref, assign, Random, Writer)
+import Templates.Effects (TVarAddress (Address), encode, State, TVarSeed (VSeed), get, put, Reader, Seed, TSeed)
 import qualified Actions.Values as V
 import Syntax (Address)
 import Actions.Modules.Eval.Denotation (derefEnv')
-import Templates.Modules.Page.Syntax (Page (..))
+import Templates.Modules.Page.Syntax (Page (..), TId)
 import Actions.Handlers.Env (refH)
 import Definitions.Pages.Syntax
 import Actions.Modules.Fun.Denotation (populateEnv)
@@ -84,13 +84,67 @@ denoteProcess Elements env = do
   (env', elems) <- derefElements env loc
   elems env'
 
+denoteDb (TCall name atts args Nothing) env = do
+  (body, env') <- populateTCall name args env
+  tEnv <- storeTemplateId name env
+  body tEnv { actionEnv = env'}
 
-denotePProcess :: ( MLState Address v <: eff, Lift eff eff' v
+denoteDb (TCall name atts args (Just elems)) env = do
+  (loc, env')   <- refElements env elems
+  (body, env'') <- populateTCall name args env
+  put loc
+  tEnv <- storeTemplateId  name env'
+  body $ tEnv { actionEnv = env''}
+
+denoteDb syntax env = denoteProcess syntax env
+
+denoteV (TCall name atts args Nothing) env = do
+  (body, env') <- populateTCall name args env
+  tEnv <- readInTemplateId env
+  body tEnv { actionEnv = env'}
+
+denoteV (TCall name atts args (Just elems)) env = do
+  (loc, env')   <- refElements env elems
+  (body, env'') <- populateTCall name args env
+  put loc
+  tEnv <- readInTemplateId env'
+  body $ tEnv { actionEnv = env''}
+
+denoteV syntax env = denoteProcess syntax env
+
+denotePDb :: ( MLState Address v <: eff, Lift eff eff' v
+  , MLState Address v <: eff', State Address <: eff'
+  , Reader () (Maybe TId) <: eff', Random String String <: eff',  Writer TId <: eff'
+  , State TSeed <: eff'
+  , v ~ Fix v', Null <: v') =>
+    PageCall (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denotePDb (PCall name args) env = do
+  (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
+    <- derefPDef name env
+  env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
+  tEnv <- storeTemplateId name env
+  body tEnv { actionEnv = env'}
+
+denotePV :: ( MLState Address v <: eff, Lift eff eff' v
+  , MLState Address v <: eff', State Address <: eff'
+  , Reader () TId <: eff', State TId <: eff'
+  , v ~ Fix v', Null <: v') =>
+    PageCall (PEnv eff eff' v) (FreeEnv eff v)
+  -> PEnv eff eff' v
+denotePV (PCall name args) env = do
+  (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
+    <- derefPDef name env
+  tEnv <- readInTemplateId env
+  env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
+  body $ tEnv {actionEnv = env'}
+
+denotePA :: ( MLState Address v <: eff, Lift eff eff' v
   , MLState Address v <: eff', State Address <: eff'
   , v ~ Fix v', Null <: v') =>
     PageCall (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
-denotePProcess (PCall name args) env = do
+denotePA (PCall name args) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefPDef name env
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)

@@ -1,5 +1,5 @@
 module Templates.Modules.Page.Syntax where
-import Syntax (Type)
+import Syntax (Type (String))
 import Templates.Modules.Attributes.Syntax
 import Definitions.Templates.Syntax
 import Data.Bifunctor (Bifunctor (bimap, first))
@@ -29,3 +29,6 @@ tCallElems name args elems = injBf $ TCall name (SelectionList []) args $ Just e
 
 elements :: (Page <:: f) => BiFix f e
 elements = injBf Elements
+
+newtype TId = TId String
+  deriving (Show, Eq)

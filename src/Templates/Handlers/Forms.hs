@@ -1,11 +1,13 @@
 module Templates.Handlers.Forms where
 import Utils
-import Templates.Effects (State (..), Throw)
-import Actions.Effects (Random (Random))
+import Templates.Effects (State (..), Throw, Reader (ReadNext))
+import Actions.Effects (Random (Random), Writer (..))
 import qualified Codec.Binary.UTF8.String as S
 import Data.UUID.V3 (namespaceOID, generateNamed)
 import Data.UUID (toString)
 import Data.Char (isAlphaNum)
+import Templates.Modules.Page.Syntax
+import Data.List.Extra (snoc)
 
 singleAccessState :: (Functor remEff) =>
   Handler_ (State (Maybe a)) val (Maybe a) remEff val
@@ -48,3 +50,17 @@ mockThrowH :: Functor g => Handler Throw a g a
 mockThrowH = Handler {
   ret = pure
 }
+
+templateIdMaybeReaderH :: (Functor g) => Handler_ (Reader () (Maybe TId)) v [String] g v
+templateIdMaybeReaderH = Handler_ 
+  { ret_   = \v input -> pure v
+  , hdlr_ = \(ReadNext k ) input -> case input of
+      [] -> k Nothing []
+      (h : t)-> k (Just $ TId  h) t
+  }
+
+appendWriterH :: Functor g => Handler_ (Writer TId) v [String] g (v, [String])
+appendWriterH = Handler_ 
+  { ret_ = curry pure
+  , hdlr_ = \(Write (TId id) k) output -> k $ snoc output id  
+  }

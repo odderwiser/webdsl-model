@@ -18,13 +18,14 @@ import PhasesFramework.Databind
 import PhasesFramework.Validate
 import PhasesFramework.Action (AEff', executeAPhase)
 import qualified Definitions.Templates.Framework as T
-import Templates.Modules.Page.PhasesDenotation (denotePProcess)
+-- import Templates.Modules.Page.PhasesDenotation (denotePProcess)
 import PhasesFramework.Program
 import qualified Definitions.GlobalVars.ActionsFramework as A
 import qualified Definitions.GlobalVars.TemplatesFramework as Tp
 import Syntax (Address)
 import Definitions.GlobalVars.Denotation (Heap)
 import Templates.Effects (State)
+import Templates.Modules.Page.PhasesDenotation (denotePDb)
 
 type RenderProgram e = ProgramDef (EffV V') (T.Eff' V') V e
 type DbProgram e = ProgramDef (EffV Vt) (DbEff' Vt) Vt' e
@@ -60,7 +61,7 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   let heap' = map (second cmapF) heap
   print (gVarEnv, heap, dbStatus)
   cache <- executeDbPhase 
-    (denotePProcess dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv) 
+    (denotePDb dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv) 
     heap' file params
   -- -- nothing :: () <- executeVPhase (denotePProcess vCall 
   --   $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache

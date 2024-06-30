@@ -129,6 +129,7 @@ library
                         bytestring,
                         containers,
                         directory,
+                        extra, 
                         tagsoup,
                         uuid,
                         utf8-string,

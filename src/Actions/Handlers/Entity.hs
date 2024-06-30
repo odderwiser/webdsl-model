@@ -174,6 +174,7 @@ instance (FromJSON (v (Fix v))) => FromJSON (Fix v)
 data DbStatus = Empty | Failure | Success
   deriving (Eq, Show)
 
+makeElems :: Elems v
 makeElems = Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}
 
 dbWriteH :: forall remEff val v.
