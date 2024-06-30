@@ -52,7 +52,7 @@ testPropertySyntax = Request
     (form False
       $ label (S.str "someLabel")
       $ input (pAccess (var "left") "a") S.Int)
-    , eDef' "obj" [("a", Int)] []
+    , eDef' "obj" [("a", Int)] [] []
   ] (vList [VDef "left" (EDecl "obj" [("a", int 1)])]) (PCall "root" [], [])
 
 testPropertyOutput =

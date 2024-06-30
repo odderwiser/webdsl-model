@@ -43,7 +43,7 @@ variableTest = testEqProgram "test1" (boxI 1) variableSyntax
 
 variableSyntax :: ProgramA 
 variableSyntax = Fragment
-  [inj $ EDef "obj" [("a", Int)] [Id] [] ]
+  [inj $ EDef "obj" [("a", Int)] [Id] [] []]
   (vList [VDef "test" (EDecl "obj" [("a", int 1)]) ])
   (pAccess (var "test") "a")
   
@@ -52,7 +52,7 @@ fCallTest = testEqProgram "test2" (boxI 2) fCallSyntax
 
 fCallSyntax :: ProgramA 
 fCallSyntax = Fragment
-      [inj $ EDef "obj" [("a", Int)] [Id] [FDecl "doSomething" [] (int 2)] ]
+      [inj $ EDef "obj" [("a", Int)] [Id] [FDecl "doSomething" [] (int 2)] []]
       (vList [VDef "test" (EDecl "obj" [("a", int 1)]) ])
       (eCall (var "test") "doSomething" [])
     
@@ -61,7 +61,7 @@ objectFieldTest = testEqProgram "test3" (boxI 1) objectFieldSyntax
 
 objectFieldSyntax :: ProgramA 
 objectFieldSyntax = Fragment
-      [inj $ EDef "obj" [("a", Int), ("parent", Entity "obj")] [Id] [FDecl "doSomething" [] (int 2)] ]
+      [inj $ EDef "obj" [("a", Int), ("parent", Entity "obj")] [Id] [FDecl "doSomething" [] (int 2)] [] ]
       (vList [VDef "test" (EDecl "obj" [("a", int 1), ("parent", var "test")]) ])
       (pAccess (var "test") "a")
     
@@ -70,7 +70,7 @@ objectFieldTest' = testEqProgram "test4" (boxI 6) objectFieldSyntax'
 
 objectFieldSyntax' :: ProgramA
 objectFieldSyntax' = Fragment
-      [inj $ EDef "obj" [("a", Int), ("parent", Entity "obj")] [Id] [FDecl "doSomething" [] (int 2)] ]
+      [inj $ EDef "obj" [("a", Int), ("parent", Entity "obj")] [Id] [FDecl "doSomething" [] (int 2)] []]
       (vList [VDef "test" (EDecl "obj" [("a", int 1), ("parent", var "test")]) ])
       (add (pAccess (pAccess (var "test") "parent") "a") (int 5))
     
@@ -79,7 +79,7 @@ twoObjectsTest = testEqProgram "test5" (boxI 17) twoObjectsSyntax
 
 twoObjectsSyntax :: ProgramA 
 twoObjectsSyntax =  Fragment
-      [inj $ EDef "obj" [("a", Int), ("other", Entity "obj")] [Id] [FDecl "doSomething" [] (int 2)] ]
+      [inj $ EDef "obj" [("a", Int), ("other", Entity "obj")] [Id] [FDecl "doSomething" [] (int 2)] [] ]
       (vList [ VDef "left" (EDecl "obj" [("a", int 1), ("other", var "right")])
     , VDef "right" (EDecl "obj" [("a", int 5), ("other", var "left")])
     ])

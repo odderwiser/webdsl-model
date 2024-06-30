@@ -86,29 +86,29 @@ denoteProcess Elements env = do
 
 denoteDb (TCall name atts args Nothing) env = do
   (body, env') <- populateTCall name args env
-  tEnv <- storeTemplateId name env
-  body tEnv { actionEnv = env'}
+  env'' <- storeTemplateId name env'
+  body env { actionEnv = env''}
 
 denoteDb (TCall name atts args (Just elems)) env = do
   (loc, env')   <- refElements env elems
   (body, env'') <- populateTCall name args env
   put loc
-  tEnv <- storeTemplateId  name env'
-  body $ tEnv { actionEnv = env''}
+  env''' <- storeTemplateId  name env''
+  body $ env { actionEnv = env'''}
 
 denoteDb syntax env = denoteProcess syntax env
 
 denoteV (TCall name atts args Nothing) env = do
   (body, env') <- populateTCall name args env
-  tEnv <- readInTemplateId env
-  body tEnv { actionEnv = env'}
+  env'' <- readInTemplateId env'
+  body env { actionEnv = env''}
 
 denoteV (TCall name atts args (Just elems)) env = do
   (loc, env')   <- refElements env elems
   (body, env'') <- populateTCall name args env
   put loc
-  tEnv <- readInTemplateId env'
-  body $ tEnv { actionEnv = env''}
+  env''' <- readInTemplateId env''
+  body $ env { actionEnv = env'''}
 
 denoteV syntax env = denoteProcess syntax env
 
@@ -123,8 +123,8 @@ denotePDb (PCall name args) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefPDef name env
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
-  tEnv <- storeTemplateId name env
-  body tEnv { actionEnv = env'}
+  env'' <- storeTemplateId name env'
+  body env { actionEnv = env''}
 
 denotePV :: ( MLState Address v <: eff, Lift eff eff' v
   , MLState Address v <: eff', State Address <: eff'
@@ -135,9 +135,9 @@ denotePV :: ( MLState Address v <: eff, Lift eff eff' v
 denotePV (PCall name args) env = do
   (PDef name params body) :: PageDef (PEnv eff eff' v) (FreeEnv eff v)
     <- derefPDef name env
-  tEnv <- readInTemplateId env
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
-  body $ tEnv {actionEnv = env'}
+  env'' <- readInTemplateId env'
+  body $ env {actionEnv = env''}
 
 denotePA :: ( MLState Address v <: eff, Lift eff eff' v
   , MLState Address v <: eff', State Address <: eff'

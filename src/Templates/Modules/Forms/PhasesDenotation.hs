@@ -64,7 +64,7 @@ denoteDb (Input exp Bool) env = do --exp is a reference to param or template var
       case boundParam of
         Just "true"  -> bindValue valueRef (injF $ V True :: v)
         Just "false" -> bindValue valueRef (injF $ V False :: v)
-        _ ->  write (TId (templateId env), "not a well-formed boolean value")
+        _ ->  write (TId (templateId $ actionEnv env), "not a well-formed boolean value")
     Nothing -> return ()
 
 denoteDb (Input exp String) env = do --exp is a reference to param or template variable
@@ -79,7 +79,7 @@ denoteDb (Input exp String) env = do --exp is a reference to param or template v
       boundParam :: Maybe String <- E.read inputName
       case boundParam of
         Just str  -> bindValue valueRef (injF $ V str :: v) -- look out for scripts? idk 
-        _ ->  write (TId (templateId env), "not a well-formed String value")
+        _ ->  write (TId (templateId $ actionEnv env), "not a well-formed String value")
     Nothing -> return ()
 
 denoteDb (Input exp Int) env = do --exp is a reference to param or template variable
@@ -95,8 +95,8 @@ denoteDb (Input exp Int) env = do --exp is a reference to param or template vari
       case boundParam of
         Just int  -> case readMaybe int of
           Just (int' :: Int) -> bindValue valueRef (injF $ V int :: v) -- look out for scripts? idk 
-          Nothing ->  write (TId (templateId env), "not a well-formed Int value")
-        _ ->  write (TId (templateId env),"value missing ")
+          Nothing ->  write (TId (templateId $ actionEnv env), "not a well-formed Int value")
+        _ ->  write (TId (templateId $ actionEnv env),"value missing ")
     Nothing -> return ()
 
 denoteRef :: forall g v' eff.

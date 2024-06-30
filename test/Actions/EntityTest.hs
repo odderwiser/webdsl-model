@@ -42,7 +42,7 @@ testEqProgram id res syntax =  do
 
 eDeclSyntax :: Program (Envs (Fix Module)) () (Fix Module)
 eDeclSyntax = Fragment
-  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []] Nothing
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] [] []] Nothing
   $ eDecl "dummy1" [("y", int 1)]
 
 testEDecl :: IO Test
@@ -71,7 +71,7 @@ testGetProperty = testEqProgram "simple _function_call"
 
 propSyntax :: Program (Envs (Fix Module)) () (Fix Module)
 propSyntax = Fragment
-  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []] Nothing
+  [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] [] []] Nothing
   $ varInit "dummy"
     (eDecl "dummy1" [("y", int 1)])
     (pAccess (var "dummy") "y")
@@ -83,8 +83,8 @@ testMethodCall = testEqProgram "method_call"
 objFunSyntax :: Program (Envs (Fix Module)) () (Fix Module)
 objFunSyntax = Fragment
   [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id]
-    [inj $ FDecl "dummy2" [ "z" ]
-      $ return' $ add (var "z") (pVar "y")]] Nothing
+    [inj $ FDecl "dummy2" [ "z" ] 
+      $ return' $ add (var "z") (pVar "y")] []] Nothing
   $ varInit "dummy"
     (eDecl "dummy1" [("y", int 1)])
     (eCall (var "dummy") "dummy2" [int 5] )
@@ -98,10 +98,10 @@ testDefsStoring = TestCase $
     $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free (Eff' Eff V') [()]) (map (fmap foldD) dummy1Definition) of
       (Pure (_, env)) ->
         case U.entityDefs env of
-        [EDef name params _ _] -> (name, params))
+        [EDef name params _ _ _] -> (name, params))
 
 dummy1Definition :: [Envs (Fix Module)]
-dummy1Definition = [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] []]
+dummy1Definition = [inj $ EDef "dummy1" [("x", Int), ("y", Int)] [Id] [] []]
 
 entityTests :: IO Test
 entityTests = do

@@ -43,19 +43,19 @@ denote (PNavigate name vars text) pEnv = do
 
 denote (TCall name atts args Nothing) env = do
   (body, env') <- populateTCall name args env
-  tEnv <- storeTemplateId name env
-  errors :: [String] <- E.read $ TId $ templateId tEnv
+  env'' <- storeTemplateId name env'
+  errors :: [String] <- E.read $ TId $ templateId env''
   renderErrors errors
-  body tEnv { actionEnv = env'}
+  body env { actionEnv = env''}
 
-denote (TCall name atts args (Just elems)) env = do
-  (loc, env')   <- refElements env elems
-  (body, env'') <- populateTCall name args env'
+denote (TCall name atts args (Just elems)) tEnv = do
+  (loc, tEnv')   <- refElements tEnv elems
+  (body, env) <- populateTCall name args tEnv'
   put loc
-  tEnv <- storeTemplateId name env'
-  errors :: [String] <- E.read $ TId $ templateId tEnv
+  env' <- storeTemplateId name env
+  errors :: [String] <- E.read $ TId $ templateId env
   renderErrors errors
-  body tEnv { actionEnv = env''}
+  body tEnv' { actionEnv = env'}
 
 denote Elements env = do
   loc <- get
@@ -121,10 +121,10 @@ denoteP (PCall name args) env = do
   env' <- populateEnv lift (actionEnv env) (map fst params) (map fst args)
   renderTag $ TagOpen "body" [("id", name)]
   isPageCall
-  env'' <- storeTemplateId name env
+  env'' <- storeTemplateId name env'
   errors :: [String] <- E.read $ TId $ templateId env''
   renderErrors errors
-  body env'' {actionEnv = env'}
+  body env {actionEnv = env''}
   renderTag $ TagClose "body"
 
 renderErrors []     =  return ()

@@ -29,6 +29,7 @@ data Env eff v = Env
     , defs       :: [Function eff v] -- this is for functions
     , entityDefs :: [EntityDef (FreeEnv eff v)] -- this is for all the entity definitions
     , objVarEnv  :: [(PName, Address)]
+    , templateId  :: String
     }
 
 data TEnv eff eff' v =  TEnv
@@ -37,7 +38,6 @@ data TEnv eff eff' v =  TEnv
   , pages       :: [PageDef (PEnv eff eff' v) (FreeEnv eff v)]
   , templates   :: [TemplateDef (PEnv eff eff' v) (FreeEnv eff v)]
   , elements    :: [(Address, TClosure eff eff' v)]
-  , templateId  :: String
   }
 
 -- discussion: couuld it be modelled differently, for example with higher order effects?

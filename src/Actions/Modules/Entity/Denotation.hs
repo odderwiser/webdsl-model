@@ -78,7 +78,7 @@ denote (PropAssign object propName e)  env = do
 
 denote (ECall obj fname vars) env = do
   (EDecl name params)   <- getObj obj env
-  (EDef _ _ _ funs)     <- derefH name entityDefsH env
+  (EDef _ _ _ funs _)   <- derefH name entityDefsH env
   FDecl _ varNames body <- F.derefDefs fname $ liftDefs funs
   env'                  <- F.populateFunEnv env varNames vars
   locs :: [Address]     <- mapM (ref . snd) params
@@ -132,7 +132,7 @@ denoteEDecl :: forall eff v.
     -> FreeEnv eff (Fix v)
 denoteEDecl decl@(EDecl entity props) env = do
   def@(EDef
-    name propsDefs iProps funs) <- derefH entity entityDefsH env
+    name propsDefs iProps funs _) <- derefH entity entityDefsH env
   values                        <- mapM ((\e -> e env) . snd) props
   implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
   id :: Uuid                    <- ref . Just $ mapProperties decl values implProps
@@ -146,7 +146,7 @@ denoteEDecl' :: forall eff v.
     -> Env eff (Fix v) -> Free eff (Fix v)
 denoteEDecl' decl@(EDecl entity props) env = do
   def@(EDef
-    name propsDefs iProps funs) <- derefH entity entityDefsH env
+    name propsDefs iProps funs _) <- derefH entity entityDefsH env
   values                        <- mapM ((\e -> e env) . snd) props
   implProps                     <- mapM (denoteImplicitProps (name, values)) iProps -- lousy id but will do for now??
   return $ injF $ mapProperties decl values implProps

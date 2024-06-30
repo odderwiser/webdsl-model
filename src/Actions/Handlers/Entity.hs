@@ -43,8 +43,8 @@ entityDefsH :: (Functor eff, Functor eff')
   => Handler_ (EntityDefsEnv eff v)
   a (Env eff v) eff' (a, Env eff v)
 entityDefsH = mkRHandler U.entityDefs
-  (\name -> find (\(EDef name' _ _ _) -> name == name' ))
-  (\k val@(EDef name _ _ _) env -> k name
+  (\name -> find (\(EDef name' _ _ _ _) -> name == name' ))
+  (\k val@(EDef name _ _ _ _) env -> k name
     $ env { U.entityDefs = val : U.entityDefs env  }
   )
 

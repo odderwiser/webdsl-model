@@ -49,6 +49,8 @@ library
         Actions.Modules.Expr.Syntax,
         Actions.Modules.Fun.Denotation,
         Actions.Modules.Fun.Syntax,
+        Actions.Modules.Phases.Syntax,
+        Actions.Modules.Phases.Denotation,
         Actions.Modules.Stmt.Denotation,
         Actions.Modules.Stmt.Syntax,
         Actions.Modules.Str.Denotation,

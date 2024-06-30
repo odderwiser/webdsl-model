@@ -39,7 +39,7 @@ defsSyn = [
     pDef "root" [] $  output $ pAccess (var "left") "a",
     tDef "inside" [("a", Int)]
       $ output $ pAccess (var "left") "a",
-    eDef' "obj" [("a", Int)] []
+    eDef' "obj" [("a", Int)] [] []
     ]
 
 pCallSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
