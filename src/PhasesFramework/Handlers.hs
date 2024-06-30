@@ -13,3 +13,12 @@ cacheH = Handler_
         (Assign (name, value) k) -> k $ Map.insert name value map
         (Deref name k) -> k (fromJust $ Map.lookup name map) map
     }
+
+cacheH' :: Functor g => Handler_ (MLState TVarAddress (Fix v)) a
+    (Map.Map TVarAddress (Fix v) ) g a
+cacheH' = Handler_ 
+    { ret_ = \v map -> pure v
+    , hdlr_ = \ eff map -> case eff of
+        (Assign (name, value) k) -> k $ Map.insert name value map
+        (Deref name k) -> k (fromJust $ Map.lookup name map) map
+    }

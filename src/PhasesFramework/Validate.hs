@@ -40,30 +40,33 @@ import qualified Data.Map as Map
 import Templates.Handlers.Layout
 import PhasesFramework.Handlers
 import Actions.Handlers.Heap
-    
-type VEff' v = Validate + State FormId + State Seed 
+import Actions.Modules.Phases.Syntax (VTuple)
+import qualified Actions.Modules.Phases.Denotation as V
+
+type VEff' v = Validate + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Reader () TId + Throw 
+  + MLState TVarAddress (Fix v) + Writer (TId, String) + Reader () TId + Throw
   + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End -- can I get rid of this read and write?
 
 vH :: Functor g => Handler Validate a g a
-vH = Handler { ret = pure }  
+vH = Handler { ret = pure }
 
-executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), 
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v) 
-  => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)] 
+executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v)
+  => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)]
   -> [TId] -> IO [(TId, String)]
 executeVPhase e heap file params cache tIds = do
   (status, elems :: Elems v) <- openDatabase file
   let (action, elems') =  unwrap
         $ handle_ inMemoryDbReadH (elems, status)
-        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v])
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
         $ handle mockThrowH -- throw (effect to remove)
         $ handle_ consumingReaderH tIds
-        $ handle_ cacheH (Map.fromList cache)
+        $ handle_ appendWriterH []
+        $ handle_ cacheH' (Map.fromList cache)
         $ handle_ stateElH Nothing -- state address
         $ handle_ paramsH (Map.fromList params) -- reqparamsst
         $ handle_ autoIncrementState (VSeed 0) -- state tvarseed
@@ -72,11 +75,11 @@ executeVPhase e heap file params cache tIds = do
         $ handle_ autoIncrementState (Seed 0) -- state seed
         $ handle_ simpleStateH "" --state formid
         $ handle vH     --databind
-        $ e 
-  ((_, cache), readstatus) <- action
-  return ([])
+        $ e
+  ((_, errors), readstatus) <- action
+  return errors
 
-data Validate k  
+data Validate k
   deriving Functor
 
 instance DenoteT Layout (EffV Vt) (VEff' Vt) Vt' where
@@ -96,6 +99,9 @@ instance DenoteT Forms(EffV Vt) (VEff' Vt) Vt' where
 
 instance DenoteT (Input (Fix Module)) (EffV Vt) (VEff' Vt) Vt' where
   denoteT = F.denoteV
+
+instance DenoteT  (LiftE VTuple) (EffV Vt) (VEff' Vt) Vt' where
+  denoteT = V.denoteT
 
 instance DenoteT TBody (EffV Vt) (VEff' Vt) Vt' where
   denoteT = F.denoteBody

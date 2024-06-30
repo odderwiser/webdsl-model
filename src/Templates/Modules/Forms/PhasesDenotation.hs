@@ -11,13 +11,20 @@ import Actions.Values
 import Syntax (Type(..), Address)
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Modules.Eval.Syntax (Eval (Var))
-import Actions.Modules.Eval.Denotation (derefEnv)
-import Actions.Modules.Entity.Syntax (Entity (PropAccess), projEntity, EntityDecl)
+import Actions.Modules.Eval.Denotation (derefEnv, derefEnv')
+import Actions.Modules.Entity.Syntax (Entity (PropAccess), projEntity, EntityDecl (..), projEName)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Text.Read (readMaybe)
-import Actions.Modules.Entity.Denotation (setProperty, getObj')
+import Actions.Modules.Entity.Denotation (setProperty, getObj', getObj'')
 import Definitions.GlobalVars.Effects (DbRead)
 import Templates.Modules.Page.Syntax (TId (TId))
+import Actions.Modules.Phases.Syntax (VTuple(Validate))
+import Definitions.Entity.Syntax
+import Actions.Handlers.Env (derefH)
+import Actions.Handlers.Entity (entityDefsH)
+import Data.Maybe (fromJust)
+import Templates.Modules.Lift.Syntax (LiftE(LiftE))
+import Actions.Modules.Phases.Denotation as D 
 
 
 denoteProcess :: forall eff eff' v v'.
@@ -107,9 +114,11 @@ denoteRef (In syntax) = case proj syntax of
   Nothing -> case proj syntax of
     (Just (e :: Entity (Fix g))) -> denoteRefEntity e
 
-denoteV :: (State FormId <: eff', State (Maybe LabelId) <: eff'
-  , State Seed <: eff', Random Label LabelId <: eff'
-  , ReqParamsSt <: eff')
+denoteV :: forall eff eff' g v v'.(State FormId <: eff', State (Maybe LabelId) <: eff'
+  , State Seed <: eff', Random Label LabelId <: eff', Heap v' <: eff
+  , PropRef <: v', v~ Fix v', Lit Uuid <: v', LitBool <: v', Writer (TId, String) <: eff'
+  , ReqParamsSt <: eff', Lift eff eff' (Fix v'), EntityDecl <: v'
+  , Eval <: g, Entity <: g, Denote g eff v, EHeap v' <: eff', DbRead (EntityDecl (Fix v')) <: eff')
   => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
 denoteV (Input exp _) env = do
@@ -118,6 +127,16 @@ denoteV (Input exp _) env = do
   seed         :: Seed         <- get
   inputName    :: String       <- encode $ show label ++ show seed
   isActiveForm :: Maybe String <- E.read  $ "form_"++formId
+  case isActiveForm of
+    (Just "1") -> do
+      valueRef <- lift $ denoteRef exp $ actionEnv env
+      case fromJust $ projF valueRef of
+        PropRef (entity, propName) -> do
+          entity' :: v <-  getObj' entity
+          (EDef name _ _ _ validation) <- derefH (projEName $ projEntity entity') entityDefsH $ actionEnv env
+          mapM_ (\e -> do
+            v' <- D.denoteT (LiftE e) env
+            return ()) (filter (\(Validate _ _ list) ->  elem propName list) validation)
   -- here some validation should happen: possibly if exp is an entity
   -- it should have some validation tuples and these can be rechecked?
   return ()
@@ -125,7 +144,7 @@ denoteV (Input exp _) env = do
 denoteA :: (Functor eff, Functor eff')
   => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
-denoteA (Input exp _) env = 
+denoteA (Input exp _) env =
   return ()
 
 
@@ -155,7 +174,7 @@ bindValue :: (MLState TVarAddress v <: f,
   => v -> v -> Free f ()
 bindValue valueRef value = case projF valueRef of
   Just (PropRef (uuid, name))  -> do
-    entity <- getObj' uuid 
+    entity <- getObj' uuid
     entity' <- setProperty name value $ projEntity entity
     uuid :: Uuid <- ref $ Just entity'
     return ()
