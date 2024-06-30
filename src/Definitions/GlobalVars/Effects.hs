@@ -36,6 +36,15 @@ data DbWrite v k
     | UpdateEntity Uuid PName v k
     deriving Functor
 
+instance ((DbWrite (Fix v)) <: f) => (Distributive (DbWrite (Fix v))) IO f where
+    distr :: forall a. (DbWrite (Fix v) <: f) => DbWrite (Fix v) (IO (Free f a)) -> IO (Free f a)
+    distr (SetEntity e k) = Op . inj . SetEntity e <$> k
+    distr (SetVar e k) = do
+        k' <- k
+        return $  Op $ inj  (SetVar e  k' :: DbWrite (Fix v) (Free f a))
+    distr (UpdateEntity k k' v c) = Op . inj . UpdateEntity k k' v <$> c
+
+
 type DbWrite' v = DbWrite (EntityDecl (Fix v))
 
 setEntity :: forall e v f. (DbWrite v <: f) => EntityDecl v -> Free f ()
