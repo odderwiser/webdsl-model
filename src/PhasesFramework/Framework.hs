@@ -9,7 +9,7 @@ import Definitions.Program.Syntax
 import qualified Templates.FrameworkIO as T
 import qualified Definitions.Pages.Framework as P
 import Templates.Modules.Page.Denotation (denoteP)
-import Data.Maybe (fromJust, fromMaybe)
+import Data.Maybe (fromJust, fromMaybe, isJust)
 import Definitions.Pages.Syntax (PageCall)
 import Actions.FrameworkIO
 import Definitions.Pages.Framework (Envs)
@@ -80,10 +80,12 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
       print "action is entered"
       rCall :: Maybe (PageCall T.Module' (Fix Module)) <- executeAPhase (denotePA aCall
         $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  (heap', file, params, cache, eCache)
+      print "call is successful? "
+      print $ isJust rCall
       return $ fromMaybe pCall rCall
     _  -> return pCall
   (T.runApplied'
-        $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
+        $ denoteP (foldCall call) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
 
   -- nothing :: () <- executeAPhase (denotePProcess aCall 
   --   $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache

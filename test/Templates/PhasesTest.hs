@@ -19,6 +19,9 @@ import Actions.Arith
 import System.Directory (doesFileExist, removeFile)
 import Control.Monad
 import Templates.Modules.Lift.Denotation (consTList)
+import qualified Templates.Modules.Layout.Syntax as L
+import Templates.Effects (redirect)
+import Actions.Modules.Phases.Syntax (redirectS)
 
 testEq :: ()
   => String -> Out' -> Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module)) -> IO T.Test
@@ -49,7 +52,7 @@ testProperty = testEqId "property" testPropertyOutput testPropertySyntax
 
 testPropertySyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
 testPropertySyntax = Request
-  [ pDef "root" [] 
+  [ pDef "root" []
     (form False
       $ label (S.str "someLabel")
       $ input (pAccess (var "left") "a") S.Int)
@@ -63,7 +66,7 @@ testButton = testEqId "button" testButtonOutput testPropertyButtonSyntax
 
 testPropertyButtonSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
 testPropertyButtonSyntax = Request
-  [ pDef "root" [] 
+  [ pDef "root" []
     (form False $ consTList [
       label (S.str "someLabel")
       $ input (pAccess (var "left") "a") S.Int,
@@ -75,6 +78,30 @@ testPropertyButtonSyntax = Request
       , ("f6780915ddea3af5817361282fc33576", "10")
       , ("withForms_ia0_92d1d547132b3a579f28b944be2c0ff9", "save")
       ])
+
+
+testRedirect = testEq "redirect" testRedirectOutput testRedirectSyntax
+
+testRedirectSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
+testRedirectSyntax = Request
+  [ pDef "root" []
+    (form False $ consTList [
+      label (S.str "someLabel")
+      $ input (pAccess (var "left") "a") S.Int,
+      submit (action $ redirectS "goal") (S.str "save")
+      ])
+    , pDef "goal" [] $ section False $ L.str "success!"
+    , eDef' "obj" [("a", Int)] [] []
+  ] (vList [VDef "left" (EDecl "obj" [("a", int 1)])]) (PCall "root" []
+    , [ ("form_92d1d547132b3a579f28b944be2c0ff9", "1")
+      , ("f6780915ddea3af5817361282fc33576", "10")
+      , ("withForms_ia0_92d1d547132b3a579f28b944be2c0ff9", "save")
+      ])
+
+testRedirectOutput = "<html><head></head><body id=\"goal\">"
+     ++ "<span class=\"section section1\">"
+     ++ "success!</span></body></html>"
+
 
 
 testPropertyOutput =
@@ -98,7 +125,9 @@ testButtonOutput =
 phasesTests = do
     test1 <- testProperty
     test2 <- testButton
+    test3 <- testRedirect
     return $ T.TestList [
        test1
-      ,test2  
+      ,test2
+      , test3
       ]
