@@ -163,7 +163,7 @@ denoteAction (Submit action name) env = do
   isButtonPressed :: Maybe String <- E.read $ "withForms_ia" ++ show buttonCount ++ "_" ++ formId
   case isButtonPressed  of
     Just name' -> case name' == unbox name of
-      True -> lift $ action $ actionEnv env
+      True -> action  env
   return ()
 
 denoteAction other env = denoteProcess other env

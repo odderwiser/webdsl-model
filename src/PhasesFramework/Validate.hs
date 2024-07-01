@@ -6,7 +6,7 @@ import Syntax
 import Definitions.GlobalVars.Denotation (Heap)
 import Definitions.GlobalVars.Effects (DbWrite, DbRead)
 import Actions.Syntax
-import Templates.Syntax as S
+import Templates.Syntax as S hiding (Validate)
 import Actions.FrameworkIO
 import qualified Templates.Modules.Forms.PhasesDenotation as F
 import qualified Templates.Modules.Lift.Denotation as Lt
@@ -43,6 +43,7 @@ import Actions.Handlers.Heap
 import Actions.Modules.Phases.Syntax (VTuple)
 import qualified Actions.Modules.Phases.Denotation as V
 import qualified Data.Aeson.KeyMap as KM
+import Templates.Modules.Phases.Denotation (denoteA)
 
 type VEff' v = Validate + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
@@ -113,6 +114,9 @@ instance DenoteT TBody (EffV Vt) (VEff' Vt) Vt' where
 
 instance DenoteT EvalT (EffV Vt) (VEff' Vt) Vt' where
   denoteT = PF.denoteEProcess
+
+instance DenoteT Action (EffV Vt) (VEff' Vt) Vt' where
+  denoteT = denoteA
 
 instance Lift (EffV Vt) (VEff' Vt) Vt' where
   lift e = bubbleDown

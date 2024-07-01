@@ -15,7 +15,7 @@ type IsAttAssigned' = Bool
 data Forms t a 
     = Form IsAttAssigned' t -- possibly consider making this a list instead??
     | Label a t -- first value evaluates to the text, the second to the field
-    | Submit a a -- fist thing is action, second is the string
+    | Submit t a -- fist thing is action, second is the string
     deriving Functor
 
 data Input r t a = Input r Type -- input with optional parameters. e is the bound writing but so far it only matters for evaluating the type of input!!
@@ -24,7 +24,7 @@ data Input r t a = Input r Type -- input with optional parameters. e is the boun
 instance Bifunctor Forms where
     bimap g f (Form bool body) = Form bool $ g body
     bimap g f (Label value contents) = Label (f value) (g contents)
-    bimap g f (Submit action name) = Submit (f action) (f name)
+    bimap g f (Submit action name) = Submit (g action) (f name)
 
 instance Bifunctor (Input r) where
     bimap g f (Input r ty) = Input r ty
@@ -38,7 +38,7 @@ label text body = injBf $ Label text body
 input :: (Input (Fix g) <:: f) => Fix g -> Type -> BiFix f (Fix g)
 input var ty = injBf $ Input var ty
 
-submit :: (Forms <:: f) => Fix g -> Fix g -> BiFix f (Fix g)
+submit :: (Forms <:: f) => BiFix f (Fix g) -> Fix g -> BiFix f (Fix g)
 submit action name = injBf $ Submit action name
 
 data EvalT t a = VarDeclT VName | VarInit VName a 

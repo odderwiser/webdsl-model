@@ -6,7 +6,7 @@ import Utils
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.FrameworkIO
 import Templates.FrameworkIO
-import Templates.Syntax as S
+import Templates.Syntax as S hiding (Databind)
 import Actions.Syntax
 import qualified Templates.Modules.Layout.Denotation as L
 import qualified Templates.Modules.Render.Denotation as X
@@ -44,6 +44,7 @@ import qualified Data.Map as Map
 import Templates.Handlers.Env (paramsH)
 import PhasesFramework.Handlers (cacheH)
 import qualified Data.Aeson.KeyMap as KM
+import Templates.Modules.Phases.Denotation (denoteA)
 
 type DbEff' v = Databind + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
@@ -84,6 +85,9 @@ instance DenoteT TBody (EffV Vt) (DbEff' Vt) Vt' where
 
 instance DenoteT EvalT (EffV Vt) (DbEff' Vt) Vt' where
   denoteT = PF.denoteEDb
+
+instance DenoteT Action (EffV Vt) (DbEff' Vt) Vt' where
+  denoteT = denoteA
 
 instance Lift (EffV Vt) (DbEff' Vt) Vt' where
   lift e = bubbleDown

@@ -31,13 +31,14 @@ import Actions.Bool (LitBool)
 import Actions.Arith (LitInt)
 import Data.Aeson (ToJSON, FromJSON)
 import qualified Data.Map as Map
+import Templates.Modules.Phases.Denotation (denoteAAction, denoteA)
  
 type Eff' v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList + E.Render (Fix v) + State Address 
   + Reader () (Maybe TId) + Writer TId + State TSeed 
    + Reader TId [String] +  E.Render String + EHeap v
   + MLState Address (Fix v) + DbRead (EntityDecl (Fix v)) +  DbWrite (Fix v) +   End
-type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
+type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT +: Action
 --running syntax
 type Module' = BiFix T (Fix Module)   
 type Out' = String
@@ -141,3 +142,6 @@ instance (Null <: v, Lit Uuid <: v)
 
 instance (Lit Uuid <: v) => DenoteT EvalT (EffV v) (Eff' v) (Fix v) where
   denoteT = P.denoteE
+
+instance ( Lit Uuid <: v) => DenoteT Action (EffV v) (Eff' v) (Fix v) where
+  denoteT = denoteA

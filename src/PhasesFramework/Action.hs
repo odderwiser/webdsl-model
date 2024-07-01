@@ -42,6 +42,7 @@ import Templates.Handlers.Layout
 import PhasesFramework.Handlers (cacheH)
 import Actions.Handlers.Heap
 import qualified Data.Aeson.KeyMap as KM
+import Templates.Modules.Phases.Denotation (denoteA)
 
 type AEff' v = ActionE + State FormId + State Seed 
   + Random Label LabelId + State (Maybe LabelId) + State TVarSeed
@@ -109,6 +110,9 @@ instance DenoteT TBody (EffV Vt) (AEff' Vt) Vt' where
 
 instance DenoteT EvalT (EffV Vt) (AEff' Vt) Vt' where
   denoteT = PF.denoteEProcess
+
+instance DenoteT Action (EffV Vt) (AEff' Vt) Vt' where
+  denoteT = denoteA
 
 instance Lift (EffV Vt) (AEff' Vt) Vt' where
   lift e = bubbleDown

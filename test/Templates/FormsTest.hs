@@ -19,6 +19,8 @@ import Definitions.Templates.Syntax (StatementType(Definition), TBody(Body), bod
 import Definitions.Templates.Syntax (StatementType(..))
 import System.Directory (removeFile)
 import Definitions.Templates.Framework (EnvTy)
+import qualified Templates.Modules.Layout.Syntax as L
+import Templates.Modules.Phases.Syntax (Action(Action))
 
 type Program'' = Program (Envs (PEnv (EffV V') (Eff' V') V) (EnvTy V'))  ()
   (PageCall (PEnv (EffV V') (Eff' V') V) (EnvTy V'))
@@ -105,7 +107,7 @@ formsSyntax = Program
     [ label (S.str "labelBool") $ input true Bool
     , label (S.str "labelInt") $ input (int 1) Int
     , label (S.str "labelStr") $ input (S.str "a") S.String
-    , submit (int 1) (S.str "submit")
+    , submit (action $ int 1) (S.str "submit")
     ]
   ] Nothing
 
@@ -119,7 +121,7 @@ formsWithVarsSyntax = Program
       [ label (S.str "labelBool") $ input (var "b") Bool
       , label (S.str "labelInt") $ input (var "a") Int
       , label (S.str "labelStr") $ input (var "c") S.String
-      , submit (int 1) (S.str "submit")
+      , submit (action $ int 1) (S.str "submit")
       ]
   ] Nothing
 
