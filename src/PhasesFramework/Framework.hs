@@ -26,6 +26,7 @@ import Syntax (Address)
 import Definitions.GlobalVars.Denotation (Heap)
 import Templates.Effects (State)
 import Templates.Modules.Page.PhasesDenotation (denotePDb, denotePV, denotePA)
+import Definitions.Syntax
 
 type RenderProgram e = ProgramDef (EffV V') (T.Eff' V') V e
 type DbProgram e = ProgramDef (EffV Vt) (DbEff' Vt) Vt' e
@@ -63,18 +64,22 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv $ P.handleDefs varDef) [] file
   let heap' = map (second cmapF) heap
   print (gVarEnv, heap, dbStatus)
-  (cache, dBvalidaton, tIds) <- executeDbPhase
+  (cache, dBvalidaton, tIds, eCache) <- executeDbPhase
     (denotePDb dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv)
     heap' file params
   print cache
+  print "entities v"
+  print $ map (\(EDef name  _ _ _ _ ) -> name) (entityDefs $ actionEnv (P.handleDefs vEnv))
   validation <- executeVPhase (denotePV vCall
-    $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache tIds
+    $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  (heap', file, params, cache, tIds, eCache)
   print "validation: "
   print validation
-  call <- case (dBvalidaton ++ validation) of
+  -- return "success"
+  call <- case dBvalidaton ++ validation of
     [] ->  do
+      print "action is entered"
       rCall :: Maybe (PageCall T.Module' (Fix Module)) <- executeAPhase (denotePA aCall
-        $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
+        $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  (heap', file, params, cache, eCache)
       return $ fromMaybe pCall rCall
     _  -> return pCall
   (T.runApplied'

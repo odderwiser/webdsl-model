@@ -22,7 +22,7 @@ getProperty name (EDecl _ params) = return
     $ fromJust
     $ lookup name params
 
-setProperty name v (EDecl eName params) = return $ EDecl name
+setProperty name v (EDecl eName params) = return $ EDecl eName
   $ map (\(name', v') -> if name == name' then (name, v) else (name', v')) params
 
 getObj :: (EHeap v <: f, DbRead (EntityDecl (Fix v)) <: f, Lit Uuid <: v)
@@ -46,13 +46,19 @@ getObj'' object env = do
   entity  <- deref uuid
   case entity of 
     (Just (e :: EntityDecl (Fix v))) -> return e 
-    Nothing                          -> getEntity uuid
+    Nothing                          -> do
+      entity <- getEntity uuid
+      uuid :: Uuid <- ref $ Just entity 
+      return entity
 
 getObj' id = do
   entity  <- deref id
   entity' <- case entity of 
     (Just (e :: EntityDecl (Fix v))) -> return e 
-    Nothing                          -> getEntity id
+    Nothing                          -> do 
+      entity <- getEntity id
+      uuid :: Uuid <- ref $ Just entity 
+      return entity
   return $ injF $ entity'
 -- derefObj obj env = derefH (getAddress obj) heap'' (entities env)
 liftDefs defs = Env {U.defs = defs}

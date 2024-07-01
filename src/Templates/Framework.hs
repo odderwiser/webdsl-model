@@ -34,7 +34,7 @@ type Eff' v = State ButtonCount + State FormId + State Seed + State TSeed
   + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList 
   + Reader () (Maybe TId) + Writer TId
-  + Reader TId [String] +  E.Render String
+  + Reader TId [String] +  E.Render String + Writer String
   + E.Render (Fix v) + MLState Address (Fix v) + State Address + End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
@@ -58,6 +58,7 @@ runApplied e = case unwrap
     $ handle_ stateElH Nothing             -- state address 
     $ handle_ heap (makeEnv [])            -- heap v
     $ handle renderH                       -- render v
+    $ handle_ appendWriterH []
     $ handle renderErrorH 
     $ handle_ nonConsumingReaderH Map.empty
     $ handle_ appendWriterH [] -- writer
@@ -74,7 +75,7 @@ runApplied e = case unwrap
     $ handle_ autoIncrementState (Count 0) -- state buttincount
     $ e 
   of
-    (((_, str), templateIds), heap)    -> str
+    ((((_, str), templateIds), _), heap)    -> str
 
 instance (Lit Uuid <: v) => Lift (EffV v) (Eff' v) (Fix v) where
   lift  = handleExp
@@ -113,7 +114,7 @@ instance ( LitStr <: v, LitBool <: v, LitInt <: v)
   denoteT = F.denoteR
 
 instance (LitStr <: v, LitBool <: v, LitInt <: v, Null <: v, [] <: v,
-  Eq (v (Fix v))) 
+  Eq (v (Fix v)), Show (v (Fix v))) 
   => DenoteT (Input (Fix Module)) (EffV v) (Eff' v) (Fix v) where
   denoteT = F.denoteRInput
 

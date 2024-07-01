@@ -44,29 +44,35 @@ import Actions.Modules.Phases.Syntax (VTuple)
 import qualified Actions.Modules.Phases.Denotation as V
 import qualified Data.Aeson.KeyMap as KM
 import Templates.Modules.Phases.Denotation (denoteA)
+import Definitions.GlobalVars.Syntax (Uuid)
 
 type VEff' v = Validate + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Writer (TId, String) + Reader () TId + Throw
+  + Writer String 
   + EHeap v + Heap v + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v)+ End -- can I get rid of this read and write?
 
 vH :: Functor g => Handler Validate a g a
 vH = Handler { ret = pure }
 
+type VIn v = ([(Address, Fix v)], String, [(String, String)], [(TVarAddress, Fix v)], [TId], [(Uuid, EntityDecl (Fix v))])
+
 executeVPhase :: forall v. (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, V' <<: v, WeakenF v V', Show (v (Fix v)))
-  => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)]
-  -> [TId] -> IO [(TId, String)]
-executeVPhase e heap file params cache tIds = do
+  => Free (VEff' v) () ->  VIn v -> IO [(TId, String)]
+executeVPhase e (heap, file, params, cache, tIds, eCache) = do
   (status, elems :: Elems V') <- openDatabase file
   let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
+  print "validate elems"
+  print elems'
   writeFile file $ encodeElems elems'
-  (((_, errors), elems'), readstatus) <-  unwrap
+  ((((_, errors), log), elems'), readstatus) <-  unwrap
         $ handle_ (dbWriteH file) ([] :: [WriteOps v])
-        $ handle_ inMemoryDbReadH' (elems', status)
+        $ handle_ inMemoryDbReadH (elems', status)
         $ handle_ heap' (makeEnv heap)
-        $ handle_ eHeapH []
+        $ handle_ eHeapH eCache
+        $ handle_ appendWriterH []
         $ handle mockThrowH -- throw (effect to remove)
         $ handle_ consumingReaderH tIds
         $ handle_ appendWriterH []
@@ -82,6 +88,8 @@ executeVPhase e heap file params cache tIds = do
         $ e
   (status, elemsV :: Elems v) <- openDatabase file
   let elems''' :: Elems V' = elems {entities = KM.map (fmap weakenF) $ entities elemsV}
+  print "validate log"
+  print log
   writeFile file $ encodeElems elems'''
   return errors
 

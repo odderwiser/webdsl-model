@@ -11,7 +11,7 @@ import Actions.Effects
 import qualified Actions.Modules.Bool.Syntax as B
 import qualified Actions.Modules.Arith.Syntax as A
 import qualified Syntax as S
-import Actions.Handlers.Env (dropAction, mkAHandler, mkRHandler, mkAHandler')
+import Actions.Handlers.Env (dropAction, mkAHandler, mkRHandler, mkAHandler', mkRHandler')
 import Data.List (find)
 import Definitions.Entity.Denotation
 import Definitions.Entity.Syntax
@@ -110,6 +110,17 @@ eHeapH = Handler_
       (Assign (name, Just value) k) -> k ((name, value) : env)
   }
 
+eHeapH' :: (Functor eff, Lit Uuid <: v)
+  => Handler_ (EHeap v) val [(Uuid, EntityDecl (Fix v))] eff (val, [(Uuid, EntityDecl (Fix v))])
+eHeapH' = Handler_
+  { ret_  = curry pure
+  , hdlr_ = \x env -> case x of
+      (Deref key k)     -> k (Prelude.lookup key env) env
+      (Ref (Just value) k)     -> let id = getUuid value
+        in k id ((id, value) : env)
+      (Assign (name, Just value) k) -> k ((name, value) : env)
+  }
+
 mockDbReadH :: (Functor remEff)
   => Handler (DbRead (EntityDecl v)) val remEff val
 mockDbReadH = Handler
@@ -199,9 +210,10 @@ data Elems v = Elems
 deriving instance (Show (v (Fix v))) => Show (Elems v)
 
 data WriteOps v = WriteGV VName Uuid
-  | UpdateProperties Uuid (Map.Map PName (Fix v))
   | AddEntity Uuid (EntityDecl (Fix v))
   | AddClassMember EName Uuid
+
+deriving instance (Show (v (Fix v))) => Show (WriteOps v)
 
 instance (FromJSON (v (Fix v))) => FromJSON (Elems v)
 instance (ToJSON (v (Fix v))) => ToJSON (Elems v)
@@ -225,12 +237,13 @@ dbWriteH dbEntry = Handler_
     oldDbState <- if fileExists then readFile' dbEntry else return ""
     (status, elems) <- openDatabase dbEntry
     print "Writer"
+    print writeOps
     print elems
     case status of
       Success -> do
         writeFile dbEntry
           $ encodeElems
-          $ updateDatabase elems writeOps
+          $ makeDb elems writeOps
       _ -> do
         writeFile dbEntry
           $ encodeElems
@@ -241,8 +254,10 @@ dbWriteH dbEntry = Handler_
       $  writeOps ++ [WriteGV name id] --Elems (insert (fromString name) id vars) decls classes
     (SetEntity e k) ->
       let uuid = getUuid e in
-      k $ writeOps ++ [AddClassMember (projEName e) uuid, AddEntity uuid e]  --updateEntity e db
-    (UpdateEntity uuid pName v k) -> k $ updateWriteOps writeOps (UpdateProperties uuid $ Map.singleton pName v)
+      k (AddClassMember (projEName e) uuid
+        : AddEntity uuid e : filter (\e -> case e of
+          (AddEntity id e) -> id /= uuid
+          _ -> True ) writeOps) --updateEntity e db
   }
 
 dbWriteInputH :: forall remEff val v.
@@ -257,7 +272,7 @@ dbWriteInputH dbEntry = Handler_
       Success -> do
         writeFile dbEntry
           $ encodeElems
-          $ updateDatabase elems writeOps
+          $ makeDb elems writeOps
       _ -> do
         writeFile dbEntry
           $ encodeElems
@@ -265,38 +280,28 @@ dbWriteInputH dbEntry = Handler_
     return val
   , hdlr_ = \eff (writeOps, elems) -> case eff of
     (SetVar (name, id) k) -> k
-      $  (writeOps ++ [WriteGV name id], elems) --Elems (insert (fromString name) id vars) decls classes
+      $  (WriteGV name id : writeOps, elems) --Elems (insert (fromString name) id vars) decls classes
     (SetEntity e k) ->
       let uuid = getUuid e in
-      k $ (writeOps ++ [AddClassMember (projEName e) uuid, AddEntity uuid e], elems)  --updateEntity e db
-    (UpdateEntity uuid pName v k) -> k $ (updateWriteOps writeOps (UpdateProperties uuid $ Map.singleton pName v), elems)
+      k $ (AddClassMember (projEName e) uuid
+        : AddEntity uuid e : filter (\e -> case e of
+          (AddEntity id e) -> id /= uuid
+          _ -> True ) writeOps, elems)  --updateEntity e d
   }
 
-updateWriteOps (AddEntity uuid e : tail) v@(UpdateProperties uuid' props)
-  | uuid == uuid' = AddEntity uuid (updateProps e props) : tail
-  | otherwise     = AddEntity uuid e : updateWriteOps tail v
-updateWriteOps [] v = [v]
-updateWriteOps (UpdateProperties uuid props : tail) v@(UpdateProperties uuid' props')
-  | uuid == uuid' = UpdateProperties uuid (Map.union props' props) : tail
-  | otherwise     = UpdateProperties uuid props : updateWriteOps tail v
-updateWriteOps (somethingElse : tail) v@(UpdateProperties uuid' props') = somethingElse : updateWriteOps tail v
-
 makeDb :: (Functor v) => Elems v -> [WriteOps v] -> Elems v
-makeDb = makeDatabase makeDb
+makeDb = makeDatabase
 
 -- makeDatabase :: Elems v -> [WriteOps v] -> Elems v
-makeDatabase :: (Functor v) => (Elems v -> [WriteOps v] -> Elems v) ->  Elems v -> [WriteOps v] -> Elems v
-makeDatabase f elems (WriteGV name id : tail) = f elems { vars = KM.insert (KM.fromString name) id (vars elems)} tail
-makeDatabase f elems (AddEntity name e : tail) = f elems {entities = KM.insert (KM.fromString name) e (entities elems) } tail
-makeDatabase f elems (AddClassMember name id : tail) = f elems {classes = KM.insertWith Set.union (KM.fromString name) (Set.singleton id) (classes elems) } tail
-makeDatabase f elems (UpdateProperties name props : tail) = let entity = fromJust $ KM.lookup (KM.fromString name) (entities elems)
-  in f elems { entities = KM.insert (KM.fromString name) (updateProps entity props) (entities elems)} tail
-makeDatabase f elems [] = elems
+makeDatabase :: (Functor v) => Elems v -> [WriteOps v] -> Elems v
+makeDatabase elems (WriteGV name id : tail) = makeDatabase
+  elems { vars = KM.insert (KM.fromString name) id (vars elems)} tail
+makeDatabase elems (AddEntity name e : tail) = makeDatabase
+  elems {entities = KM.insert (KM.fromString name) e (entities elems) } tail
+makeDatabase elems (AddClassMember name id : tail) = makeDatabase
+  elems {classes = KM.insertWith Set.union (KM.fromString name) (Set.singleton id) (classes elems) } tail
+makeDatabase elems [] = elems
 
-updateDatabase :: (Functor v) => Elems v -> [WriteOps v] -> Elems v
-updateDatabase elems (UpdateProperties name props : tail) = let entity = fromJust $ KM.lookup (KM.fromString name) (entities elems)
-  in updateDatabase elems { entities = KM.insert (KM.fromString name) (updateProps entity props) (entities elems)} tail
-updateDatabase elems ops = makeDatabase updateDatabase elems ops
 
 updateProps :: EntityDecl (Fix v) -> Map.Map PName (Fix v) -> EntityDecl (Fix v)
 updateProps (EDecl name props) props' = EDecl name $ Map.toList $ Map.union props' $ Map.fromList props

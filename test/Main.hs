@@ -15,7 +15,7 @@ main = do
   globalVarT <- T.globalVarTests
   templateIO <- templatesTestsIO
   phases' <- phasesTests
-  result <- runTestTT $ test
+  result <- runTestTT $ test -- [phases']
     [ actionsTests
     , actionIo
     , templatesTests

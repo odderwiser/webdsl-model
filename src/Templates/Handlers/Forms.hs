@@ -1,6 +1,6 @@
 module Templates.Handlers.Forms where
 import Utils
-import Templates.Effects (State (..), Throw, Reader (ReadNext, Read))
+import Templates.Effects (State (..), Throw, Reader (ReadNext, Read), Log)
 import Actions.Effects (Random (Random), Writer (..))
 import qualified Codec.Binary.UTF8.String as S
 import Data.UUID.V3 (namespaceOID, generateNamed)
@@ -79,3 +79,9 @@ appendWriterH = Handler_
   { ret_ = curry pure
   , hdlr_ = \(Write v k) output -> k $ snoc output v
   }
+
+-- logH :: Functor g => Handler_ (Log) va [String] (val, String)
+-- logH = Handler_ {
+--   ret_ = curry pure
+--   , hdlr_ = \eff out -> 
+-- }

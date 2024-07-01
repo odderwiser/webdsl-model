@@ -9,7 +9,7 @@ import Actions.Values (unbox, Lit (V), Null (Null))
 import Actions.Str
 import Syntax
 import Actions.Bool (LitBool)
-import Actions.Effects (ref, MLState, Random)
+import Actions.Effects (ref, MLState, Random, Writer, write)
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Modules.Eval.Denotation (refEnv')
 import qualified Actions.Modules.Eval.Syntax
@@ -20,7 +20,7 @@ denoteR :: forall eff eff' v v'.
   ( E.Attribute <: eff', Stream HtmlOut <: eff'
   , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
-  , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
+  , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v', Writer String <: eff'
   , Lift eff eff' v)
   => Forms (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
@@ -37,6 +37,8 @@ denoteR (Label name contents) env = do -- attribute "for"
   name'      <- lift $ name $ actionEnv env
   nameId     <- encode (unbox name' :: Label)
   put       (Just nameId)
+  write $ " render before encoding: " ++ (unbox name' :: Label)
+  write $ "render after encoding: " ++ nameId
   renderTag $ TagOpen "label" [("for", nameId)]
   renderPlainText 
     (unbox name') True
@@ -58,7 +60,8 @@ denoteRInput :: forall eff eff' v v' g.
   , State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
-  , Lift eff eff' v, Denote g eff (Fix v'))
+  , Lift eff eff' v, Denote g eff (Fix v'), Writer String <: eff',
+  Show (v' (Fix v')))
   => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
 denoteRInput (Input exp Bool) env = do
@@ -89,11 +92,14 @@ denoteRInput (Input exp String) env = do
 
 denoteRInput (Input exp Int) env = do
   exp'         <- lift $ Utils.foldD exp $ actionEnv env
+  write "render value"
+  write $ show exp'
   value        <- case (projF exp':: Maybe (LitInt v)) of
     Just (V int) -> return int
     Nothing      -> return 0 
   label:: Maybe LabelId<- get
   seed :: Seed <- get
+  write $ "rendering: seed is " ++ show label ++ show seed
   inputName    <- encode $ show label ++ show seed
   renderInput label
     [ ("class", "inputInt")

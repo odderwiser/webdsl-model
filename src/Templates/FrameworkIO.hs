@@ -36,7 +36,7 @@ import Templates.Modules.Phases.Denotation (denoteAAction, denoteA)
 type Eff' v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList + E.Render (Fix v) + State Address 
   + Reader () (Maybe TId) + Writer TId + State TSeed 
-   + Reader TId [String] +  E.Render String + EHeap v
+   + Reader TId [String] +  E.Render String + Writer String + EHeap v
   + MLState Address (Fix v) + DbRead (EntityDecl (Fix v)) +  DbWrite (Fix v) +   End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT +: Action
 --running syntax
@@ -67,11 +67,12 @@ runApplied' :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   => Free (Eff' v) () -> [(Address, (Fix v))] -> String -> IO Out'
 runApplied' e heap file = do
   (status, elems :: Elems v) <- openDatabase file
-  ((((_, out), templateIds), elems'), readstatus) <- unwrap
+  (((((_, out), templateIds), log), elems'), readstatus) <- unwrap
         $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
         $ handle_ inMemoryDbReadH (elems, status)
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
+        $ handle_ appendWriterH []
         $ handle renderErrorH 
         $ handle_ nonConsumingReaderH Map.empty
         $ handle_ autoIncrementState (TSeed 0)
@@ -88,8 +89,8 @@ runApplied' e heap file = do
         $ handle_ simpleStateH ""
         $ handle_ autoIncrementState (Count 0)
         $ e 
-  print "store after"
-  print heap
+  print "render log"
+  print log
   return out
  
 

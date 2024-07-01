@@ -137,3 +137,9 @@ data Redirect v k = Redirect String [(v, S.Type)] k
 
 redirect :: (Redirect v <: f) => String -> [(v, S.Type)] -> Free f ()
 redirect name args = Op $ inj $ Redirect name args $ Pure ()
+
+data Log k = Log String k
+    deriving Functor
+
+log :: (Log <: f) => String -> Free f ()
+log msg = Op $ inj $ Log msg $ Pure ()

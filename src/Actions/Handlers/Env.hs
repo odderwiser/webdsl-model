@@ -14,7 +14,7 @@ type FunctionEnv eff v = MLState FunName (FDecl (FreeEnv eff v))
 defsH :: (Functor eff, Functor eff')
   => Handler_ (FunctionEnv eff v)
   a (Env eff v) eff' (a, Env eff v)
-defsH = mkRHandler U.defs
+defsH = mkRHandler' U.defs
   (\name -> find (\(FDecl name' _ _) -> name == name' ))
   (\k value@(FDecl name _ _) env ->
     k name $ env { U.defs = value : U.defs env } )
@@ -60,6 +60,13 @@ mkAHandler' envSubtype finder setter = Handler_
       (env', Assign record k) -> k $ setter record env}
 
 mkRHandler envSubtype finder cont = Handler_
+  { ret_  = curry pure
+  , hdlr_ = \x env -> case (envSubtype env, x) of
+      (env', Deref key k) -> k (fromJust $  finder key env') env
+      (env', Ref value k) -> cont k value env
+  }
+
+mkRHandler' envSubtype finder cont = Handler_
   { ret_  = curry pure
   , hdlr_ = \x env -> case (envSubtype env, x) of
       (env', Deref key k) -> k (fromJust $  finder key env') env

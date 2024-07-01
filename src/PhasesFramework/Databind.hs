@@ -18,12 +18,12 @@ import Actions.Values (Lit)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn, dummyRedirect)
-import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH, encodeElems, inMemoryDbReadH')
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH, encodeElems, inMemoryDbReadH', eHeapH')
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import qualified Templates.Modules.Page.Denotation as F
 import qualified Templates.Modules.Page.PhasesDenotation as PF
-import Definitions.Pages.Syntax (PageDef)
+import Definitions.Pages.Syntax (PageDef, RequestParams)
 import Definitions.Fun.Syntax (FDecl)
 import Definitions.Entity.Syntax (EntityDef)
 import Definitions.Pages.Framework (Eff'')
@@ -45,12 +45,14 @@ import Templates.Handlers.Env (paramsH)
 import PhasesFramework.Handlers (cacheH)
 import qualified Data.Aeson.KeyMap as KM
 import Templates.Modules.Phases.Denotation (denoteA)
+import PhasesFramework.Validate (VEff')
+import Definitions.GlobalVars.Syntax (Uuid)
 
 type DbEff' v = Databind + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Writer (TId, String)
-  + Reader () (Maybe TId) + Writer TId + State TSeed 
+  + Reader () (Maybe TId) + Writer TId + State TSeed + Writer String
   + EHeap v + Heap v + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v) + End
 
 data Databind k
@@ -113,23 +115,21 @@ instance DenoteDef' TemplateDef (PEnv (EffV Vt) (DbEff' Vt) Vt') (FreeEnv (EffV 
 
 type Cache v= [(TVarAddress, Fix v)]
 
+type DbOut v = (Cache v, [(TId, String)], [TId], [(Uuid, EntityDecl (Fix v))])
+
 executeDbPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, V' <<: v)
   => Free (DbEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] 
-  -> IO (Cache v, [(TId, String)], [TId])
+  -> IO (DbOut v)
 executeDbPhase e heap file params = do
   (status, elems :: Elems V') <- openDatabase file
-  print "reading database in databind"
-  print status
-  print elems
   let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
-  print "post mapping"
-  print elems' 
-  ((((_, cache), validationErrors), templateIds), elems'') <- unwrap
+  ((((((_, cache), validationErrors), templateIds), log), eCache), elems'') <- unwrap
         $ handle_ (dbWriteInputH file) ([] :: [WriteOps v], (elems', status))
         $ handle_ inMemoryDbReadH' (elems', status)
         $ handle_ heap' (makeEnv heap)
-        $ handle_ eHeapH []
+        $ handle_ eHeapH' []
+        $ handle_ appendWriterH []
         $ handle_ autoIncrementState (TSeed 0)
         $ handle_ appendWriterH []
         $ handle_ templateIdMaybeReaderH []
@@ -144,14 +144,14 @@ executeDbPhase e heap file params = do
         $ handle_ simpleStateH "" --state formid
         $ handle dH     --databind
         $ e
-  print "after reading"
-  print elems''
   (status, elemsV :: Elems Vt) <- openDatabase file
+  print log
+  print "db eCache"
+  print eCache
   let elems''' :: Elems V' = elems {entities = KM.map (fmap weakenF) $ entities elemsV}
   writeFile file $ encodeElems elems'''
-  print "after remapping"
-  print elems'''
-  return (cache, validationErrors, templateIds)
+  return (cache, validationErrors, templateIds, eCache)
+
 
 -- State (Maybe LabelId) 
 --   + State TVarSeed + ReqParamsSt + State Address

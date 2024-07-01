@@ -18,6 +18,7 @@ import Syntax as S
 import Actions.Arith
 import System.Directory (doesFileExist, removeFile)
 import Control.Monad
+import Templates.Modules.Lift.Denotation (consTList)
 
 testEq :: ()
   => String -> Out' -> Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module)) -> IO T.Test
@@ -55,8 +56,26 @@ testPropertySyntax = Request
     , eDef' "obj" [("a", Int)] [] []
   ] (vList [VDef "left" (EDecl "obj" [("a", int 1)])]) (PCall "root" []
     , [ ("form_92d1d547132b3a579f28b944be2c0ff9", "1")
-      , ("c7d3fe12397d3a6ea3b9f7a6db2d6190", "10")
+      , ("withForms_ia0_c7d3fe12397d3a6ea3b9f7a6db2d6190", "10")
       ])
+
+testButton = testEqId "button" testButtonOutput testPropertyButtonSyntax
+
+testPropertyButtonSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
+testPropertyButtonSyntax = Request
+  [ pDef "root" [] 
+    (form False $ consTList [
+      label (S.str "someLabel")
+      $ input (pAccess (var "left") "a") S.Int,
+      submit (action $ save (var "left")) (S.str "save")
+      ])
+    , eDef' "obj" [("a", Int)] [] []
+  ] (vList [VDef "left" (EDecl "obj" [("a", int 1)])]) (PCall "root" []
+    , [ ("form_92d1d547132b3a579f28b944be2c0ff9", "1")
+      , ("f6780915ddea3af5817361282fc33576", "10")
+      , ("withForms_ia0_92d1d547132b3a579f28b944be2c0ff9", "save")
+      ])
+
 
 testPropertyOutput =
   [ Plain "<html><head></head><body id=\"root\"><form id=\""
@@ -66,9 +85,20 @@ testPropertyOutput =
   , Forms.Id True , Plain "\" class=\"inputInt\" name=\""
   , Name    , Plain $ "\" value=\"1\"></form></body></html>" ]
 
+testButtonOutput =
+  [ Plain "<html><head></head><body id=\"root\"><form id=\""
+  , FormName, Plain "\" name=\""
+  , FormName, Plain "\" accept-charset=\"UTF-8\" method=\"POST\"><label for=\""
+  , Forms.Id False, Plain "\">someLabel</label><input id=\""
+  , Forms.Id True , Plain "\" class=\"inputInt\" name=\""
+  , Name    , Plain "\" value=\"10\"><button class=\"button\" name=\""
+  , Button  , Plain "\">save</button></form></body></html>" ]
+
 
 phasesTests = do
     test1 <- testProperty
+    test2 <- testButton
     return $ T.TestList [
-        test1
+       test1
+      ,test2  
       ]

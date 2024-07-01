@@ -42,12 +42,13 @@ import Templates.Handlers.Layout
 import PhasesFramework.Handlers (cacheH)
 import Actions.Handlers.Heap
 import qualified Data.Aeson.KeyMap as KM
-import Templates.Modules.Phases.Denotation (denoteA)
+import Templates.Modules.Phases.Denotation (denoteA, denoteAAction)
+import Definitions.GlobalVars.Syntax (Uuid)
 
 type AEff' v = ActionE + State FormId + State Seed 
   + Random Label LabelId + State (Maybe LabelId) + State TVarSeed
   + State ButtonCount +  ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Throw + Redirect (Fix v)
+  + MLState TVarAddress (Fix v) + Throw + Redirect (Fix v) + Writer String
   + EHeap v + Heap v + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v) + End -- can I get rid of this read and write?
 
 data ActionE k 
@@ -56,19 +57,21 @@ data ActionE k
 aH :: Functor g => Handler ActionE a g a
 aH = Handler { ret = pure }  
 
+type AIn v = ([(Address, Fix v)], String, [(String, String)], [(TVarAddress, Fix v)], [(Uuid, EntityDecl (Fix v))])
+
 executeAPhase :: forall v g h. (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Show (v (Fix v)), V' <<: v, WeakenF v V')
-  => Free (AEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)]
-  -> [(TVarAddress, Fix v)]  ->  IO (Maybe (PageCall (BiFix h (Fix g)) (Fix g)))
-executeAPhase e heap file params cache = do
+  => Free (AEff' v) () -> AIn v  ->  IO (Maybe (PageCall (BiFix h (Fix g)) (Fix g)))
+executeAPhase e (heap, file, params, cache, eCache) = do
   (status, elems :: Elems V') <- openDatabase file
   let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
   writeFile file $ encodeElems elems'
-  (((_, pageCall), elems'), readStatus) <- unwrap
+  ((((_, pageCall), log), elems'), readStatus) <- unwrap
         $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
         $ handle_ inMemoryDbReadH (elems', status)
         $ handle_ heap' (makeEnv heap)
-        $ handle_ eHeapH []
+        $ handle_ eHeapH eCache
+        $ handle_ appendWriterH []
         $ handle_ redirectH Nothing
         $ handle mockThrowH -- throw (effect to remove)
         $ handle_ cacheH (Map.fromList cache)
@@ -84,6 +87,8 @@ executeAPhase e heap file params cache = do
         $ e 
   (status, elemsV :: Elems v) <- openDatabase file
   let elems''' :: Elems V' = elems {entities = KM.map (fmap weakenF) $ entities elemsV}
+  print "action log"
+  print log
   writeFile file $ encodeElems elems'''
   return pageCall
 
@@ -112,7 +117,7 @@ instance DenoteT EvalT (EffV Vt) (AEff' Vt) Vt' where
   denoteT = PF.denoteEProcess
 
 instance DenoteT Action (EffV Vt) (AEff' Vt) Vt' where
-  denoteT = denoteA
+  denoteT = denoteAAction
 
 instance Lift (EffV Vt) (AEff' Vt) Vt' where
   lift e = bubbleDown
