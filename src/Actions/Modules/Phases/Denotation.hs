@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use if" #-}
 module Actions.Modules.Phases.Denotation where
-import Actions.Modules.Phases.Syntax (VTuple(Validate), Redirect (Redirect))
+import Actions.Modules.Phases.Syntax as S (VTuple(Validate), Redirect (Redirect), Ref(Ref))
 import Utils
 import Actions.Effects
 import Actions.Values as V
@@ -52,3 +52,8 @@ denoteTR (LiftE (Redirect page args)) tEnv = do --todo
         e' <- Utils.lift $ e $ actionEnv tEnv
         return (e', ty)) args
     redirect page args'
+
+
+denoteRef :: (EHeap v' <: eff, v~ Fix v', Lit Uuid <: v')
+    => Ref (FreeEnv eff v) -> FreeEnv eff v
+denoteRef (S.Ref uuid) env = return $ box uuid

@@ -106,8 +106,21 @@ testRedirectOutput = "<html><head></head><body id=\"goal\">"
 systemTestSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
 systemTestSyntax = Request
   [ eDef' "Project" [("name", S.String), ("apps", S.List (Entity "Project"))] [] 
-    [S.Validate (gt (pVar "name") (int 0)) "" ["name"]]]
-  (vList [])
+    [S.Validate (gt (pVar "name") (int 0)) "" ["name"]],
+    pDef "editProject" [("p", Entity "Project")] $ form False $ consTList 
+      [ output $ pAccess (var "p") "name"
+      , forAllT "app" (pAccess (var "p") "apps") 
+        $ input (pAccess (var "app") "name") S.String
+      , submit (action $ forAll "app" 
+        (pAccess (var "p") "apps") (save (var "app")) [] ) 
+        (S.str "save")
+    ] ]
+  (vList [VDef "webdsl" $ EDecl "Project" [("name",S.str "WebDSL")
+      , ("apps", list [var ("yg"), var("wl"), var "cf", var "re"])],
+      VDef "yg" $ EDecl "Project" [("name", S.str "yellowgrass")],
+      VDef "wl" $ EDecl "Project" [("name", S.str "weblab")],
+      VDef "cf" $ EDecl "Project" [("name", S.str "codefinder")],
+      VDef "re" $ EDecl "Project" [("name", S.str "researchr")]  ])
   (PCall "root" [], [
       ("a", "1")
     ])

@@ -2,6 +2,7 @@ module Actions.Modules.Phases.Syntax where
 import Syntax (Type)
 import Utils.Composition
 import Utils.Fix
+import Actions.Values
 
 
 
@@ -13,3 +14,6 @@ data Redirect e = Redirect String [(e, Type)]
 
 redirectS :: (Redirect <: f) => String -> Fix f
 redirectS string = injF $ Redirect string []
+
+data Ref e = Ref Uuid
+    deriving Functor

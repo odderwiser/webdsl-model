@@ -23,13 +23,13 @@ import Actions.Modules.Stmt.Denotation as S
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
 import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus, openDatabase, inMemoryDbReadH, Elems)
-import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Actions.Modules.Phases.Syntax (Redirect)
 import qualified Actions.Modules.Phases.Denotation as Ph
 import qualified Templates.Effects as E
 import Templates.Modules.Lift.Syntax
+import Actions.Modules.Phases.Denotation (denoteRef)
 
 type Eff = EffV V'
 type EffV v    =  Cond + Abort (Fix v) + Random String String + E.Redirect (Fix v)
@@ -37,7 +37,7 @@ type EffV v    =  Cond + Abort (Fix v) + Random String String + E.Redirect (Fix 
 type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
-type Module  = Redirect + EntityDecl + Entity + Weaken Loop + Stmt + Fun + Eval + Expr + ModuleV
+type Module  = Ref + Redirect + EntityDecl + Entity + Weaken Loop + Stmt + Fun + Eval + Expr + ModuleV
 type Out     = V --todo: make different!
 
 runExp :: FreeEnv Eff V -> String -> IO (Out, DbStatus)
@@ -107,3 +107,7 @@ instance (Lit Address <: v, Lit Uuid <: v, Null <: v, Show  (v(Fix v)))
 instance (Null <: v)
   => Denote Redirect (EffV v) (Fix v) where
     denote = Ph.denoteA
+
+instance (Lit Uuid <: v) 
+  => Denote Ref (EffV v) (Fix v) where
+  denote = denoteRef

@@ -17,7 +17,7 @@ import Actions.Arith as A
 import Actions.Bool as B
 import Actions.Syntax
 import Actions.Str
-import Definitions.GlobalVars.Syntax (GlobalVar, VarList (VList), Uuid)
+import Definitions.GlobalVars.Syntax (GlobalVar, VarList (VList))
 import Definitions.GlobalVars.Denotation as G
 import Definitions.GlobalVars.Effects
 import Actions.Modules.Col.Denotation as C
@@ -33,13 +33,14 @@ import Actions.Handlers.Heap
 import Actions.Handlers.Cond
 import Data.Aeson.KeyMap (empty)
 import Actions.Effects
-import Actions.Values (Lit, Null)
+import Actions.Values (Lit, Null, Uuid)
 import Data.Aeson (ToJSON, FromJSON, Result (Success))
 import qualified Definitions.Entity.Framework as E
 import Actions.Modules.Phases.Syntax
 import qualified Actions.Modules.Phases.Denotation as Ph
 import qualified Templates.Effects as E
 import Templates.Modules.Lift.Syntax (Weaken)
+import Actions.Modules.Phases.Denotation (denoteRef)
 --running syntax
 
 --preprocessing
@@ -156,3 +157,7 @@ instance (Lit Address <: v, Lit Uuid <: v,
 
 instance (Null <: v) => Denote Redirect (EffA v) (Fix v) where
   denote = Ph.denoteA
+
+instance (Lit Uuid <: v) 
+  => Denote Ref (EffA v) (Fix v) where
+  denote = denoteRef

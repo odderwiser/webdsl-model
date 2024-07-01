@@ -34,3 +34,5 @@ instance ToJSON (Null e)
 instance FromJSON (Null e)
 null :: (Null <: v) => Fix v 
 null = injF Null
+
+type Uuid = String

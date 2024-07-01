@@ -20,7 +20,7 @@ import Data.UUID.V3 (generateNamed, namespaceOID)
 import qualified Codec.Binary.UTF8.String as S (encode, decode)
 import Actions.Modules.Str.Syntax
 import Data.Maybe (fromJust)
-import Definitions.GlobalVars.Syntax (getUuid, Uuid)
+import Definitions.GlobalVars.Syntax (getUuid)
 import Definitions.GlobalVars.Effects
 import Actions.Modules.Eval.Syntax (VName)
 import qualified Data.Aeson.KeyMap as KM (KeyMap, insert, union, insertWith, unionWith, lookup, empty, elems, toList)

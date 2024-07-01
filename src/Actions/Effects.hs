@@ -7,7 +7,6 @@ import Actions.Modules.Bool.Syntax (LitBool)
 import Syntax (Type, Address)
 import Utils.Environment
 import Actions.Modules.Entity.Syntax
-import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 
 --- ABORT ---

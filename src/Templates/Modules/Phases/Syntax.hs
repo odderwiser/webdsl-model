@@ -22,3 +22,4 @@ instance Bifunctor Action where
 
 action :: (Action <:: g) => Fix f -> BiFix g (Fix f)
 action a = injBf $ Action a
+

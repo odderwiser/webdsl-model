@@ -44,7 +44,7 @@ import Actions.Modules.Phases.Syntax (VTuple)
 import qualified Actions.Modules.Phases.Denotation as V
 import qualified Data.Aeson.KeyMap as KM
 import Templates.Modules.Phases.Denotation (denoteA)
-import Definitions.GlobalVars.Syntax (Uuid)
+import qualified Templates.Modules.Lift.Denotation as L
 
 type VEff' v = Validate + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
@@ -125,6 +125,9 @@ instance DenoteT EvalT (EffV Vt) (VEff' Vt) Vt' where
 
 instance DenoteT Action (EffV Vt) (VEff' Vt) Vt' where
   denoteT = denoteA
+
+instance DenoteT Loop (EffV Vt) (VEff' Vt) Vt' where
+  denoteT = L.denoteT
 
 instance Lift (EffV Vt) (VEff' Vt) Vt' where
   lift e = bubbleDown

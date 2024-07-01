@@ -22,7 +22,6 @@ import Actions.Syntax (VName)
 import Actions.Modules.Eval.Denotation (derefEnv')
 import Data.Bifunctor (second)
 import GHC.Float (timesDouble)
-import Definitions.Syntax (Uuid)
 import qualified Templates.Effects as E
 
 denote ::forall eff eff' v v'.

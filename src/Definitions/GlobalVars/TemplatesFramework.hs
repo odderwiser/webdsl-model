@@ -188,6 +188,9 @@ instance DenoteT EvalT Eff Eff' V where
 
 instance DenoteT Action Eff Eff' V where
   denoteT _ _  = return () 
+
+instance DenoteT Loop Eff Eff' V where
+  denoteT _ _  = return () 
 -- instance Denote VarList Eff V where
 --   denote = D.denote
 

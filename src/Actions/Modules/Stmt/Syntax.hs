@@ -1,7 +1,7 @@
 module Actions.Modules.Stmt.Syntax where
 import Actions.Modules.Eval.Syntax (VName)
-import Utils.Composition (type (<:))
-import Utils.Fix (Fix, injF)
+import Utils.Composition 
+import Utils.Fix 
 import Templates.Modules.Lift.Syntax (Weaken (Weaken))
 import Data.Bifunctor (Bifunctor (bimap))
 
@@ -23,6 +23,8 @@ instance Bifunctor Loop where
     bimap g f (ForArith name a a' t) = f <$> ForArith name a a' (g t)
     bimap g f (While a t) = f <$> While a (g t)
 
+forAllT :: (Loop <:: f) => String -> Fix g -> BiFix f (Fix g) -> BiFix f (Fix g)
+forAllT name col stmts = injBf $ ForCol name col stmts []
 
 forAll :: (Weaken Loop <: f)
     => VName -> Fix f -> Fix f -> [Filter (Fix f)] -> Fix f

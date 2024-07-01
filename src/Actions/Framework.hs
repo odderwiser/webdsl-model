@@ -24,7 +24,6 @@ import Actions.Modules.Stmt.Denotation as S
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
 import Actions.Handlers.Entity (uuidH, eHeapH)
-import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
 import Templates.Modules.Lift.Syntax
 

@@ -13,7 +13,6 @@ import Actions.Syntax
 import Actions.Arith as A
 import Definitions.Fun.Syntax
 import Actions.Handlers.Entity (entityDefsH)
-import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Modules.Entity.Denotation (mapProperties)
 import Actions.Values
 import System.Directory (removeFile)

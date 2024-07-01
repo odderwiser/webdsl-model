@@ -4,13 +4,14 @@ import Data.Bifunctor (Bifunctor (bimap))
 import Utils.Composition
 import Utils.Fix
 import Actions.Modules.Eval.Syntax (VName)
-import Definitions.GlobalVars.Syntax (Uuid)
 import Definitions.Entity.Syntax (PName)
 import GHC.Generics (Generic)
 import Data.Aeson (ToJSON, FromJSON)
+import Actions.Values (Uuid)
 
 data Param = Placeholder
 type IsAttAssigned' = Bool
+
 
 data Forms t a 
     = Form IsAttAssigned' t -- possibly consider making this a list instead??

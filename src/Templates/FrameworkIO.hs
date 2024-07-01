@@ -23,8 +23,7 @@ import Templates.Modules.Forms.Denotation as F
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH, appendWriterH, templateIdMaybeReaderH, nonConsumingReaderH)
 import Actions.Modules.Entity.Syntax (Entity, EntityDecl)
 import Definitions.Templates.Syntax (TBody)
-import Actions.Values (Lit, Null)
-import Definitions.GlobalVars.Syntax (Uuid)
+import Actions.Values (Lit, Null, Uuid)
 import Definitions.GlobalVars.Effects (DbWrite, DbRead)
 import Actions.Str (LitStr)
 import Actions.Bool (LitBool)
@@ -32,13 +31,15 @@ import Actions.Arith (LitInt)
 import Data.Aeson (ToJSON, FromJSON)
 import qualified Data.Map as Map
 import Templates.Modules.Phases.Denotation (denoteAAction, denoteA)
+import Actions.Modules.Stmt.Syntax (Loop)
+import qualified Templates.Modules.Lift.Denotation as St
  
 type Eff' v = State ButtonCount + State FormId + State Seed + Random Label LabelId + State (Maybe LabelId) 
   + Attribute + Stream HtmlOut + State AttList + E.Render (Fix v) + State Address 
   + Reader () (Maybe TId) + Writer TId + State TSeed 
    + Reader TId [String] +  E.Render String + Writer String + EHeap v
   + MLState Address (Fix v) + DbRead (EntityDecl (Fix v)) +  DbWrite (Fix v) +   End
-type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT +: Action
+type T = Loop +: Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT +: Action
 --running syntax
 type Module' = BiFix T (Fix Module)   
 type Out' = String
@@ -146,3 +147,7 @@ instance (Lit Uuid <: v) => DenoteT EvalT (EffV v) (Eff' v) (Fix v) where
 
 instance ( Lit Uuid <: v) => DenoteT Action (EffV v) (Eff' v) (Fix v) where
   denoteT = denoteA
+
+instance ( Lit Uuid <: v, LitBool <: v, LitInt <: v, Null <: v, [] <: v) 
+  => DenoteT Loop (EffV v) (Eff' v) (Fix v) where  
+  denoteT = St.denoteT 

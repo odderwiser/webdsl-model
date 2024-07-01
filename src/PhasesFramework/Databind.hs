@@ -14,7 +14,7 @@ import qualified Templates.Modules.Page.PhasesDenotation as P
 import Syntax (Address)
 import qualified Templates.Modules.Lift.Denotation as Lt
 import qualified Templates.Modules.Forms.PhasesDenotation as F
-import Actions.Values (Lit)
+import Actions.Values (Lit, Uuid)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn, dummyRedirect)
@@ -46,7 +46,7 @@ import PhasesFramework.Handlers (cacheH)
 import qualified Data.Aeson.KeyMap as KM
 import Templates.Modules.Phases.Denotation (denoteA)
 import PhasesFramework.Validate (VEff')
-import Definitions.GlobalVars.Syntax (Uuid)
+import qualified Templates.Modules.Lift.Denotation as L
 
 type DbEff' v = Databind + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
@@ -90,6 +90,9 @@ instance DenoteT EvalT (EffV Vt) (DbEff' Vt) Vt' where
 
 instance DenoteT Action (EffV Vt) (DbEff' Vt) Vt' where
   denoteT = denoteA
+
+instance DenoteT Loop (EffV Vt) (DbEff' Vt) Vt' where
+  denoteT = L.denoteT
 
 instance Lift (EffV Vt) (DbEff' Vt) Vt' where
   lift e = bubbleDown

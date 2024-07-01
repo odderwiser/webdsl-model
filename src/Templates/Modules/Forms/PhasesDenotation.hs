@@ -13,7 +13,6 @@ import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Modules.Eval.Syntax (Eval (Var))
 import Actions.Modules.Eval.Denotation (derefEnv, derefEnv')
 import Actions.Modules.Entity.Syntax (Entity (PropAccess), projEntity, EntityDecl (..), projEName, projParams)
-import Definitions.GlobalVars.Syntax (Uuid)
 import Text.Read (readMaybe)
 import Actions.Modules.Entity.Denotation (setProperty, getObj', getObj'', refProperties)
 import Definitions.GlobalVars.Effects (DbRead)
@@ -24,7 +23,7 @@ import Actions.Handlers.Env (derefH)
 import Actions.Handlers.Entity (entityDefsH)
 import Data.Maybe (fromJust)
 import Templates.Modules.Lift.Syntax (LiftE(LiftE))
-import Actions.Modules.Phases.Denotation as D 
+import Actions.Modules.Phases.Denotation as D hiding (denoteRef) 
 
 
 denoteProcess :: forall eff eff' v v'.

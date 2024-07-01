@@ -6,7 +6,7 @@ import Syntax
 import Definitions.GlobalVars.Denotation (Heap)
 import Definitions.GlobalVars.Effects
 import Actions.Syntax
-import Actions.Values (Lit)
+import Actions.Values (Lit, Uuid)
 import Actions.FrameworkIO
 import Templates.Syntax as S
 import Definitions.Templates.Syntax (TBody, TemplateDef)
@@ -43,7 +43,8 @@ import PhasesFramework.Handlers (cacheH)
 import Actions.Handlers.Heap
 import qualified Data.Aeson.KeyMap as KM
 import Templates.Modules.Phases.Denotation (denoteA, denoteAAction)
-import Definitions.GlobalVars.Syntax (Uuid)
+import qualified Templates.Modules.Lift.Denotation as L
+import qualified Templates.FrameworkIO as T
 
 type AEff' v = ActionE + State FormId + State Seed 
   + Random Label LabelId + State (Maybe LabelId) + State TVarSeed
@@ -61,7 +62,7 @@ type AIn v = ([(Address, Fix v)], String, [(String, String)], [(TVarAddress, Fix
 
 executeAPhase :: forall v g h. (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, Show (v (Fix v)), V' <<: v, WeakenF v V')
-  => Free (AEff' v) () -> AIn v  ->  IO (Maybe (PageCall (BiFix h (Fix g)) (Fix g)))
+  => Free (AEff' v) () -> AIn v  ->  IO (Maybe (PageCall T.Module' (Fix Module)))
 executeAPhase e (heap, file, params, cache, eCache) = do
   (status, elems :: Elems V') <- openDatabase file
   let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
@@ -118,6 +119,9 @@ instance DenoteT EvalT (EffV Vt) (AEff' Vt) Vt' where
 
 instance DenoteT Action (EffV Vt) (AEff' Vt) Vt' where
   denoteT = denoteAAction
+
+instance DenoteT Loop (EffV Vt) (AEff' Vt) Vt' where
+  denoteT = L.denoteT
 
 instance Lift (EffV Vt) (AEff' Vt) Vt' where
   lift e = bubbleDown

@@ -2,8 +2,8 @@ module Definitions.GlobalVars.Effects where
 import Definitions.Entity.Syntax (EName, PName)
 import Actions.Modules.Eval.Syntax (VName)
 import Utils
-import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Modules.Entity.Syntax (EntityDecl)
+import Actions.Values
 
 type IsSuccess = Bool
 

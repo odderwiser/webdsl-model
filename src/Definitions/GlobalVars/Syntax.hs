@@ -15,7 +15,6 @@ type DatabaseLoc = String --this contains file address to be checked
 
 -- tests should be able to say, persistent / nonpersistent 
 
-type Uuid = String
 
 getUuid :: (Lit Uuid <: v) => EntityDecl (Fix v) -> Uuid
 getUuid (EDecl name params) = unbox $ fromJust $ lookup "id" params
@@ -41,3 +40,6 @@ vList list = Just $ injF $ VList list
 
 -- type VarList = Weaken VarListT
 getNames = map (\(VDef name e) -> name)
+
+data Ref e = Ref Uuid
+    deriving Functor

@@ -14,7 +14,6 @@ import Definitions.Fun.Syntax (FDecl(FDecl))
 import Definitions.Entity.Syntax
 import Actions.Modules.Entity.Syntax
 import Actions.Modules.Str.Syntax as Str
-import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values as V
 import Definitions.GlobalVars.Effects (setEntity, DbWrite, getEntity, DbRead)
 
