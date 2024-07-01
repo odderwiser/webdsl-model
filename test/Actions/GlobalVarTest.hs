@@ -16,6 +16,7 @@ import Actions.Values
 import Definitions.Fun.Syntax (FDecl(FDecl))
 import System.Directory (doesFileExist, removeFile)
 import Actions.Handlers.Entity (DbStatus(..))
+import Control.Monad (when)
 
 -- testEq :: Denote m EffA V
 --   => String -> Out -> Fix m -> FilePath ->  IO Test
@@ -29,7 +30,8 @@ testEqProgram :: ()
   => String -> Out -> ProgramA ->  IO Test
 testEqProgram id res syntax =  do
   let file = "./test/Actions/dbs/"++id++ ".txt"
-  removeFile file
+  fileExists <- doesFileExist file
+  when fileExists $ removeFile file
   (output, dbStatus)  <- runProgram syntax file
   (output', dbStatus') <- runProgram syntax file
   return $ TestList

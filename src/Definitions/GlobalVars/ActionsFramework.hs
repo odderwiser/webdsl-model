@@ -111,7 +111,7 @@ runVars e env store file = do
   return (globalEnv, heap, status)
 
 instance (Lit Uuid <: v, Lit Address <: v,
- EntityDecl <: v, LitStr <: v, Null <: v,
+ EntityDecl <: v, LitStr <: v, Null <: v, [] <: v,
  Show (v (Fix v)))
  =>  Denote VarList (EffA v) (Fix v) where
   denote = G.denote
