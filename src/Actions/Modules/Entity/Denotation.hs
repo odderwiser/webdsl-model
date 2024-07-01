@@ -103,6 +103,8 @@ denote (Save obj) env =  do
 
 derefLocalProperty pname = derefH pname propertyVarEnvH
 
+refProperties :: ( Functor eff')
+  => [String] -> [Int] -> Env eff v -> Free eff' (Env eff v)
 refProperties names locs env = do
   (_, env') <- handle_ propertyVarEnvH env
     $ mapM assign (zip names locs)

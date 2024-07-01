@@ -70,7 +70,7 @@ instance (Lit Int <: v, Lit Bool <: v, Eq (v (Fix v)))
   => Denote Expr (EffV v) (Fix v) where
   denote = Ex.denote
 
-instance (LitStr <: v) => Denote Str (EffV v) (Fix v) where
+instance (LitStr <: v, LitInt <: v) => Denote Str (EffV v) (Fix v) where
   denote = Str.denote
 
 instance (Null <: v, [] <: v, Lit Bool <: v, Lit Int <: v) 

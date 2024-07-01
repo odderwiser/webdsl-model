@@ -13,7 +13,7 @@ import Definitions.GlobalVars.ActionsFramework
 import Definitions.Syntax as D
 import Templates.Syntax
 import qualified Actions.Str as S
-import Actions.Syntax
+import Actions.Syntax as S
 import Syntax as S
 import Actions.Arith
 import System.Directory (doesFileExist, removeFile)
@@ -102,6 +102,15 @@ testRedirectOutput = "<html><head></head><body id=\"goal\">"
      ++ "<span class=\"section section1\">"
      ++ "success!</span></body></html>"
 
+
+systemTestSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
+systemTestSyntax = Request
+  [ eDef' "Project" [("name", S.String), ("apps", S.List (Entity "Project"))] [] 
+    [S.Validate (gt (pVar "name") (int 0)) "" ["name"]]]
+  (vList [])
+  (PCall "root" [], [
+      ("a", "1")
+    ])
 
 
 testPropertyOutput =

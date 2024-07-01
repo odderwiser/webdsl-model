@@ -12,10 +12,10 @@ import Syntax (Type(..), Address)
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Modules.Eval.Syntax (Eval (Var))
 import Actions.Modules.Eval.Denotation (derefEnv, derefEnv')
-import Actions.Modules.Entity.Syntax (Entity (PropAccess), projEntity, EntityDecl (..), projEName)
+import Actions.Modules.Entity.Syntax (Entity (PropAccess), projEntity, EntityDecl (..), projEName, projParams)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Text.Read (readMaybe)
-import Actions.Modules.Entity.Denotation (setProperty, getObj', getObj'')
+import Actions.Modules.Entity.Denotation (setProperty, getObj', getObj'', refProperties)
 import Definitions.GlobalVars.Effects (DbRead)
 import Templates.Modules.Page.Syntax (TId (TId))
 import Actions.Modules.Phases.Syntax (VTuple(Validate))
@@ -124,7 +124,7 @@ denoteRef (In syntax) = case proj syntax of
     (Just (e :: Entity (Fix g))) -> denoteRefEntity e
 
 denoteV :: forall eff eff' g v v'.(State FormId <: eff', State (Maybe LabelId) <: eff'
-  , State Seed <: eff', Random Label LabelId <: eff', Heap v' <: eff
+  , State Seed <: eff', Random Label LabelId <: eff', Heap v' <: eff, Heap v' <: eff'
   , PropRef <: v', v~ Fix v', Lit Uuid <: v', LitBool <: v', Writer (TId, String) <: eff'
   , ReqParamsSt <: eff', Lift eff eff' (Fix v'), EntityDecl <: v'
   , Eval <: g, Entity <: g, Denote g eff v, EHeap v' <: eff', DbRead (EntityDecl (Fix v')) <: eff'
@@ -146,9 +146,12 @@ denoteV (Input exp _) env = do
         PropRef (entity, propName) -> do
           entity' :: v <-  getObj' entity
           write $ "entity found: " ++ show entity'
-          (EDef name _ _ _ validation) <- derefH (projEName $ projEntity entity') entityDefsH $ actionEnv env
+          let (EDecl eName params) = projEntity entity'
+          (EDef name _ _ _ validation) <- derefH eName entityDefsH $ actionEnv env
+          locs :: [Address]     <- mapM (ref . snd) params
+          env'                 <- refProperties (map fst params) locs $ actionEnv env
           mapM_ (\e -> do
-            v' <- D.denoteT (LiftE e) env
+            v' <- D.denoteT (LiftE e) env {actionEnv = env' }
             return ()) (filter (\(Validate _ _ list) ->  elem propName list) validation)
     Nothing -> do
       return ()

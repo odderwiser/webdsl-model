@@ -1,5 +1,5 @@
 module PhasesFramework.Action where
-import Templates.Effects
+import Templates.Effects as E
 import Actions.Effects
 import Utils
 import Syntax
@@ -48,7 +48,7 @@ import Definitions.GlobalVars.Syntax (Uuid)
 type AEff' v = ActionE + State FormId + State Seed 
   + Random Label LabelId + State (Maybe LabelId) + State TVarSeed
   + State ButtonCount +  ReqParamsSt + State Address
-  + MLState TVarAddress (Fix v) + Throw + Redirect (Fix v) + Writer String
+  + MLState TVarAddress (Fix v) + Throw + E.Redirect (Fix v) + Writer String
   + EHeap v + Heap v + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v) + End -- can I get rid of this read and write?
 
 data ActionE k 

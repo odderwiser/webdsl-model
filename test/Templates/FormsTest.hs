@@ -10,7 +10,7 @@ import Templates.Syntax
 import Templates.Modules.Lift.Denotation (consT, consTList)
 import Syntax as S
 import Actions.Values
-import Actions.Str as S
+import qualified Actions.Str as S
 import Actions.Bool (true, false)
 import Actions.Arith (int)
 import Actions.Modules.Eval.Syntax (var)

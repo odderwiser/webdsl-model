@@ -23,3 +23,4 @@ data (Bifunctor s) => Weaken s e = Weaken (s e e)
 instance (Bifunctor s) => Functor (Weaken s) where
   fmap :: (a -> b) -> Weaken s a -> Weaken s b
   fmap  f (Weaken s) = Weaken $ bimap f f s 
+

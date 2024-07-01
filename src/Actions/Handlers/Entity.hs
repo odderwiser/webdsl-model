@@ -62,7 +62,7 @@ defaultTypeH = Handler
   , hdlr = \(DefaultValue ty k) -> case ty of
       Int      -> k $ boxI (0 :: Int)
       Bool     -> k $ boxV False
-      List     -> k $ injF []
+      List  r  -> k $ injF []
       S.Entity s -> k $ injF Null
   }
 
@@ -85,9 +85,9 @@ objEnvH :: (Functor eff)
   [(PName, Address)] eff (val, [(PName, Address)])
 objEnvH = mkAHandler id lookup (:)
 
-propertyVarEnvH ::(Functor eff)
+propertyVarEnvH ::(Functor eff')
   => Handler_   (MLState PName Address) val
-    (Env eff v) eff (val, Env eff v)
+    (Env eff v) eff' (val, Env eff v)
 propertyVarEnvH = mkAHandler U.objVarEnv lookup
   (\record env -> env { U.objVarEnv = record : U.objVarEnv env})
 
