@@ -39,6 +39,7 @@ import qualified Definitions.Entity.Framework as E
 import Actions.Modules.Phases.Syntax
 import qualified Actions.Modules.Phases.Denotation as Ph
 import qualified Templates.Effects as E
+import Templates.Modules.Lift.Syntax (Weaken)
 --running syntax
 
 --preprocessing
@@ -138,7 +139,7 @@ instance (LitStr <: v) => Denote Str (EffA v) (Fix v) where
   denote = Str.denote
 
 instance (Null <: v, [] <: v, LitBool <: v, LitInt <: v)
-  => Denote Loop (EffA v) (Fix v) where
+  => Denote (Weaken Loop) (EffA v) (Fix v) where
   denote = St.denoteLoop
 
 instance (Null <: v) => Denote Fun (EffA v) (Fix v) where

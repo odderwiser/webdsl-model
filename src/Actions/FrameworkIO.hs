@@ -29,6 +29,7 @@ import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Actions.Modules.Phases.Syntax (Redirect)
 import qualified Actions.Modules.Phases.Denotation as Ph
 import qualified Templates.Effects as E
+import Templates.Modules.Lift.Syntax
 
 type Eff = EffV V'
 type EffV v    =  Cond + Abort (Fix v) + Random String String + E.Redirect (Fix v)
@@ -36,7 +37,7 @@ type EffV v    =  Cond + Abort (Fix v) + Random String String + E.Redirect (Fix 
 type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
-type Module  = Redirect + EntityDecl + Entity + Loop + Stmt + Fun + Eval + Expr + ModuleV
+type Module  = Redirect + EntityDecl + Entity + Weaken Loop + Stmt + Fun + Eval + Expr + ModuleV
 type Out     = V --todo: make different!
 
 runExp :: FreeEnv Eff V -> String -> IO (Out, DbStatus)
@@ -89,7 +90,7 @@ instance (LitStr <: v) => Denote Str (EffV v) (Fix v) where
   denote = Str.denote
 
 instance (Null <: v, [] <: v, Lit Bool <: v, Lit Int <: v) 
-  => Denote Loop (EffV v) (Fix v) where
+  => Denote (Weaken Loop) (EffV v) (Fix v) where
   denote = St.denoteLoop
 
 instance (Null <: v) => Denote Fun (EffV v) (Fix v) where

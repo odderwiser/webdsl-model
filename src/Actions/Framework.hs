@@ -26,6 +26,7 @@ import qualified Actions.Modules.Stmt.Denotation as St
 import Actions.Handlers.Entity (uuidH, eHeapH)
 import Definitions.GlobalVars.Syntax (Uuid)
 import Actions.Values
+import Templates.Modules.Lift.Syntax
 
 type Eff = EffV V'
 type EffV v   =  Cond + Abort (Fix v)
@@ -33,7 +34,7 @@ type EffV v   =  Cond + Abort (Fix v)
 type V'      =  [] + LitBool + LitInt + LitStr + Null
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
-type Module  = Loop + Stmt + Fun + Eval + Expr + ModuleV
+type Module  = Weaken Loop + Stmt + Fun + Eval + Expr + ModuleV
 type Out     = V --todo: make different!
 
 runExp :: FreeEnv Eff V -> Out
@@ -73,7 +74,7 @@ instance (LitStr <: v) => Denote Str (EffV v) (Fix v) where
   denote = Str.denote
 
 instance (Null <: v, [] <: v, Lit Bool <: v, Lit Int <: v) 
-  => Denote Loop (EffV v) (Fix v) where
+  => Denote (Weaken Loop) (EffV v) (Fix v) where
   denote = St.denoteLoop
 
 instance (Null <: v) => Denote Fun (EffV v) (Fix v) where

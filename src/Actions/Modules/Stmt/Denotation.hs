@@ -11,6 +11,7 @@ import Actions.Modules.Arith.Syntax as A
 import Data.List (sort, sortOn)
 import Actions.Modules.Col.Syntax (projC)
 import Actions.Values
+import Templates.Modules.Lift.Syntax
 
 denote :: forall v eff. (Functor eff)
   => Stmt (FreeEnv eff (Fix v))
@@ -25,22 +26,22 @@ denoteStmt (S s1 s2) env = do
 denoteLoop :: forall v eff. 
   ( Null <: v, [] <: v, LitBool <: v, LitInt <: v
   , Cond <: eff, MLState Address (Fix v) <: eff
-  ) => Loop (FreeEnv eff (Fix v))
+  ) => Weaken Loop (FreeEnv eff (Fix v))
     -> FreeEnv eff (Fix v)
 
-denoteLoop (ForCol name col stmts filters) env = do
+denoteLoop (Weaken (ForCol name col stmts filters)) env = do
   col' <- col env
   col'' <- denoteFilters name col' filters env
   executeLoop (projC col'') name env stmts
   -- return $ injF Null
 
-denoteLoop (ForArith name e1 e2 stmts) env = do
+denoteLoop (Weaken (ForArith name e1 e2 stmts)) env = do
   e1' <- e1 env
   e2' <- e2 env
   executeLoop (halfOpenRange e1' e2')
     name env stmts
 
-denoteLoop (While e stmts) env = whileLoop e stmts env
+denoteLoop (Weaken (While e stmts)) env = whileLoop e stmts env
 
 executeLoop col' name env stmts = do
   mapM_ (\id -> do
