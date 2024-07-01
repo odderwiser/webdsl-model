@@ -14,15 +14,15 @@ main = do
   globalVarA <- A.globalVarTests
   globalVarT <- T.globalVarTests
   templateIO <- templatesTestsIO
-  -- phases' <- phasesTests
-  result <- runTestTT $ test --[phases']
-    [ actionsTests
-    , actionIo
-    , templatesTests
-    , templateIO
-    , globalVarA
-    , globalVarT
-    ]
+  phases' <- phasesTests
+  result <- runTestTT $ test [phases']
+    -- [ actionsTests
+    -- , actionIo
+    -- , templatesTests
+    -- , templateIO
+    -- , globalVarA
+    -- , globalVarT
+    -- ]
   print result
   if failures result > 0 then exitFailure else exitSuccess
 

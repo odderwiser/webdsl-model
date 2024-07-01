@@ -9,7 +9,7 @@ import Definitions.Program.Syntax
 import qualified Templates.FrameworkIO as T
 import qualified Definitions.Pages.Framework as P
 import Templates.Modules.Page.Denotation (denoteP)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, fromMaybe)
 import Definitions.Pages.Syntax (PageCall)
 import Actions.FrameworkIO
 import Definitions.Pages.Framework (Envs)
@@ -54,6 +54,9 @@ runProgram f@(Fragment defs (Just vars) pCall) file = do
  (out, _) <- Tp.runObservableProgram f file
  return out
 
+runProgram r@(Request defs (Just vars) (pCall, [])) file =
+  runProgram (Fragment defs (Just vars) pCall) file
+
 runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   let (rEnv, dBEnv, vEnv, aEnv, varDef) = foldPhases defs
   let (dbCall, vCall, aCall) = foldRequest pCall
@@ -63,20 +66,18 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   (cache, dBvalidaton, tIds) <- executeDbPhase
     (denotePDb dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv)
     heap' file params
+  print cache
   validation <- executeVPhase (denotePV vCall
     $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  heap' file params cache tIds
-  case (dBvalidaton ++ validation) of
+  print "validation: "
+  print validation
+  call <- case (dBvalidaton ++ validation) of
     [] ->  do
       rCall :: Maybe (PageCall T.Module' (Fix Module)) <- executeAPhase (denotePA aCall
         $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache
-      case rCall of
-        Nothing -> (T.runApplied'
-          $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
-        Just rCall' -> (T.runApplied'
-          $ denoteP (foldCall rCall') $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) [] file
-      (T.runApplied'
-        $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
-    _  -> (T.runApplied'
+      return $ fromMaybe pCall rCall
+    _  -> return pCall
+  (T.runApplied'
         $ denoteP (foldCall pCall) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
 
   -- nothing :: () <- executeAPhase (denotePProcess aCall 

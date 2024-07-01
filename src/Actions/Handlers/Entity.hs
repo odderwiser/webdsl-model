@@ -127,7 +127,28 @@ inMemoryDbReadH = Handler_
       GetEntity uuid k -> k
         (case KM.lookup (KM.fromString uuid) $ entities elems of
           Nothing -> head $  KM.elems $ entities elems
-          Just e -> e) (elems { vars = KM.insert (KM.fromString $"dummy"++uuid ) "not real" $ vars elems}
+          Just e -> e) (elems { vars = KM.insert (KM.fromString $ "dummy"++uuid ) "not real" $ vars elems}
+            , db)
+      -- GetEntity' uuid k -> k
+        -- (fromJust $ KM.lookup (KM.fromString uuid) $ entities elems) e
+      GetAll name k -> k
+        (filter (\(EDecl name' _) -> name == name')
+          $ KM.elems $ entities elems)
+        e
+      LoadVariables k -> k (map (first KM.toString)
+        $ KM.toList $ vars elems) e
+  }
+
+inMemoryDbReadH' :: (Functor remEff, Functor v)
+  => Handler_ (DbRead (EntityDecl (Fix v))) val ((Elems v), DbStatus) remEff (val, (Elems v))
+inMemoryDbReadH' = Handler_
+  { ret_ = \v (elems, db) -> pure (v, elems)
+  , hdlr_ = \eff e@(elems, db) -> case eff of
+      Connect k -> k (db == Success) (elems, db)
+      GetEntity uuid k -> k
+        (case KM.lookup (KM.fromString uuid) $ entities elems of
+          Nothing -> head $  KM.elems $ entities elems
+          Just e -> e) (elems { vars = KM.insert (KM.fromString $ "dummy"++uuid ) "not real" $ vars elems}
             , db)
       -- GetEntity' uuid k -> k
         -- (fromJust $ KM.lookup (KM.fromString uuid) $ entities elems) e
@@ -196,13 +217,15 @@ makeElems :: Elems v
 makeElems = Elems {vars = KM.empty, classes = KM.empty, entities = KM.empty}
 
 dbWriteH :: forall remEff val v.
-  (Functor remEff, Lit Uuid <: v,ToJSON (v (Fix v)), FromJSON (v (Fix v)))
+  (Functor remEff, Lit Uuid <: v,ToJSON (v (Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)))
   => FilePath -> Handler_ (DbWrite (Fix v)) val [WriteOps v] remEff (IO (val, DbStatus))
 dbWriteH dbEntry = Handler_
   { ret_ = \ val writeOps -> pure $ do
     fileExists <- doesFileExist dbEntry
     oldDbState <- if fileExists then readFile' dbEntry else return ""
     (status, elems) <- openDatabase dbEntry
+    print "Writer"
+    print elems
     case status of
       Success -> do
         writeFile dbEntry

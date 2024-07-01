@@ -53,7 +53,10 @@ testPropertySyntax = Request
       $ label (S.str "someLabel")
       $ input (pAccess (var "left") "a") S.Int)
     , eDef' "obj" [("a", Int)] [] []
-  ] (vList [VDef "left" (EDecl "obj" [("a", int 1)])]) (PCall "root" [], [])
+  ] (vList [VDef "left" (EDecl "obj" [("a", int 1)])]) (PCall "root" []
+    , [ ("form_92d1d547132b3a579f28b944be2c0ff9", "1")
+      , ("c7d3fe12397d3a6ea3b9f7a6db2d6190", "10")
+      ])
 
 testPropertyOutput =
   [ Plain "<html><head></head><body id=\"root\"><form id=\""

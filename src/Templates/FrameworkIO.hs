@@ -36,7 +36,7 @@ type Eff' v = State ButtonCount + State FormId + State Seed + Random Label Label
   + Attribute + Stream HtmlOut + State AttList + E.Render (Fix v) + State Address 
   + Reader () (Maybe TId) + Writer TId + State TSeed 
    + Reader TId [String] +  E.Render String + EHeap v
-  + MLState Address (Fix v) + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
+  + MLState Address (Fix v) + DbRead (EntityDecl (Fix v)) +  DbWrite (Fix v) +   End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
 type Module' = BiFix T (Fix Module)   
@@ -66,9 +66,9 @@ runApplied' :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   => Free (Eff' v) () -> [(Address, (Fix v))] -> String -> IO Out'
 runApplied' e heap file = do
   (status, elems :: Elems v) <- openDatabase file
-  let (action, elems') = unwrap
-        $ handle_ inMemoryDbReadH (elems, status)
+  ((((_, out), templateIds), elems'), readstatus) <- unwrap
         $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+        $ handle_ inMemoryDbReadH (elems, status)
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
         $ handle renderErrorH 
@@ -87,7 +87,6 @@ runApplied' e heap file = do
         $ handle_ simpleStateH ""
         $ handle_ autoIncrementState (Count 0)
         $ e 
-  (((_, out), templateIds), readstatus) <- action
   print "store after"
   print heap
   return out

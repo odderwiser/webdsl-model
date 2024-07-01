@@ -14,7 +14,7 @@ import qualified Templates.Modules.Page.PhasesDenotation as P
 import qualified Templates.Modules.Render.Denotation as X
 import qualified Templates.Modules.Layout.Denotation as L
 import Templates.FrameworkIO as T
-import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, openDatabase, inMemoryDbReadH, Elems)
+import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, openDatabase, inMemoryDbReadH, Elems (entities), encodeElems, inMemoryDbReadH')
 import Actions.Handlers.Return (funReturn, dummyRedirect)
 import Actions.Handlers.Cond (condition)
 import Definitions.Templates.Syntax
@@ -42,25 +42,28 @@ import PhasesFramework.Handlers
 import Actions.Handlers.Heap
 import Actions.Modules.Phases.Syntax (VTuple)
 import qualified Actions.Modules.Phases.Denotation as V
+import qualified Data.Aeson.KeyMap as KM
 
 type VEff' v = Validate + State FormId + State Seed
   + Random Label LabelId + State (Maybe LabelId)
   + State TVarSeed + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Writer (TId, String) + Reader () TId + Throw
-  + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End -- can I get rid of this read and write?
+  + EHeap v + Heap v + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v)+ End -- can I get rid of this read and write?
 
 vH :: Functor g => Handler Validate a g a
 vH = Handler { ret = pure }
 
-executeVPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
-  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v)
+executeVPhase :: forall v. (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
+  LitStr <: v, LitInt <: v, LitBool <: v, [] <: v, V' <<: v, WeakenF v V', Show (v (Fix v)))
   => Free (VEff' v) () ->  [(Address, Fix v)] -> String -> [(String, String)] -> [(TVarAddress, Fix v)]
   -> [TId] -> IO [(TId, String)]
 executeVPhase e heap file params cache tIds = do
-  (status, elems :: Elems v) <- openDatabase file
-  let (action, elems') =  unwrap
-        $ handle_ inMemoryDbReadH (elems, status)
+  (status, elems :: Elems V') <- openDatabase file
+  let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
+  writeFile file $ encodeElems elems'
+  (((_, errors), elems'), readstatus) <-  unwrap
         $ handle_ (dbWriteH file) ([] :: [WriteOps v])
+        $ handle_ inMemoryDbReadH' (elems', status)
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
         $ handle mockThrowH -- throw (effect to remove)
@@ -76,7 +79,9 @@ executeVPhase e heap file params cache tIds = do
         $ handle_ simpleStateH "" --state formid
         $ handle vH     --databind
         $ e
-  ((_, errors), readstatus) <- action
+  (status, elemsV :: Elems v) <- openDatabase file
+  let elems''' :: Elems V' = elems {entities = KM.map (fmap weakenF) $ entities elemsV}
+  writeFile file $ encodeElems elems'''
   return errors
 
 data Validate k

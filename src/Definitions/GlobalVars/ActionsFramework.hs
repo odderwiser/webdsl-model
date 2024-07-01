@@ -88,7 +88,7 @@ instance DenoteDef EntityDef (FreeEnv (EffA v) (Fix v)) (EffP v) where
 -- runExp :: FreeEnv (EffA V') V -> FilePath -> IO (Out,  DbStatus)
 -- runExp e = run e (Env { varEnv = []}) []
 
-runVars :: (ToJSON (v (Fix v)), Lit Uuid <: v, FromJSON (v (Fix v)))
+runVars :: (ToJSON (v (Fix v)), Lit Uuid <: v, FromJSON (v (Fix v)), Show (v (Fix v)))
   => FreeEnv (EffA v) (Fix v) -> Env (EffA v) (Fix v) -> [(Address, Fix v)] -> FilePath
   -> IO ([(Name, Address)], [(Address, (Fix v))], DbStatus)
 runVars e env store file = do

@@ -18,7 +18,7 @@ import Actions.Values (Lit)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn, dummyRedirect)
-import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH)
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH, encodeElems, inMemoryDbReadH')
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import qualified Templates.Modules.Page.Denotation as F
@@ -50,7 +50,7 @@ type DbEff' v = Databind + State FormId + State Seed
   + State TVarSeed + ReqParamsSt + State Address
   + MLState TVarAddress (Fix v) + Writer (TId, String)
   + Reader () (Maybe TId) + Writer TId + State TSeed 
-  + EHeap v + Heap v + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) + End
+  + EHeap v + Heap v + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v) + End
 
 data Databind k
   deriving Functor
@@ -121,9 +121,9 @@ executeDbPhase e heap file params = do
   let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
   print "post mapping"
   print elems' 
-  let (action, elems'') = unwrap
-        $ handle_ inMemoryDbReadH (elems', status)
+  ((((_, cache), validationErrors), templateIds), elems'') <- unwrap
         $ handle_ (dbWriteInputH file) ([] :: [WriteOps v], (elems', status))
+        $ handle_ inMemoryDbReadH' (elems', status)
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
         $ handle_ autoIncrementState (TSeed 0)
@@ -142,7 +142,11 @@ executeDbPhase e heap file params = do
         $ e
   print "after reading"
   print elems''
-  (((_, cache), validationErrors), templateIds) <- action
+  (status, elemsV :: Elems Vt) <- openDatabase file
+  let elems''' :: Elems V' = elems {entities = KM.map (fmap weakenF) $ entities elemsV}
+  writeFile file $ encodeElems elems'''
+  print "after remapping"
+  print elems'''
   return (cache, validationErrors, templateIds)
 
 -- State (Maybe LabelId) 

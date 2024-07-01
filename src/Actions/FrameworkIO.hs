@@ -32,7 +32,7 @@ import qualified Templates.Effects as E
 
 type Eff = EffV V'
 type EffV v    =  Cond + Abort (Fix v) + Random String String + E.Redirect (Fix v)
-  + EHeap v + MLState Address (Fix v) + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
+  + EHeap v + MLState Address (Fix v) + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v) +  End
 type V'      =  [] + LitBool + LitInt + LitStr + Null + EntityDecl + Lit Address + Lit Uuid
 type V       = Fix V'
 type ModuleV = Col + Arith + Boolean + Str
@@ -48,9 +48,9 @@ run e env store file = do
   (dbstatus, elems :: Elems V') <- openDatabase file
   print "store before running:"
   print store
-  let (action, elems') = unwrap
-        $ handle_ inMemoryDbReadH (elems, dbstatus)
+  (((out, heap :: [(Address, V)]), elems), status) <-  unwrap
         $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
+        $ handle_ inMemoryDbReadH (elems, dbstatus)
         $ handle_ heap'' store --(makeEnv store)
         $ handle_ eHeapH []
         $ handle dummyRedirect
@@ -58,7 +58,6 @@ run e env store file = do
         $ handle funReturn
         $ handle condition
         $ e env 
-  ((out, heap :: [(Address, V)]  ), status) <- action
   print "store after running"
   print heap
   return (out, status)
