@@ -9,7 +9,7 @@ type IsSuccess = Bool
 
 data DbRead e k
     = GetEntity Uuid (e -> k)
-    | GetEntity' Uuid (e -> k)
+    -- | GetEntity' Uuid (e -> k)
     | GetAll EName ([e] -> k)
     | Connect (IsSuccess -> k)
     | LoadVariables ([(VName, Uuid)] -> k)
@@ -18,8 +18,8 @@ data DbRead e k
 getEntity :: (DbRead e <: f) => Uuid -> Free f e
 getEntity uuid = Op $ inj $ GetEntity uuid Pure
 
-getEntity' :: (DbRead e <: f) => Uuid -> Free f e
-getEntity' uuid = Op $ inj $ GetEntity' uuid Pure
+-- getEntity' :: (DbRead e <: f) => Uuid -> Free f e
+-- getEntity' uuid = Op $ inj $ GetEntity' uuid Pure
 
 getAll :: (DbRead e <: f) => EName -> Free f [e]
 getAll eName = Op $ inj $ GetAll eName Pure

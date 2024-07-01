@@ -129,15 +129,33 @@ inMemoryDbReadH = Handler_
           Nothing -> head $  KM.elems $ entities elems
           Just e -> e) (elems { vars = KM.insert (KM.fromString $"dummy"++uuid ) "not real" $ vars elems}
             , db)
-      GetEntity' uuid k -> k
-        (fromJust $ KM.lookup (KM.fromString uuid) $ entities elems) e
+      -- GetEntity' uuid k -> k
+        -- (fromJust $ KM.lookup (KM.fromString uuid) $ entities elems) e
       GetAll name k -> k
         (filter (\(EDecl name' _) -> name == name')
           $ KM.elems $ entities elems)
         e
-      LoadVariables k -> k (map (first KM.toString) 
+      LoadVariables k -> k (map (first KM.toString)
         $ KM.toList $ vars elems) e
   }
+
+
+dbReadIoH :: forall remEff val v. (Functor remEff, FromJSON (v (Fix v)))
+  => String -> IOHandler (DbRead (EntityDecl (Fix v))) val remEff val
+dbReadIoH file = IOHandler
+  { ioRet = pure . pure
+  , ioHdlr = \eff -> case eff of
+    GetEntity uuid k -> do
+      (state, elems :: Elems v) <- openDatabase file
+      k $ fromJust $ KM.lookup (KM.fromString uuid) $ entities elems
+    GetAll name k -> do
+      (state, elems :: Elems v) <- openDatabase file
+      k $  filter (\(EDecl name' _) -> name == name') (KM.elems $ entities elems)
+    LoadVariables k -> do
+      (state, elems :: Elems v) <- openDatabase file
+      k $ map (first KM.toString) (KM.toList $ vars elems)
+  }
+
 
 openDatabase :: (FromJSON (v (Fix v))) => String -> IO (DbStatus, Elems v)
 openDatabase file = do
@@ -184,7 +202,7 @@ dbWriteH dbEntry = Handler_
   { ret_ = \ val writeOps -> pure $ do
     fileExists <- doesFileExist dbEntry
     oldDbState <- if fileExists then readFile' dbEntry else return ""
-    (status, elems) <- openDatabase dbEntry 
+    (status, elems) <- openDatabase dbEntry
     case status of
       Success -> do
         writeFile dbEntry
