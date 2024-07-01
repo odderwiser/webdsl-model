@@ -30,7 +30,7 @@ import Templates.Handlers.Render
 import qualified Templates.Handlers.Render as R
 import Templates.Handlers.Layout
 import Actions.Handlers.Heap (heap, makeEnv)
-import Actions.Handlers.Entity (entityDefsH, Elems (..), dbWriteH, eHeapH, uuidH, mockDbReadH, tempEHeapH, tempEHeapH', TempEHeap, DbStatus)
+import Actions.Handlers.Entity (entityDefsH, Elems (..), dbWriteH, eHeapH, uuidH, mockDbReadH, tempEHeapH, tempEHeapH', TempEHeap, DbStatus (Success))
 import qualified Templates.Syntax as S
 import Actions.Syntax
 import Data.Aeson.KeyMap (empty)
@@ -95,10 +95,14 @@ runObservableProgram (Fragment defs (Just vars) pCall) file = do
   let (pDefs, vDefs)
         = ( P.handleDefs (map T.foldTDefs defs ::  [P.Envs (PEnv (EffV V') (T.Eff' V') V) (FreeEnv (EffV V') V )])
           , P.handleDefs (map T.foldTDefs defs ::  [P.Envs (PEnv Eff Eff' V) (FreeEnv Eff V )]))
+  print $ globalVars $ actionEnv pDefs
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv vDefs) [] file
+  print gVarEnv
+  print heap
   out <- T.runApplied' (denoteP (bimap foldDT foldD pCall) 
-    (injectGlobal pDefs gVarEnv )) heap file
+    (injectGlobal pDefs gVarEnv)) heap file
   return (out, dbStatus)
+  -- return ("success!", Success)
 
 injectGlobal defs env = defs {actionEnv = (actionEnv defs) {globalVars = env} }
 

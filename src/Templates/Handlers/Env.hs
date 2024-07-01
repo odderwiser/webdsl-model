@@ -27,7 +27,7 @@ type TempEnv eff eff' v = MLState (TName, [Type]) (TemplateDef (PEnv eff eff' v)
 templatesH :: (Functor eff, Functor eff')
   => Handler_ (TDefs eff eff'' v)
   a (TEnv eff eff'' v) eff' (a, TEnv eff eff'' v)
-templatesH = mkRHandler' U.templates
+templatesH = mkRHandler U.templates
   (\ key env -> find (\val -> mapToKey val == key ) $ env)
   (\ k record env -> k (mapToKey record)
     $  env {U.templates = record : U.templates env})
@@ -39,7 +39,7 @@ type PgEnv eff eff' v = MLState PgName (PageDef (PEnv eff eff' v) (FreeEnv eff v
 pagesH :: (Functor eff, Functor eff')
   => Handler_ (PgEnv eff eff'' v)
   a (TEnv eff eff'' v) eff' (a, TEnv eff eff'' v)
-pagesH = mkRHandler' U.pages
+pagesH = mkRHandler U.pages
   (\ key env -> find (\val -> mapToPgName val == key) $ env)
   (\ k record env -> k (mapToPgName record)
     $  env {U.pages = record : U.pages env})
@@ -51,7 +51,7 @@ type ElemEnv eff eff' v = MLState Address (TEnv eff eff' v, PEnv eff eff' v)
 elementsH :: (Functor eff, Functor eff')
   => Handler_ (ElemEnv eff eff'' v)
   a (TEnv eff eff'' v) eff' (a, TEnv eff eff'' v)
-elementsH = mkRHandler' U.elements
+elementsH = mkRHandler U.elements
   lookup
   (\k value env ->
     let key = length $ U.elements env

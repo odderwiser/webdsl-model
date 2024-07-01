@@ -24,11 +24,12 @@ denote (Validate e errorMsg props) env = do
         True  -> return ()
     return V.null
 
-denoteT :: (Functor eff, LitBool <: v', v~Fix v'
-    , Writer (TId, String) <: eff', Lift eff eff' (Fix v'))
+denoteT :: (Functor eff, LitBool <: v', v~Fix v', Show v
+    , Writer (TId, String) <: eff', Lift eff eff' (Fix v'), Writer String <: eff')
     => LiftE VTuple (PEnv eff eff' v) (FreeEnv  eff v) -> PEnv eff eff' v
 denoteT (LiftE (Validate e errorMsg props)) env = do
     bool <- Utils.lift $ e $ actionEnv env
+    write $ show bool
     case unbox bool of
         False -> do
             write (TId $ templateId $ actionEnv env, errorMsg)

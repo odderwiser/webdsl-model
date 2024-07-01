@@ -11,7 +11,7 @@ import Actions.Values
 import Syntax (Type(..), Address)
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Modules.Eval.Syntax (Eval (Var))
-import Actions.Modules.Eval.Denotation (derefEnv, derefEnv')
+import Actions.Modules.Eval.Denotation (derefEnv)
 import Actions.Modules.Entity.Syntax (Entity (PropAccess), projEntity, EntityDecl (..), projEName, projParams)
 import Text.Read (readMaybe)
 import Actions.Modules.Entity.Denotation (setProperty, getObj', getObj'', refProperties)
@@ -147,8 +147,11 @@ denoteV (Input exp _) env = do
           write $ "entity found: " ++ show entity'
           let (EDecl eName params) = projEntity entity'
           (EDef name _ _ _ validation) <- derefH eName entityDefsH $ actionEnv env
+          write name
           locs :: [Address]     <- mapM (ref . snd) params
+          write $ show locs
           env'                 <- refProperties (map fst params) locs $ actionEnv env
+          write $ show $ objVarEnv env'
           mapM_ (\e -> do
             v' <- D.denoteT (LiftE e) env {actionEnv = env' }
             return ()) (filter (\(Validate _ _ list) ->  elem propName list) validation)

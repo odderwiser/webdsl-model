@@ -5,7 +5,7 @@ import Actions.Effects
 
 import Utils
 import Syntax
-import Actions.Handlers.Heap (environment)
+import Actions.Handlers.Heap (environment, environment')
 import Actions.Values
 import Templates.Modules.Lift.Syntax
 
@@ -17,6 +17,12 @@ derefEnv = derefEnv'
 derefEnv' :: (Functor eff', Functor eff) 
   => VName -> Env eff v -> Free eff' Address
 derefEnv' name env = do
+  (loc, env) <- handle_ environment' env (deref name)
+  return loc
+
+derefEnv'' :: (Functor eff', Functor eff) 
+  => VName -> Env eff v -> Free eff' Address
+derefEnv'' name env = do
   (loc, env) <- handle_ environment env (deref name)
   return loc
 
@@ -42,7 +48,7 @@ denote :: forall v eff. ( MLState Address (Fix v) <: eff, Null <: v)
   -> FreeEnv eff (Fix v)
 
 denote (Var name)            env = do
-  loc         <- derefEnv name env
+  loc         <- derefEnv'' name env
   deref loc
 
 denote (VDecl name k)        env = do

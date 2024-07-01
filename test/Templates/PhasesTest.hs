@@ -106,7 +106,7 @@ testRedirectOutput = "<html><head></head><body id=\"goal\">"
 systemTestSyntax :: Program DefSyntax (Fix Sym) (PageCall Module' (Fix Module))
 systemTestSyntax = Request
   [ eDef' "Project" [("name", S.String), ("apps", S.List (Entity "Project"))] [] 
-    [S.Validate (gt (pVar "name") (int 0)) "" ["name"]],
+    [S.Validate (gt (S.length (pVar "name")) (int 0)) "Name must be longer than 0" ["name"]],
     pDef "editProject" [("p", Entity "Project")] $ form False $ consTList 
       [ output $ pAccess (var "p") "name"
       , forAllT "app" (pAccess (var "p") "apps") 
@@ -121,10 +121,25 @@ systemTestSyntax = Request
       VDef "wl" $ EDecl "Project" [("name", S.str "weblab")],
       VDef "cf" $ EDecl "Project" [("name", S.str "codefinder")],
       VDef "re" $ EDecl "Project" [("name", S.str "researchr")]  ])
-  (PCall "root" [], [
-      ("a", "1")
+  (PCall "editProject" [(var "webdsl", Entity "Project")], [
+     ("form_92d1d547132b3a579f28b944be2c0ff9", "1")
+     , ("dd853912a9de30debe8e666fda7b2252", "Yellowgrass")
+     , ("796c994b9bda387a86eca718bcefa3b2", "Weblab")
+     , ("810751c35afe38679b6905198b41c878", "Codefinder")
+     , ("f82e5e76bd0a363ba77b5d6fecfcb922", "Researchr")
+     , ("withForms_ia0_92d1d547132b3a579f28b944be2c0ff9", "save")
     ])
 
+systemTestOutput = [ Plain "<html><head></head><body id=\"editProject\"><form id=\""
+  , FormName, Plain "\" name=\""
+  , FormName, Plain "\" accept-charset=\"UTF-8\" method=\"POST\">WebDSL<input class=\"inputString\" name=\""
+  , Name    , Plain $ "\" type=\"text\" value=\"Yellowgrass\"><input class=\"inputString\" name=\""
+  , Name    , Plain $ "\" type=\"text\" value=\"Weblab\"><input class=\"inputString\" name=\""
+  , Name    , Plain $ "\" type=\"text\" value=\"Codefinder\"><input class=\"inputString\" name=\""
+  , Name    , Plain $ "\" type=\"text\" value=\"Researchr\"><button class=\"button\" name=\""
+  , Button  , Plain "\">save</button></form></body></html>" ]
+
+systemTest = testEqId "systemTest" systemTestOutput systemTestSyntax
 
 testPropertyOutput =
   [ Plain "<html><head></head><body id=\"root\"><form id=\""
@@ -148,8 +163,10 @@ phasesTests = do
     test1 <- testProperty
     test2 <- testButton
     test3 <- testRedirect
+    test4 <- systemTest
     return $ T.TestList [
        test1
       ,test2
       , test3
+      , test4
       ]

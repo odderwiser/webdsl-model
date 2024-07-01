@@ -69,7 +69,6 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
     heap' file params
   print cache
   print "entities v"
-  print $ map (\(EDef name  _ _ _ _ ) -> name) (entityDefs $ actionEnv (P.handleDefs vEnv))
   validation <- executeVPhase (denotePV vCall
     $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  (heap', file, params, cache, tIds, eCache)
   print "validation: "

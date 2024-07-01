@@ -79,6 +79,14 @@ environment = Handler_
       (Deref key k)     -> k (fromJust $ lookup key (varEnv env ++ globalVars env)) env
       (Assign record k) -> k $ insertMap record env}
 
+environment' :: (Functor g) => Handler_ (MLState VName Address)
+  a (Env eff v) g (a, Env eff v)
+environment' = Handler_
+  { ret_  = curry pure
+  , hdlr_ = \x env -> case x of
+      (Deref key k)     -> k (fromJust $ lookup key (varEnv env ++ globalVars env)) env
+      (Assign record k) -> k $ insertMap record env}
+
 global :: (Functor g) => Handler_ (MLState VName Address)
   a (Env eff v) g (a, Env eff v)
 global = Handler_

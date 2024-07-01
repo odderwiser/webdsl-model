@@ -236,9 +236,6 @@ dbWriteH dbEntry = Handler_
     fileExists <- doesFileExist dbEntry
     oldDbState <- if fileExists then readFile' dbEntry else return ""
     (status, elems) <- openDatabase dbEntry
-    print "Writer"
-    print writeOps
-    print elems
     case status of
       Success -> do
         writeFile dbEntry
