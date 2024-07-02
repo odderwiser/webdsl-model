@@ -18,7 +18,7 @@ import Actions.Values (Lit, Uuid)
 import qualified Actions.Modules.Entity.Denotation as En
 import Actions.Handlers.Cond (condition)
 import Actions.Handlers.Return (funReturn, dummyRedirect)
-import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH, encodeElems, inMemoryDbReadH', eHeapH')
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, mockDbReadH, dbWriteH, openDatabase, inMemoryDbReadH, Elems (entities), dbWriteInputH, encodeElems, inMemoryDbReadH', eHeapH', dbReadIoH)
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import qualified Templates.Modules.Page.Denotation as F
@@ -127,9 +127,8 @@ executeDbPhase :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
 executeDbPhase e heap file params = do
   (status, elems :: Elems V') <- openDatabase file
   let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
-  ((((((_, cache), validationErrors), templateIds), log), eCache), elems'') <- unwrap
-        $ handle_ (dbWriteInputH file) ([] :: [WriteOps v], (elems', status))
-        $ handle_ inMemoryDbReadH' (elems', status)
+  writeFile file $ encodeElems elems'
+  action <- ioHandle (dbReadIoH file) 
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH' []
         $ handle_ appendWriterH []
@@ -147,10 +146,9 @@ executeDbPhase e heap file params = do
         $ handle_ simpleStateH "" --state formid
         $ handle dH     --databind
         $ e
+  (((((_, cache), validationErrors), templateIds), log), eCache) <- unwrap
+        $ handle_ (dbWriteInputH file) ([] :: [WriteOps v], (elems', status)) $ action
   (status, elemsV :: Elems Vt) <- openDatabase file
-  print log
-  print "db eCache"
-  print eCache
   let elems''' :: Elems V' = elems {entities = KM.map (fmap weakenF) $ entities elemsV}
   writeFile file $ encodeElems elems'''
   return (cache, validationErrors, templateIds, eCache)

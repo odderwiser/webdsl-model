@@ -22,7 +22,7 @@ import Actions.Modules.Stmt.Denotation as S
 
 import Actions.Modules.Str.Denotation as Str
 import qualified Actions.Modules.Stmt.Denotation as St
-import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus, openDatabase, inMemoryDbReadH, Elems)
+import Actions.Handlers.Entity (uuidH, eHeapH, mockDbReadH, dbWriteH, WriteOps, DbStatus, openDatabase, inMemoryDbReadH, Elems, dbReadIoH)
 import Actions.Values
 import Definitions.GlobalVars.Effects (DbRead, DbWrite)
 import Actions.Modules.Phases.Syntax (Redirect)
@@ -47,11 +47,7 @@ run :: FreeEnv Eff V -> Env Eff V -> [(Address, V)] -> String
   -> IO (Fix V', DbStatus)
 run e env store file = do
   (dbstatus, elems :: Elems V') <- openDatabase file
-  print "store before running:"
-  print store
-  (((out, heap :: [(Address, V)]), elems), status) <-  unwrap
-        $ handle_ (dbWriteH file) ([] :: [WriteOps V']) 
-        $ handle_ inMemoryDbReadH (elems, dbstatus)
+  action <-  ioHandle (dbReadIoH file)
         $ handle_ heap'' store --(makeEnv store)
         $ handle_ eHeapH []
         $ handle dummyRedirect
@@ -59,8 +55,8 @@ run e env store file = do
         $ handle funReturn
         $ handle condition
         $ e env 
-  print "store after running"
-  print heap
+  ((out, heap), status) <-  unwrap
+        $ handle_ (dbWriteH file) ([] :: [WriteOps V']) $ action 
   return (out, status)
   
 

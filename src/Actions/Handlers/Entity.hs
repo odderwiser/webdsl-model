@@ -177,6 +177,9 @@ dbReadIoH :: forall remEff val v. (Functor remEff, FromJSON (v (Fix v)))
 dbReadIoH file = IOHandler
   { ioRet = pure . pure
   , ioHdlr = \eff -> case eff of
+    Connect k -> do
+      (state, _ ::Elems v) <- openDatabase file
+      k $ state == Success
     GetEntity uuid k -> do
       (state, elems :: Elems v) <- openDatabase file
       k $ fromJust $ KM.lookup (KM.fromString uuid) $ entities elems

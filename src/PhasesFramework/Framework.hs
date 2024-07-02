@@ -63,28 +63,22 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   let (dbCall, vCall, aCall) = foldRequest pCall
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv $ P.handleDefs varDef) [] file
   let heap' = map (second cmapF) heap
-  print (gVarEnv, heap, dbStatus)
   (cache, dBvalidaton, tIds, eCache) <- executeDbPhase
     (denotePDb dbCall $ Tp.injectGlobal (P.handleDefs dBEnv) gVarEnv)
     heap' file params
-  print cache
-  print "entities v"
   validation <- executeVPhase (denotePV vCall
     $  Tp.injectGlobal (P.handleDefs vEnv) gVarEnv)  (heap', file, params, cache, tIds, eCache)
-  print "validation: "
-  print validation
-  -- return "success"
+
   call <- case dBvalidaton ++ validation of
     [] ->  do
-      print "action is entered"
+
       rCall :: Maybe (PageCall T.Module' (Fix Module)) <- executeAPhase (denotePA aCall
         $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  (heap', file, params, cache, eCache)
-      print "call is successful? "
-      print $ isJust rCall
       return $ fromMaybe pCall rCall
     _  -> return pCall
   (T.runApplied'
         $ denoteP (foldCall call) $ Tp.injectGlobal (P.handleDefs rEnv) gVarEnv) heap file
+  -- return "success!"
 
   -- nothing :: () <- executeAPhase (denotePProcess aCall 
   --   $  Tp.injectGlobal (P.handleDefs aEnv) gVarEnv)  heap' file params cache

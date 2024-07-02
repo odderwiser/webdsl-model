@@ -18,7 +18,7 @@ import Templates.Modules.Page.Denotation as P
 import Templates.Modules.Lift.Denotation as Lt
 import Templates.Modules.Lift.Syntax (LiftT)
 import Actions.Syntax (Stmt, Eval)
-import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase, Elems)
+import Actions.Handlers.Entity (uuidH, eHeapH, WriteOps, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase, Elems, dbReadIoH)
 import Templates.Modules.Forms.Denotation as F
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState, simpleStateH, appendWriterH, templateIdMaybeReaderH, nonConsumingReaderH)
 import Actions.Modules.Entity.Syntax (Entity, EntityDecl)
@@ -68,9 +68,7 @@ runApplied' :: (ToJSON (v(Fix v)), FromJSON (v (Fix v)), Show (v (Fix v)),
   => Free (Eff' v) () -> [(Address, (Fix v))] -> String -> IO Out'
 runApplied' e heap file = do
   (status, elems :: Elems v) <- openDatabase file
-  (((((_, out), templateIds), log), elems'), readstatus) <- unwrap
-        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-        $ handle_ inMemoryDbReadH (elems, status)
+  action <-  ioHandle (dbReadIoH file)
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH []
         $ handle_ appendWriterH []
@@ -90,8 +88,9 @@ runApplied' e heap file = do
         $ handle_ simpleStateH ""
         $ handle_ autoIncrementState (Count 0)
         $ e 
-  print "render log"
-  print log
+  ((((_, out), templateIds), log), readstatus) <- unwrap
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
+        $ action
   return out
  
 

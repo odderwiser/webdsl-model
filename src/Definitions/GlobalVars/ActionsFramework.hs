@@ -9,7 +9,7 @@ import Definitions.Fun.Denotation as F
 import Definitions.Fun.Syntax
 import Actions.Handlers.Env (FunctionEnv, defsH, globalNamesH)
 import Definitions.Program.Syntax
-import Actions.Handlers.Entity (entityDefsH, eHeapH, uuidH, mockDbReadH, dbWriteH, Elems (..), TempEHeap, tempEHeapH, mockDbWriteH, MaybeEntity, WriteOps, DbStatus (Failure, Empty), openDatabase, inMemoryDbReadH, tempEHeapH')
+import Actions.Handlers.Entity 
 import Actions.Handlers.Return (funReturn, dummyRedirect)
 import Actions.FrameworkIO as A
 import Syntax
@@ -41,6 +41,7 @@ import qualified Actions.Modules.Phases.Denotation as Ph
 import qualified Templates.Effects as E
 import Templates.Modules.Lift.Syntax (Weaken)
 import Actions.Modules.Phases.Denotation (denoteRef)
+import Actions.Handlers.Entity (dbReadIoH)
 --running syntax
 
 --preprocessing
@@ -50,7 +51,7 @@ type EffA v = Abort (Fix v)
   + Cond + Random String String
   +  Writer (VName, Address) + E.Redirect (Fix v)
   + TempEHeap v + EHeap v + MLState Address (Fix v)
-  + DbWrite (Fix v) + DbRead (EntityDecl (Fix v)) +  End
+  + DbRead (EntityDecl (Fix v)) + DbWrite (Fix v) +  End
 type Sym = VarList + Module
 
   --  case unwrap
@@ -72,7 +73,6 @@ runProgram (Fragment defs (Just vars) exp) file = do
         = ( E.handleDefs (map (fmap foldD) defs ::  [Envs (FreeEnv (EffV V') (Fix V'))])
           , E.handleDefs (map (fmap foldD) defs ::  [Envs (FreeEnv (EffA V') (Fix V'))]))
   (gVarEnv, heap, dbStatus) <- runVars (foldD vars :: FreeEnv (EffA V') (Fix V')) vDefs [] file
-  print gVarEnv
   (v, status) <- run (foldD exp) (pDefs {globalVars = gVarEnv}) heap file
   return (v, dbStatus)
 
@@ -95,9 +95,7 @@ runVars :: (ToJSON (v (Fix v)), Lit Uuid <: v, FromJSON (v (Fix v)), Show (v (Fi
   -> IO ([(Name, Address)], [(Address, (Fix v))], DbStatus)
 runVars e env store file = do
   (status, db :: Elems v) <- openDatabase file
-  let (action, elems' ) = unwrap
-        $ handle_ inMemoryDbReadH (db, status)
-        $ handle_ (dbWriteH file) ([] :: [WriteOps v])
+  action <- ioHandle (dbReadIoH file)    
         $ handle_ heap'' store
         $ handle_ eHeapH []
         $ handle_ tempEHeapH' (makeEnv [])
@@ -107,7 +105,8 @@ runVars e env store file = do
         $ handle condition
         $ handle funReturn
         $ e env
-  (((_, globalEnv), heap), dbstatus) <- action
+  (((_, globalEnv), heap), dbstatus) <- unwrap
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) $ action
   return (globalEnv, heap, status)
 
 instance (Lit Uuid <: v, Lit Address <: v,

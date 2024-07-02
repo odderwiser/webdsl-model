@@ -95,10 +95,7 @@ runObservableProgram (Fragment defs (Just vars) pCall) file = do
   let (pDefs, vDefs)
         = ( P.handleDefs (map T.foldTDefs defs ::  [P.Envs (PEnv (EffV V') (T.Eff' V') V) (FreeEnv (EffV V') V )])
           , P.handleDefs (map T.foldTDefs defs ::  [P.Envs (PEnv Eff Eff' V) (FreeEnv Eff V )]))
-  print $ globalVars $ actionEnv pDefs
   (gVarEnv, heap, dbStatus) <- A.runVars (foldD vars) (actionEnv vDefs) [] file
-  print gVarEnv
-  print heap
   out <- T.runApplied' (denoteP (bimap foldDT foldD pCall) 
     (injectGlobal pDefs gVarEnv)) heap file
   return (out, dbStatus)

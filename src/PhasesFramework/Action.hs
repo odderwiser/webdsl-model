@@ -11,7 +11,7 @@ import Actions.FrameworkIO
 import Templates.Syntax as S
 import Definitions.Templates.Syntax (TBody, TemplateDef)
 import Templates.FrameworkIO
-import Actions.Handlers.Entity (uuidH, WriteOps, eHeapH, dbWriteH, mockDbReadH, inMemoryDbReadH, openDatabase, Elems (entities), encodeElems)
+import Actions.Handlers.Entity 
 import Actions.Handlers.Return (funReturn, redirectH)
 import Actions.Handlers.Cond (condition)
 import qualified Templates.Modules.Layout.Denotation as L
@@ -65,11 +65,9 @@ executeAPhase :: forall v g h. (ToJSON (v(Fix v)), FromJSON (v (Fix v)),
   => Free (AEff' v) () -> AIn v  ->  IO (Maybe (PageCall T.Module' (Fix Module)))
 executeAPhase e (heap, file, params, cache, eCache) = do
   (status, elems :: Elems V') <- openDatabase file
-  let elems' = elems {entities = KM.map (fmap cmapF) $ entities elems}
+  let elems' :: Elems v = elems {entities = KM.map (fmap cmapF) $ entities elems}
   writeFile file $ encodeElems elems'
-  ((((_, pageCall), log), elems'), readStatus) <- unwrap
-        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) 
-        $ handle_ inMemoryDbReadH (elems', status)
+  action <- ioHandle (dbReadIoH file) 
         $ handle_ heap' (makeEnv heap)
         $ handle_ eHeapH eCache
         $ handle_ appendWriterH []
@@ -86,10 +84,10 @@ executeAPhase e (heap, file, params, cache, eCache) = do
         $ handle_ simpleStateH "" --state formid
         $ handle aH     --action
         $ e 
+  (((_, pageCall), log), readStatus) <- unwrap
+        $ handle_ (dbWriteH file) ([] :: [WriteOps v]) $ action
   (status, elemsV :: Elems v) <- openDatabase file
   let elems''' :: Elems V' = elems {entities = KM.map (fmap weakenF) $ entities elemsV}
-  print "action log"
-  print log
   writeFile file $ encodeElems elems'''
   return pageCall
 
