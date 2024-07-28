@@ -23,7 +23,7 @@ instance Bifunctor Loop where
     bimap g f (ForArith name a a' t) = f <$> ForArith name a a' (g t)
     bimap g f (While a t) = f <$> While a (g t)
 
-forAllT :: (Loop <:: f) => String -> Fix g -> BiFix f (Fix g) -> BiFix f (Fix g)
+forAllT :: (Loop <:: f) => String -> Fix g -> BiFix f g -> BiFix f g
 forAllT name col stmts = injBf $ ForCol name col stmts []
 
 forAll :: (Weaken Loop <: f)

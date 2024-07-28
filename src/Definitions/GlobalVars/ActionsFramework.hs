@@ -72,8 +72,8 @@ runProgram (Fragment defs (Just vars) exp) file = do
   let (pDefs, vDefs)
         = ( E.handleDefs (map (fmap foldD) defs ::  [Envs (FreeEnv (EffV V') (Fix V'))])
           , E.handleDefs (map (fmap foldD) defs ::  [Envs (FreeEnv (EffA V') (Fix V'))]))
-  (gVarEnv, heap, dbStatus) <- runVars (foldD vars :: FreeEnv (EffA V') (Fix V')) vDefs [] file
-  (v, status) <- run (foldD exp) (pDefs {globalVars = gVarEnv}) heap file
+  (gVarEnv, heap, dbStatus) <- runVars (foldD vars) vDefs [] file
+  (v, status)               <- run (foldD exp) (pDefs {globalVars = gVarEnv}) heap file
   return (v, dbStatus)
 
 

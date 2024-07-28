@@ -27,17 +27,17 @@ instance Bifunctor Layout where
   bimap g f (String s)    = String s
   bimap g f (Block a b c) = Block a b $ g c
 
-header :: (Layout <:: f) => IsAttAssigned -> BiFix f (Fix e) -> BiFix f (Fix e)  
+header :: (Layout <:: f) => IsAttAssigned -> BiFix f e -> BiFix f e
 header iAtAsgd content = injBf $ Header iAtAsgd content
 
-title :: (Layout <:: f) => String -> BiFix f (Fix e)
+title :: (Layout <:: f) => String -> BiFix f e
 title = injBf . Title
 
-section :: (Layout <:: f) => IsAttAssigned -> BiFix f (Fix e) -> BiFix f (Fix e)  
+section :: (Layout <:: f) => IsAttAssigned -> BiFix f e -> BiFix f e
 section iAtAsgd content = injBf $ Section iAtAsgd content
 
-str :: (Layout <:: f) => String -> BiFix f (Fix e)
+str :: (Layout <:: f) => String -> BiFix f e
 str = injBf . String
 
-block :: (Layout <:: f) => IsAttAssigned -> Maybe ClassName -> BiFix f (Fix e) -> BiFix f (Fix e)  
+block :: (Layout <:: f) => IsAttAssigned -> Maybe ClassName -> BiFix f e -> BiFix f e
 block iAtAsgd cName content = injBf $ Block iAtAsgd cName content

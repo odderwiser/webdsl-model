@@ -30,13 +30,13 @@ instance Bifunctor Render where
   bimap g f (Output actions) = Output (f actions) 
   bimap g f (Raw actions)    = Raw (f actions)
 
-output :: (Render <:: f) => Fix h -> BiFix f (Fix h)
+output :: (Render <:: f) => Fix h -> BiFix f h
 output = injBf . Output 
 
-xml :: (Render <:: f) => String -> BiFix f (Fix h)
+xml :: (Render <:: f) => String -> BiFix f h
 xml = injBf . XmlR . xmlT
 
 xmlRec :: (Render <:: f) 
   => String -> Fix e 
-  -> Xml (BiFix f (Fix e)) (Fix e)  -> BiFix f (Fix e)
+  -> Xml (BiFix f e) (Fix e)  -> BiFix f e
 xmlRec start exp tail = injBf $ XmlR $ xmlS start exp tail

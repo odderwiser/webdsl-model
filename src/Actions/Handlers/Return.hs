@@ -31,8 +31,8 @@ dummyRedirect = Handler
 redirectH :: (Functor remEff, v~ Fix v'
   , LitInt <: v', LitBool <: v', Lit Uuid <: v'
   , Arith <: g, Boolean <:g, S.Ref <: g) 
-  => Handler_ (E.Redirect v) value (Maybe (PageCall (BiFix h (Fix g))(Fix g))) 
-  remEff (value, Maybe (PageCall (BiFix h (Fix g))(Fix g)))
+  => Handler_ (E.Redirect v) value (Maybe (PageCall (BiFix h g)(Fix g))) 
+  remEff (value, Maybe (PageCall (BiFix h g)(Fix g)))
 redirectH = Handler_
   { ret_ = curry pure
   , hdlr_ = \eff out -> case (eff, out) of

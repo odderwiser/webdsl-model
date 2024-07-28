@@ -58,7 +58,7 @@ halfOpenRange a b = map (box :: Int -> Fix g) [a', (a' + step)..(b' - step) ]
         
 whileLoop e stmts env = do
   e'      <- e env
-  cond e' 
+  cond (projV e') 
     (executeWhileLoop e stmts env)
     (return $ injF Null)
 

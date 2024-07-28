@@ -3,6 +3,7 @@ import GHC.Generics (Generic)
 import Data.Aeson (ToJSON, FromJSON)
 import Utils.Composition
 import Utils.Fix
+import Utils.Free
 
 data Lit v e = V v | Box v 
     deriving (Functor, Eq, Show, Generic)
@@ -23,6 +24,15 @@ box = injF . Box
 
 boxV :: (Lit v <: f) => v -> Fix f
 boxV = injF . V
+
+v :: (Functor f, Lit a <: v) => a -> Free f (Fix v)
+v = return . injF . V
+
+unV :: Lit a e -> a
+unV (V a) = a
+
+projV :: (Lit a <: g) => Fix g -> Maybe a
+projV (In fix) = unV <$> proj fix 
 
 showValue :: forall a v. (Show a, Lit a <: v) => Fix v -> String
 showValue = show . (unbox' :: Fix v -> a) 

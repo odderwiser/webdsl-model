@@ -16,7 +16,7 @@ data PageCall t a = PCall PgName [(a, Type)]
 
 pCallRoot = PCall "root" []
 
-pCall :: (PageCall <:: f) => String -> BiFix f (Fix g)
+pCall :: (PageCall <:: f) => String -> BiFix f g
 pCall name = injBf $ PCall name []
 
 instance Bifunctor PageCall where

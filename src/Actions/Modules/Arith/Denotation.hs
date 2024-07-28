@@ -3,40 +3,37 @@ import Actions.Modules.Arith.Syntax
 import Utils hiding (denote)
 import Actions.Values
 
-op :: (Functor f, LitInt <: v') 
-  => (Int -> Int -> Int) -> Fix v' -> Fix v' 
+op :: (Functor f, Lit Int <: v') 
+  => (Int -> Int -> Int) -> Maybe Int -> Maybe Int 
   -> Free f (Fix v')
-op operand e1 e2 = case (unbox' e1, unbox' e2) of
-  (e1', e2') -> return 
-    $ boxV 
-    $ operand e1' e2'
+op operand (Just e1) (Just e2) = v $ operand e1 e2
 
 denote :: (Functor eff, LitInt <: v) 
   => Arith (FreeEnv eff (Fix v)) 
   -> FreeEnv eff (Fix v)
-denote (LitAr int) env = return $ boxV int
+denote (LitAr int) env = v int
 
 denote (OpArith Add a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (+) a' b'
+  op (+) (projV a') (projV b')
 
 denote (OpArith Div a b) env = do 
   a' <- a env 
   b' <- b env 
-  op div a' b'
+  op div (projV a') (projV b')
 
 denote (OpArith Sub a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (-) a' b'
+  op (-) (projV a') (projV b')
 
 denote (OpArith Mul a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (*) a' b'
+  op (*) (projV a') (projV b')
 
 denote (OpArith Mod a b) env = do 
   a' <- a env 
   b' <- b env 
-  op mod a' b'
+  op mod (projV a') (projV b')

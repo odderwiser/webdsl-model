@@ -41,7 +41,7 @@ type Eff' v = State ButtonCount + State FormId + State Seed + Random Label Label
   + MLState Address (Fix v) + DbRead (EntityDecl (Fix v)) +  DbWrite (Fix v) +   End
 type T = Loop +: Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT +: Action
 --running syntax
-type Module' = BiFix T (Fix Module)   
+type Module' = BiFix T Module 
 type Out' = String
 
 

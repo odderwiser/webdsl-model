@@ -20,6 +20,6 @@ data Action t a = Action a | NamedAction String a
 instance Bifunctor Action where
     bimap g f (Action a) = Action $ f a
 
-action :: (Action <:: g) => Fix f -> BiFix g (Fix f)
+action :: (Action <:: g) => Fix f -> BiFix g f
 action a = injBf $ Action a
 

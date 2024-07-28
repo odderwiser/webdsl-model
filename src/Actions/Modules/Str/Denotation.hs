@@ -1,35 +1,29 @@
 module Actions.Modules.Str.Denotation where
-import Actions.Modules.Str.Syntax
+import Actions.Modules.Str.Syntax hiding (length)
 import Utils
 import Actions.Values
 import Actions.Arith (LitInt)
 
-op :: (Functor f, LitStr <: v') 
-  => (String -> String -> String) -> Fix v' -> Fix v' 
-  -> Free f (Fix v')
-op operand e1 e2 = case (unbox' e1, unbox' e2) of
-  (e1', e2') -> return 
-    $ boxV
-    $ operand e1' e2'
+op :: (Functor f, LitStr <: v) 
+  => (String -> String -> String) -> Maybe String -> Maybe String 
+  -> Free f (Fix v)
+op operand (Just e1) (Just e2) = v $ operand e1 e2
 
-unOp :: (Functor f, LitStr <: v', Lit a <: v') 
-  => (String -> a) -> Fix v'
-  -> Free f (Fix v')
-unOp operand e = return 
-    $ boxV
-    $ operand 
-    $ unbox e
+unOp :: (Functor f, LitStr <: v, Lit a <: v) 
+  => (String -> a) -> Maybe String
+  -> Free f (Fix v)
+unOp operand (Just e) = v $ operand e
 
 denote :: (Functor eff, LitStr <: v, LitInt <: v) 
   => Str (FreeEnv eff (Fix v)) 
   -> FreeEnv eff (Fix v)
-denote (LitS str) env = return $ boxV str
+denote (LitS str) env = v str
 
 denote (Add a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (++) a' b'
+  op (++) (projV a') (projV b')
 
 denote (Length str) env = do
   str' <- str env
-  unOp Prelude.length str'
+  unOp length (projV str')

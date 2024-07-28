@@ -19,7 +19,7 @@ data StatementType = Definition | Expression
 data TBody t a = Body [String] t t -- body contains list of names in scope, list of definitions and list of remaining statements
   deriving Functor
 
-body :: (TBody <:: f) => [String] -> BiFix f (Fix g) -> BiFix f (Fix g) -> BiFix f (Fix g)
+body :: (TBody <:: f) => [String] -> BiFix f g -> BiFix f g -> BiFix f g
 body names defs stmts = injBf $ Body names defs stmts
 
 instance Bifunctor TBody where

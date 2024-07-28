@@ -37,7 +37,7 @@ type Eff' v = State ButtonCount + State FormId + State Seed + State TSeed
   + E.Render (Fix v) + MLState Address (Fix v) + State Address + End
 type T = Input (Fix Module) +: Forms +: Layout +: S.Render +: Page +: LiftT Stmt +: TBody +: EvalT
 --running syntax
-type Module' = BiFix T (Fix Module)   
+type Module' = BiFix T Module  
 type Out' = String
 
 

@@ -74,7 +74,7 @@ refVars envTuples env = do
   return env'
 
 refVar :: (Functor eff,
-  MLState Address v <: eff')
+  Functor eff')
   => VName -> Address -> Env eff v
   -> Free eff' (Env eff v)
 refVar name value env = do

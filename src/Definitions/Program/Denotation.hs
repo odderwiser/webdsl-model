@@ -18,9 +18,9 @@ foldProgram (Fragment defs _ program) = Fragment (map (fmap foldD) defs) Nothing
 --   (Fragment defs (injF $ Weaken $ VList vars program)) 
 
 
-denoteDefs ::
-  (FDecl <: g, GlobalScope g eff v <: eff')
-  => EnvType -> [g (FreeEnv eff v)] -> Free eff' (Env eff v) -> Free eff' (Env eff v)
-denoteDefs ty defs env = do
-  env' <- env
-  write ty defs env'
+-- denoteDefs ::
+--   (FDecl <: g, GlobalScope g eff v <: eff')
+--   => EnvType -> [g (FreeEnv eff v)] -> Free eff' (Env eff v) -> Free eff' (Env eff v)
+-- denoteDefs ty defs env = do
+--   env' <- env
+--   write ty defs env'

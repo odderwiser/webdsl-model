@@ -25,13 +25,15 @@ foldD (In f) = denote $ fmap foldD f
 
 class (Functor eff', Functor sym) => DenoteDef sym e eff' where
     denoteDef :: sym e -> Free eff' ()
-    denoteDefList ::  [sym e] -> Free eff' [()]
-    denoteDefList = mapM denoteDef
+
+denoteDefList :: (DenoteDef sym e eff') => [sym e] -> Free eff' ()
+denoteDefList = mapM_ denoteDef
 
 class (Functor eff', Bifunctor sym) => DenoteDef' sym f e eff' where
     denoteDef' :: sym f e  -> Free eff' ()
-    denoteDefList' ::  [sym f e] -> Free eff' [()]
-    denoteDefList' = mapM denoteDef'
+
+denoteDefList' :: (DenoteDef' sym f e eff') =>  [sym f e] -> Free eff' ()
+denoteDefList' = mapM_ denoteDef'
 
 instance DenoteDef sym e eff' => DenoteDef' (LiftE sym) f e eff' where
   denoteDef' (LiftE x)  = denoteDef x
@@ -55,7 +57,7 @@ foldDef (In f) = denoteDef f
 
 
 class DenoteT sym eff eff' v where
-    denoteT :: sym (PEnv eff eff' v) (FreeEnv eff v) -> PEnv eff eff' v 
+    denoteT :: sym (PEnv eff eff' v) (FreeEnv eff v) -> PEnv eff eff' v
 
 instance  (DenoteT sym1 eff eff' v,
     DenoteT sym2 eff eff' v)
@@ -65,14 +67,14 @@ instance  (DenoteT sym1 eff eff' v,
         (R' f) -> denoteT f
 
 instance (Denote sym eff v, Functor eff', Lift eff eff' v) => DenoteT (LiftE sym) eff eff' v where
-  denoteT (LiftE x) env = do 
+  denoteT (LiftE x) env = do
     v <- lift $ denote x (actionEnv env)
     return ()
 
 -- data (Functor f) => Fix' e f = In' (e (Fix f) (Fix' e f))
 
 foldDT :: (Denote f eff v, DenoteT g eff eff' v, Bifunctor g)
-    => BiFix g (Fix f) -> PEnv eff  eff' v 
+    => BiFix g f -> PEnv eff  eff' v
 foldDT (BIn elem) = denoteT $ bimap foldDT foldD elem
 
 

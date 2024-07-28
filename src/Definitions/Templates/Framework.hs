@@ -66,12 +66,12 @@ makeTEnv eEnv fEnv tEnv = TEnv
     }
 
 foldTProgram :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
-    => Program ((g (BiFix f (Fix h))) (Fix h)) () (BiFix f (Fix h))
+    => Program ((g (BiFix f h)) (Fix h)) () (BiFix f h)
     -> Program ((g (PEnv eff eff' v)) (FreeEnv eff v)) () (PEnv eff eff' v)
 foldTProgram (Fragment defs _ program) = Fragment (fmap foldTDefs defs) Nothing (foldDT program)
 
 foldTDefs :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
-  => (g (BiFix f (Fix h))) (Fix h) -> (g (PEnv eff eff' v)) (FreeEnv eff v)
+  => (g (BiFix f h)) (Fix h) -> (g (PEnv eff eff' v)) (FreeEnv eff v)
 foldTDefs = bimap foldDT foldD 
 
 instance DenoteDef FDecl (EnvTy v) (Eff'' v) where --- Maybe?? This works???

@@ -39,7 +39,7 @@ import qualified Templates.Modules.Forms.Denotation as F
 import Templates.Handlers.Forms (singleAccessState, idH, autoIncrementState)
 import Data.Aeson (ToJSON, FromJSON)
 import Actions.Modules.Str.Syntax (LitStr)
-import Actions.Arith (LitInt)
+import Actions.Modules.Arith.Syntax ( LitInt )
 import Actions.Bool (LitBool)
 import Actions.Values (Null)
 
@@ -54,7 +54,7 @@ type Program' = Program DefSyntax (PageCall T.Module' (Fix Module))
 
 
 foldProgram :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f, Bifunctor g)
-    => Program ((g (BiFix f (Fix h)))  (Fix h)) () (PageCall (BiFix f (Fix h)) (Fix h))
+    => Program ((g (BiFix f h))  (Fix h)) () (PageCall (BiFix f h) (Fix h))
     -> Program ((g ( PEnv eff eff' v)) (FreeEnv eff v)) () (PageCall ( PEnv eff eff' v) (FreeEnv eff v))
 foldProgram (Fragment defs _ pg@(PCall name args))
     = Fragment (fmap T.foldTDefs defs) Nothing (bimap foldDT foldD pg)

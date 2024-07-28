@@ -23,6 +23,7 @@ data Input r t a = Input r Type -- input with optional parameters. e is the boun
     deriving Functor
 
 instance Bifunctor Forms where
+    bimap :: (a -> b) -> (c -> d) -> Forms a c -> Forms b d
     bimap g f (Form bool body) = Form bool $ g body
     bimap g f (Label value contents) = Label (f value) (g contents)
     bimap g f (Submit action name) = Submit (g action) (f name)
@@ -30,16 +31,16 @@ instance Bifunctor Forms where
 instance Bifunctor (Input r) where
     bimap g f (Input r ty) = Input r ty
 
-form :: (Forms <:: f) => IsAttAssigned' -> BiFix f (Fix g) -> BiFix f (Fix g)
+form :: (Forms <:: f) => IsAttAssigned' -> BiFix f g -> BiFix f g
 form isAssigned body = injBf $ Form isAssigned body
 
-label :: (Forms <:: f) => Fix g -> BiFix f (Fix g) ->  BiFix f (Fix g)
+label :: (Forms <:: f) => Fix g -> BiFix f g ->  BiFix f g
 label text body = injBf $ Label text body
 
-input :: (Input (Fix g) <:: f) => Fix g -> Type -> BiFix f (Fix g)
+input :: (Input (Fix g) <:: f) => Fix g -> Type -> BiFix f g
 input var ty = injBf $ Input var ty
 
-submit :: (Forms <:: f) => BiFix f (Fix g) -> Fix g -> BiFix f (Fix g)
+submit :: (Forms <:: f) => BiFix f g -> Fix g -> BiFix f g
 submit action name = injBf $ Submit action name
 
 data EvalT t a = VarDeclT VName | VarInit VName a 
@@ -52,7 +53,7 @@ instance Bifunctor EvalT where
 vDeclT :: (EvalT <:: f) => VName -> BiFix f g
 vDeclT = injBf . VarDeclT
 
-varInitT :: (EvalT <:: f) => VName -> Fix g -> BiFix f (Fix g)
+varInitT :: (EvalT <:: f) => VName -> Fix g -> BiFix f g
 varInitT name v = injBf $ VarInit name v 
 
 data PropRef e = PropRef (Uuid, PName)

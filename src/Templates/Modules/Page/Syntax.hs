@@ -21,10 +21,10 @@ instance Bifunctor Page where
   bimap g f Elements = Elements
 
 
-tCall :: (Page <:: f) => TName ->  [(e, Type)] -> BiFix f e
+tCall :: (Page <:: f) => TName ->  [(Fix e, Type)] -> BiFix f e
 tCall name args = injBf $ TCall name (SelectionList []) args Nothing 
 
-tCallElems :: (Page <:: f) => TName ->  [(e, Type)] -> BiFix f e -> BiFix f e
+tCallElems :: (Page <:: f) => TName ->  [(Fix e, Type)] -> BiFix f e -> BiFix f e
 tCallElems name args elems = injBf $ TCall name (SelectionList []) args $ Just elems
 
 elements :: (Page <:: f) => BiFix f e

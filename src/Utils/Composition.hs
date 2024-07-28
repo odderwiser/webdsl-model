@@ -114,31 +114,25 @@ instance {-# OVERLAPPING #-}  (Functor f, Functor h,
 
 infix 5 <
 class u < v where
-  injV  :: u -> v
-  projV :: v -> Maybe u
+  injV'  :: u -> v
+  projV' :: v -> Maybe u
 
 infixr \/
 type u \/ v = Either u v
 
 instance {-# OVERLAPPING #-} u < u where
-  injV :: u -> u
-  injV = id
-  projV :: u -> Maybe u
-  projV = Just
+  injV' = id
+  projV' = Just
 
 instance u < u \/ v where
-  injV :: u -> u \/ v
-  injV = Left
-  projV :: u \/ v -> Maybe u
-  projV = \case
+  injV' = Left
+  projV' = \case
     Left f -> Just f
     _ -> Nothing
 
 instance {-# OVERLAPPABLE #-} (u < v', w ~ v \/ v') => u < w where
-  injV :: (u < v') => u -> v \/ v'
-  injV = Right . injV 
-  projV :: (u < v') => v \/ v' -> Maybe u
-  projV = \case
+  injV' = Right . injV' 
+  projV' = \case
     Left g -> Nothing
-    Right g' -> projV g'
+    Right g' -> projV' g'
 

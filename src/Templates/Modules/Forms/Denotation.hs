@@ -20,7 +20,7 @@ denoteR :: forall eff eff' v v'.
   ( E.Attribute <: eff', Stream HtmlOut <: eff'
   , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
-  , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v', Writer String <: eff'
+  , LitStr <: v', v ~ Fix v', Writer String <: eff'
   , Lift eff eff' v)
   => Forms (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v

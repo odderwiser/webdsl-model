@@ -94,7 +94,7 @@ testDefsStoring = TestCase $
   ("dummy1", [("x", Int), ("y", Int)])
   (case
   handle_ entityDefsH Env{entityDefs = []}
-    $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free (Eff' Eff V') [()]) (map (fmap foldD) dummy1Definition) of
+    $ (denoteDefList :: [Envs (FreeEnv Eff V)] -> Free (Eff' Eff V') ()) (map (fmap foldD) dummy1Definition) of
       (Pure (_, env)) ->
         case U.entityDefs env of
         [EDef name params _ _ _] -> (name, params))

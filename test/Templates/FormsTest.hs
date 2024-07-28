@@ -111,6 +111,10 @@ formsSyntax = Program
     ]
   ] Nothing
 
+formsEx :: Fix (Forms (Forms () (Fix Module)) + Module)
+formsEx = injF (Form False (Label (S.str "example") ()) :: Forms (Forms () (Fix Module)) (Fix (Forms (Forms () (Fix Module)) + Module)))
+
+
 formsWithVarsSyntax :: Program (Envs Module' (Fix Module)) () (PageCall Module' (Fix Module))
 formsWithVarsSyntax = Program
   [ pDef "root" [] $ body ["a", "b", "c"]

@@ -96,11 +96,11 @@ runProgram r@(Request defs (Just vars) (pCall, params)) file = do
   -- executePhase pCall defs gVarEnv = execute (denotePProcess pCall $ Tp.injectGlobal (P.handleDefs defs) gVarEnv :: PEnv (EffV v) eff' (Fix v)) 
 
 foldDefs:: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f)
-  => [Envs (BiFix f (Fix h)) (Fix h)] -> [Envs (PEnv eff eff' v) (FreeEnv eff v)]
+  => [Envs (BiFix f h) (Fix h)] -> [Envs (PEnv eff eff' v) (FreeEnv eff v)]
 foldDefs = map T.foldTDefs
 
 foldCall :: (Denote h eff v, DenoteT f eff eff' v, Bifunctor f)
-  => PageCall (BiFix f (Fix h)) (Fix h) -> PageCall ( PEnv eff eff' v) (FreeEnv eff v)
+  => PageCall (BiFix f h) (Fix h) -> PageCall ( PEnv eff eff' v) (FreeEnv eff v)
 foldCall = bimap foldDT foldD
 
 foldPhases :: [P.DefSyntax] -> ([RenderDef], [DbDef], [VDef], [ADef], [VarDef])

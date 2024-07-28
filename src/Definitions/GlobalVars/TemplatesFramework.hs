@@ -89,7 +89,7 @@ instance DenoteDef' PageDef (PEnv Eff Eff' V) EnvTy Eff'' where
 --   ((((_, tEnv'), tEnv), env'), env) ->
 --     run $ pCall $ (T.makeTEnv env' env tEnv) { U.pages = pages tEnv'}
 
-runObservableProgram :: Program P.DefSyntax (Fix Sym) (PageCall (BiFix T.T (Fix Module)) (Fix Module))-> FilePath
+runObservableProgram :: Program P.DefSyntax (Fix Sym) (PageCall (BiFix T.T Module) (Fix Module))-> FilePath
     -> IO (T.Out', DbStatus)
 runObservableProgram (Fragment defs (Just vars) pCall) file = do
   let (pDefs, vDefs)
