@@ -40,14 +40,14 @@ denote (PNavigate name vars text) pEnv = do
   renderPlainText text False
   renderTag $ TagClose "a"
 
-denote (TCall name atts args Nothing) env = do
+denote (TCall name args Nothing) env = do
   (body, env') <- populateTCall name args env
   env'' <- storeTemplateId name env'
   errors :: [String] <- E.read $ TId $ templateId env''
   renderErrors errors
   body env { actionEnv = env''}
 
-denote (TCall name atts args (Just elems)) tEnv = do
+denote (TCall name args (Just elems)) tEnv = do
   (loc, tEnv')   <- refElements tEnv elems
   (body, env) <- populateTCall name args tEnv'
   put loc

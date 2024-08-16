@@ -19,13 +19,13 @@ denote (LitB bool) env = return $ boxV bool
 denote (OpB Or a b) env = do
   a' <- a env
   b' <- b env
-  op (||) (projV a') (projV b')
+  op (||) (projV'' a') (projV'' b')
 
 denote (OpB And a b) env = do
   a' <- a env
   b' <- b env
-  op (&&) (projV a') (projV b')
+  op (&&) (projV'' a') (projV'' b')
 
 denote (If c a b) env = do
   c' <- c env
-  cond (projV c') (a env) (b env)
+  cond (projV'' c') (a env) (b env)

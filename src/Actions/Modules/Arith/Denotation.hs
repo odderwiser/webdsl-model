@@ -16,24 +16,24 @@ denote (LitAr int) env = v int
 denote (OpArith Add a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (+) (projV a') (projV b')
+  op (+) (projV'' a') (projV'' b')
 
 denote (OpArith Div a b) env = do 
   a' <- a env 
   b' <- b env 
-  op div (projV a') (projV b')
+  op div (projV'' a') (projV'' b')
 
 denote (OpArith Sub a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (-) (projV a') (projV b')
+  op (-) (projV'' a') (projV'' b')
 
 denote (OpArith Mul a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (*) (projV a') (projV b')
+  op (*) (projV'' a') (projV'' b')
 
 denote (OpArith Mod a b) env = do 
   a' <- a env 
   b' <- b env 
-  op mod (projV a') (projV b')
+  op mod (projV'' a') (projV'' b')

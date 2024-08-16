@@ -22,8 +22,8 @@ denote (LitS str) env = v str
 denote (Add a b) env = do 
   a' <- a env 
   b' <- b env 
-  op (++) (projV a') (projV b')
+  op (++) (projV'' a') (projV'' b')
 
 denote (Length str) env = do
   str' <- str env
-  unOp length (projV str')
+  unOp length (projV'' str')

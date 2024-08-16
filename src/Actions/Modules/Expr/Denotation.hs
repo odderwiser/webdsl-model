@@ -37,19 +37,19 @@ denote (OpCmp Neq e1 e2) env = do
 denote (OpCmp Lt e1 e2) env = do
   e1' <- e1 env
   e2' <- e2 env
-  opCmp (<) (projV e1') (projV e2')
+  opCmp (<) (projV'' e1') (projV'' e2')
 
 denote (OpCmp Lte e1 e2) env = do
   e1' <- e1 env
   e2' <- e2 env
-  opCmp (<=) (projV e1') (projV e2')
+  opCmp (<=) (projV'' e1') (projV'' e2')
 
 denote (OpCmp Gt e1 e2) env = do
   e1' <- e1 env
   e2' <- e2 env
-  opCmp (>) (projV e1') (projV e2')
+  opCmp (>) (projV'' e1') (projV'' e2')
 
 denote (OpCmp Gte e1 e2) env = do
   e1' <- e1 env
   e2' <- e2 env
-  opCmp (>=) (projV e1') (projV e2')
+  opCmp (>=) (projV'' e1') (projV'' e2')

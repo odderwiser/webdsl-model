@@ -69,11 +69,11 @@ denoteProcess ::forall eff eff' v v'.
 -- this should do something with vars. DOesnt yet.
 denoteProcess (PNavigate {}) pEnv = return ()
 
-denoteProcess (TCall name atts args Nothing) env = do
+denoteProcess (TCall name args Nothing) env = do
   (body, env') <- populateTCall name args env
   body env { actionEnv = env'}
 
-denoteProcess (TCall name atts args (Just elems)) env = do
+denoteProcess (TCall name args (Just elems)) env = do
   (loc, env')   <- refElements env elems
   (body, env'') <- populateTCall name args env
   put loc
@@ -84,12 +84,12 @@ denoteProcess Elements env = do
   (env', elems) <- derefElements env loc
   elems env'
 
-denoteDb (TCall name atts args Nothing) env = do
+denoteDb (TCall name args Nothing) env = do
   (body, env') <- populateTCall name args env
   env'' <- storeTemplateId name env'
   body env { actionEnv = env''}
 
-denoteDb (TCall name atts args (Just elems)) env = do
+denoteDb (TCall name args (Just elems)) env = do
   (loc, env')   <- refElements env elems
   (body, env'') <- populateTCall name args env
   put loc
@@ -98,12 +98,12 @@ denoteDb (TCall name atts args (Just elems)) env = do
 
 denoteDb syntax env = denoteProcess syntax env
 
-denoteV (TCall name atts args Nothing) env = do
+denoteV (TCall name args Nothing) env = do
   (body, env') <- populateTCall name args env
   env'' <- readInTemplateId env'
   body env { actionEnv = env''}
 
-denoteV (TCall name atts args (Just elems)) env = do
+denoteV (TCall name args (Just elems)) env = do
   (loc, env')   <- refElements env elems
   (body, env'') <- populateTCall name args env
   put loc

@@ -31,8 +31,14 @@ v = return . injF . V
 unV :: Lit a e -> a
 unV (V a) = a
 
+unV' :: Lit a e -> a
+unV' (V a) = a
+
 projV :: (Lit a <: g) => Fix g -> Maybe a
 projV (In fix) = unV <$> proj fix 
+
+projV'' :: (Lit a <: g) => Fix g -> Maybe a
+projV'' (In fix) = unV' <$> proj fix 
 
 showValue :: forall a v. (Show a, Lit a <: v) => Fix v -> String
 showValue = show . (unbox' :: Fix v -> a) 

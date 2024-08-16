@@ -51,7 +51,7 @@ executeLoop col' name env stmts = do
   return $ injF Null
 
 halfOpenRange :: forall g. (LitInt <: g) => Fix g -> Fix g -> [Fix g]
-halfOpenRange a b = map (box :: Int -> Fix g) [a', (a' + step)..(b' - step) ]
+halfOpenRange a b = map (boxV :: Int -> Fix g) [a', (a' + step)..(b' - step) ]
   where step = signum (b' - a')
         a'   = unbox' a
         b'   = unbox' b
