@@ -2,7 +2,7 @@ module Templates.Modules.Lift.Denotation where
 import Templates.Modules.Lift.Syntax
 import Actions.Syntax
 import Utils as U
-import Actions.Modules.Stmt.Denotation (denoteStmt, denoteFilters)
+import Actions.Modules.Stmt.Denotation as Stmt (denoteStmt, denoteFilters) 
 import Definitions.GlobalVars.Denotation (Heap)
 import Actions.Bool (LitBool)
 import Actions.Arith (LitInt)

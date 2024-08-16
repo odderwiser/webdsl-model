@@ -16,7 +16,6 @@ import Templates.Modules.Lift.Syntax
 denote :: forall v eff. (Functor eff)
   => Stmt (FreeEnv eff (Fix v))
   -> FreeEnv eff (Fix v)
-
 denote = denoteStmt
 
 denoteStmt (S s1 s2) env = do
@@ -30,10 +29,9 @@ denoteLoop :: forall v eff.
     -> FreeEnv eff (Fix v)
 
 denoteLoop (Weaken (ForCol name col stmts filters)) env = do
-  col' <- col env
+  col'  <- col env
   col'' <- denoteFilters name col' filters env
   executeLoop (projC col'') name env stmts
-  -- return $ injF Null
 
 denoteLoop (Weaken (ForArith name e1 e2 stmts)) env = do
   e1' <- e1 env
@@ -44,11 +42,13 @@ denoteLoop (Weaken (ForArith name e1 e2 stmts)) env = do
 denoteLoop (Weaken (While e stmts)) env = whileLoop e stmts env
 
 executeLoop col' name env stmts = do
-  mapM_ (\id -> do
-    loc <- ref id
-    env' <- refEnv name loc env
-    stmts env') col'
+  mapM_ (executeIteration name env stmts) col'
   return $ injF Null
+
+executeIteration name env stmts id = do
+  loc  <- ref id
+  env' <- refEnv name loc env
+  stmts env'
 
 halfOpenRange :: forall g. (LitInt <: g) => Fix g -> Fix g -> [Fix g]
 halfOpenRange a b = map (boxV :: Int -> Fix g) [a', (a' + step)..(b' - step) ]
@@ -71,8 +71,8 @@ denoteFilters :: (Null <: v, [] <: v, LitBool <: v, LitInt <: v,  MLState Addres
   -> FreeEnv eff (Fix v)
 denoteFilters name col []              env = return col
 denoteFilters name col ( f : filters ) env =  do
-    col'' <- denoteFilter name (projC col) f env
-    denoteFilters name col'' filters env
+  col'' <- denoteFilter name (projC col) f env
+  denoteFilters name col'' filters env
 
 
 denoteFilter :: forall eff v. 
