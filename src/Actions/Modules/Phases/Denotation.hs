@@ -25,7 +25,7 @@ denote (Validate e errorMsg props) env = do
     return V.null 
 
 denoteT :: (Functor eff, LitBool <: v', v~Fix v', Show v
-    , Writer (TId, String) <: eff', Lift eff eff' (Fix v'), Writer String <: eff')
+    , Writer (TId, String) <: eff', Lift eff eff' (Fix v'))
     => LiftE VTuple (PEnv eff eff' v) (FreeEnv  eff v) -> PEnv eff eff' v
 denoteT (LiftE (Validate e errorMsg props)) env = do
     bool <- Utils.lift $ e $ actionEnv env

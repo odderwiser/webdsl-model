@@ -13,12 +13,12 @@ denote :: forall eff eff' v. (
   => Attributes (PEnv eff eff' v) (FreeEnv eff v)
     -> PEnv eff eff' v
 denote (SelectionList list body) env = do
-    mapM_ (\el -> denoteSel el env) list
+    mapM_ (`denoteSel` env) list
     body env
 
-denoteSel :: (  
+denoteSel :: (
     Lift eff eff' v,
-    State [(AttName, String)] <: eff', Render v <: eff') => 
+    State [(AttName, String)] <: eff', Render v <: eff') =>
     AttributeSel (PEnv eff eff' v) (FreeEnv eff v)
     -> PEnv eff eff' v
 denoteSel (Attribute attName) env = do
@@ -30,8 +30,8 @@ denoteSel (AllAttributes list) env = do
 
 denoteSel (AttDef name e) env = do
     e' <- lift $ e $ actionEnv env
-    e'' <- render e' -- this probably doesn't do what I want it to 
-    put [(name, e'')] 
+    e'' <- render e'
+    put [(name, e'')]
 
-getAllExcept env = map ((`delete` env) 
+getAllExcept env = map ((`delete` env)
     . (\elem -> (elem, fromJust $ lookup elem env )))

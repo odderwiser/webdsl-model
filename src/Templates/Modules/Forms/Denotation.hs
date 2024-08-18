@@ -20,7 +20,7 @@ denoteR :: forall eff eff' v v'.
   ( E.Attribute <: eff', Stream HtmlOut <: eff'
   , State AttList <: eff', State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
-  , LitStr <: v', v ~ Fix v', Writer String <: eff'
+  , LitStr <: v', v ~ Fix v'
   , Lift eff eff' v)
   => Forms (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
@@ -34,91 +34,88 @@ denoteR (Form False body) env = do -- here action should be determined?
     $ TagClose "form"
 
 denoteR (Label name contents) env = do -- attribute "for"
-  name'      <- lift $ name $ actionEnv env
-  nameId     <- encode (unbox name' :: Label)
-  put       (Just nameId)
-  write $ " render before encoding: " ++ (unbox name' :: Label)
-  write $ "render after encoding: " ++ nameId
-  renderTag $ TagOpen "label" [("for", nameId)]
-  renderPlainText 
-    (unbox name') True
+  name'                 <- lift $ name $ actionEnv env
+  nameId :: LabelId     <- encode (unbox name' :: Label)
+  put (Just nameId)
+  put [("for", nameId)]
+  attributes :: AttList <- get 
+  renderTag $ TagOpen "label" attributes
+  renderPlainText (unbox name') True
   renderTag $ TagClose "label"
   contents env
 
 denoteR (Submit action name) env = do
-  name <- lift $ name $ actionEnv env
-  formId :: String <- get 
+  name                       <- lift $ name $ actionEnv env
+  formId :: String           <- get 
   buttonCount :: ButtonCount <- get
-  renderTag $ TagOpen "button"
-    [ ("class", "button")
-    , ("name", "withForms_ia" ++ show buttonCount ++ "_" ++ formId)]
+  put [ ("class", "button"), ("name", "withForms_ia" ++ show buttonCount ++ "_" ++ formId)]
+  attributes :: AttList      <- get
+  renderTag $ TagOpen "button" attributes
   renderPlainText (unbox name) True
   renderTag $ TagClose "button"
 
 denoteRInput :: forall eff eff' v v' g.
-  ( E.Attribute <: eff', Stream HtmlOut <: eff'
+  ( E.Attribute <: eff', State AttList <: eff', Stream HtmlOut <: eff'
   , State (Maybe LabelId) <: eff', Random Label LabelId <: eff'
   , State Seed <: eff', State FormId <: eff', State ButtonCount <: eff'
   , LitStr <: v', LitBool <: v', LitInt <: v' , v ~ Fix v'
-  , Lift eff eff' v, Denote g eff (Fix v'), Writer String <: eff',
+  , Lift eff eff' v, Denote g eff (Fix v'),
   Show (v' (Fix v')))
   => Input (Fix g) (PEnv eff eff' v) (FreeEnv eff v)
   -> PEnv eff eff' v
 denoteRInput (Input exp Bool) env = do
-  exp'         <- lift $ Utils.foldD exp $ actionEnv env
-  value        <- case (projF exp':: Maybe (LitBool v)) of
-    Just (V True)  -> return [("value", "true")]
-    Just (V False) -> return [("value", "false")]
-    Nothing        -> return []
-  label:: Maybe LabelId<- get
-  seed :: Seed <- get
-  inputName    <- encode $ show label ++  show seed
+  exp'                  <- lift $ Utils.foldD exp $ actionEnv env
+  label:: Maybe LabelId <- get
+  seed :: Seed          <- get
+  inputName              <- encode $ show label ++ show seed
+  put ([("class", "inputBool"), ("type", "checkbox"), ("name", inputName)] 
+    ++ evaluateBooleanValue (projF exp'))
   renderInput label
-    $  [("class", "inputBool"), ("type", "checkbox"), ("name", inputName)] 
-    ++ value
 
 denoteRInput (Input exp String) env = do
   exp'         <- lift $ Utils.foldD exp $ actionEnv env
   value        <- case (projF exp':: Maybe (LitStr v)) of
     Just (V str) -> return [("value", str)]
     Nothing      -> return [] 
-  label:: Maybe LabelId<- get
+  label:: Maybe LabelId <- get
   seed :: Seed <- get
   inputName    <- encode $ show label ++ show seed
+  put $ [("class", "inputString"), ("name", inputName), ("type", "text")] ++ value
   renderInput label
-    $  [("class", "inputString"), ("name", inputName), ("type", "text")] 
-    ++ value
 
 
 denoteRInput (Input exp Int) env = do
   exp'         <- lift $ Utils.foldD exp $ actionEnv env
-  write "render value"
-  write $ show exp'
   value        <- case (projF exp':: Maybe (LitInt v)) of
     Just (V int) -> return int
     Nothing      -> return 0 
-  label:: Maybe LabelId<- get
+  label:: Maybe LabelId <- get
   seed :: Seed <- get
-  write $ "rendering: seed is " ++ show label ++ show seed
   inputName    <- encode $ show label ++ show seed
-  renderInput label
-    [ ("class", "inputInt")
+  put [ ("class", "inputInt")
     , ("name", inputName)
     , ("value", show value)
     ]
--- I should have cases for entities but I can't figure out how they work
+  renderInput label
+
+evaluateBooleanValue (Just (V True))  = [("value", "true")]
+evaluateBooleanValue (Just (V False)) = [("value", "false")]
+evaluateBooleanValue Nothing          = []
 
 renderForm formId = renderTag $ TagOpen "form" 
     [ ("id", "form_"++formId), ("name", "form_"++formId)
     , ("accept-charset", "UTF-8"), ("method", "POST")]
 
-renderInput :: (Stream HtmlOut <: f, State (Maybe LabelId) <: f) 
-  => Maybe LabelId ->  [H.Attribute String] -> Free f ()
-renderInput label atts = do 
-  id <- case label of 
-    Just label -> return [("id", label)]
-    Nothing    -> return []  
-  renderTag $ TagOpen "input" $ id ++ atts
+renderInput :: (Stream HtmlOut <: f, State (Maybe LabelId) <: f, State AttList <: f) 
+  => Maybe LabelId  -> Free f ()
+renderInput (Just label) = do 
+  put [("id", label)]
+  atts :: AttList <- get
+  renderTag $ TagOpen "input" atts
+
+renderInput Nothing = do 
+  atts :: AttList <- get
+  renderTag $ TagOpen "input" atts
 
 denoteNames ::  forall eff eff' v.
   ( Heap v <: eff', Null <: v
