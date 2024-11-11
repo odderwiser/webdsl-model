@@ -1,0 +1,7 @@
+#WebDSL model
+
+This repository contains the basis of my Master Thesis @ TU Delft: "Towards Modular Language Semantics of WebDSL: A Case Study of Using Algebraic Effects in Haskell for Language Specification". The thesis can be accessed [here](https://repository.tudelft.nl/record/uuid:47aba90c-b45d-477b-90c0-462e111efdb1)
+
+# Abstract
+
+WebDSL is a DSL for creating web applications, combining many different aspects and domains of web design in a single language. The dynamic semantics of this language are not defined, despite multiple attempts, abandoned due to complexity of the language and lack of expression of chosen frameworks. We adapt the algebraic effects and handlers approach and the framework introduced in Datatypes a la carte (Swierstra, 2008) to create a modular denotational semantics model of WebDSL, extending the framework by a bifunctor formulation for multi-sort syntax definition that allows us to distinguish between effects raised by different components of the language. In the process of defining the framework and semantics in Haskell, we encountered obstacles and of working with algebraic effects and handlers paradigm in the language, leading us to compile workarounds, solutions and pitfalls to avoid when constructing and maintaining such model. In evaluation of the framework approach with earlier attempts at defining dynamic semantics for WebDSL, we find algebraic effects and handlers to be a viable and successful approach for modelling a rich DSL such as WebDSL, and propose possible improvements to the WebDSL compiler.
